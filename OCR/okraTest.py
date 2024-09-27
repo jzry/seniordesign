@@ -1,17 +1,25 @@
-from okra import OkraDigitGetter
+import okra
 import cv2
 from termcolor import colored
 
 
-dg = OkraDigitGetter()
+dg = okra.DigitGetter()
 
-dg.debug_images = True
+# Uncomment this line to display images while OCRing
+#dg.debug_images = True
 
-
-img = cv2.imread(r'Test Images\neat_pencil.jpg', 0) # 0 is for monochrome
+# Load a test image
+#
+# .\neat_pen.jpg
+# .\sloppy_pen.jpg
+# .\dark_pen.jpg
+#
+# .\neat_pencil.jpg
+# .\sloppy_pencil.jpg
+#
+img = cv2.imread(r'Test Images\neat_pen.jpg', 0) # 0 is for monochrome
 
 numbers, confidence = dg.image_to_digits(img)
-
 
 for i in range(len(numbers)):
     if confidence[i] > 90.0:

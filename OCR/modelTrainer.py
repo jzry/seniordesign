@@ -42,11 +42,10 @@ def main():
     trainLoader = DataLoader(train, shuffle=True, batch_size=batch_size, num_workers=15)
     testLoader = DataLoader(test, shuffle=False, batch_size=batch_size, num_workers=15)
     # Prepare model
-    model = None
+    model = OkraClassifier()
     if load_existing_model:
-        model = torch.load('./okra.model', weights_only=False)
-    else:
-        model = OkraClassifier()
+        state_dict = torch.load('./okra.model.weights', weights_only=True)
+        model.load_state_dict(state_dict)
     model.to(device);
     # Prepare Optimizer
     optimizer = torch.optim.Adam(model.parameters(), lr=lr)
@@ -55,7 +54,7 @@ def main():
     # Start training
     train_model(model, trainLoader, testLoader, optimizer, loss_fn)
     # Save the model
-    torch.save(model, 'okra.model')
+    torch.save(model.state_dict(), 'okra.model.weights')
 
 
 def train_model(model, trainData, testData, optimizer, loss_fn):
