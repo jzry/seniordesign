@@ -11,7 +11,9 @@ class DigitGetter:
 
     Attributes:
         debug_images (bool): Output the input image after the preprocessing stage (default=False)
-        column_skip (int): The number of image columns to be skipped each loop of the scan
+        column_skip (int): The number of image columns to be skipped each loop of the scan (default=5)
+        segment_padding_hori (int): The amount of space to add to the left and right of digit segments (default=30)
+        segment_padding_vert (int): The amount of space to add to the top and bottom of digit segments (default=20)
     """
 
     def __init__(self):
@@ -27,7 +29,6 @@ class DigitGetter:
         # Set default attributes
         self.debug_images = False
         self.column_skip = 5
-
         self.segment_padding_hori = 30
         self.segment_padding_vert = 20
 
@@ -150,6 +151,10 @@ class DigitGetter:
             # Get the slice of the image containing the digit
             digit_segment, current_column = self.__segment_digit(img, digit_pixel)
 
+            # Ignore small specs in the image
+            if digit_segment.shape[0] < (img.shape[0] / 3) and digit_segment.shape[1] < (img.shape[0] / 3):
+                continue
+
             # Classify the digit
             num, conf = self.__digit_from_image(digit_segment)
             numbers.append(num)
@@ -204,7 +209,8 @@ class DigitGetter:
 
         bounds = Boundary(start_pixel[1], start_pixel[0], start_pixel[1], start_pixel[0])
 
-        # Find the actual boundary of the digit
+        # Find the actual boundary of the digit.
+        # 'bounds' will be updated with the correct values.
         self.__fill_digit(img, bounds, start_pixel)
 
         # The next column will be the column to the right of the segment
