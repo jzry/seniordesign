@@ -60,10 +60,7 @@ class DigitGetter:
             cv2.THRESH_BINARY_INV
         )
 
-        # Show debugging image
-        if self.debug_images:
-            plt.imshow(img)
-            plt.show()
+        self.__show_debug_image(img, 'Pre-processed Image')
 
         return img
 
@@ -99,10 +96,7 @@ class DigitGetter:
         transform = transforms.Compose([transforms.ToTensor(), transforms.Resize((28, 28))])
         img = transform(img)
 
-        # Show debugging image
-        if self.debug_images:
-            plt.imshow(img[0].numpy())
-            plt.show()
+        self.__show_debug_image(img[0].numpy(), 'Digit')
 
         # Adds two dimensions to the 28x28 img so it "fits" into the model.
         # This doesn't actually alter the data; it basically adds extra brackets around the array
@@ -164,13 +158,12 @@ class DigitGetter:
                 conf = self.__get_decimal_confidence(segment.shape)
                 numbers.append('.')
                 confidence.append(conf)
-                if self.debug_images:
-                    plt.imshow(segment)
-                    plt.show()
+                self.__show_debug_image(segment, 'Decimal Point')
             else:
-                if self.debug_images:
-                    plt.imshow(segment)
-                    plt.show()
+                if segment_type == SegmentType.MINUS:
+                    self.__show_debug_image(segment, 'Minus Symbol')
+                else:
+                    self.__show_debug_image(segment, 'Ignored')
 
         return (numbers, confidence)
 
@@ -337,6 +330,15 @@ class DigitGetter:
         percentage = min(shape_no_padding) / 100.0 * max(shape_no_padding)
 
         return percentage
+
+
+    def __show_debug_image(self, img, title):
+        """Helper function to display a matplotlib plot of an image"""
+
+        if self.debug_images:
+            plt.imshow(img)
+            plt.title(title)
+            plt.show()
 
 
 class Boundary:
