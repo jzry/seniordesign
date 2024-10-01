@@ -3,6 +3,7 @@ import torchvision.transforms as transforms
 import numpy as np
 import cv2
 import matplotlib.pyplot as plt
+from enum import Enum
 from OkraClassifier import OkraClassifier
 
 class DigitGetter:
@@ -149,16 +150,27 @@ class DigitGetter:
                 break
 
             # Get the slice of the image containing the digit
-            digit_segment, current_column = self.__segment_digit(img, digit_pixel)
+            segment, segment_type, current_column = self.__segment_digit(img, digit_pixel)
 
-            # Ignore small specs in the image
-            if digit_segment.shape[0] < (img.shape[0] / 3) and digit_segment.shape[1] < (img.shape[0] / 3):
-                continue
+            if segment_type == SegmentType.DIGIT:
 
-            # Classify the digit
-            num, conf = self.__digit_from_image(digit_segment)
-            numbers.append(num)
-            confidence.append(conf)
+                # Classify the digit
+                num, conf = self.__digit_from_image(segment)
+                numbers.append(num)
+                confidence.append(conf)
+
+            elif segment_type == SegmentType.DECIMAL:
+
+                conf = self.__get_decimal_confidence(segment.shape)
+                numbers.append('.')
+                confidence.append(conf)
+                if self.debug_images:
+                    plt.imshow(segment)
+                    plt.show()
+            else:
+                if self.debug_images:
+                    plt.imshow(segment)
+                    plt.show()
 
         return (numbers, confidence)
 
@@ -204,7 +216,7 @@ class DigitGetter:
             start_pixel (int, int): The coordinate of the starting pixel
 
         Returns:
-            (numpy.ndarray, int): A tuple with a slice of img containing a single digit and the adjacent column's index
+            (numpy.ndarray, int): A 3-tuple with a slice of img containing a single digit, the type of segment, and the adjacent column's index
         """
 
         bounds = Boundary(start_pixel[1], start_pixel[0], start_pixel[1], start_pixel[0])
@@ -216,13 +228,16 @@ class DigitGetter:
         # The next column will be the column to the right of the segment
         next_column = bounds.right + 1
 
+        # Figure out whats in this segment based on its size and shape
+        segment_type = self.__get_segment_type(bounds.shape(), img.shape)
+
         # Add padding around the digit
         bounds.top -= self.segment_padding_vert
         bounds.right += self.segment_padding_hori
         bounds.bottom += self.segment_padding_vert
         bounds.left -= self.segment_padding_hori
 
-        return (bounds.get_slice(img), next_column)
+        return (bounds.get_slice(img), segment_type, next_column)
 
 
     def __fill_digit(self, img, bounds, pixel):
@@ -272,6 +287,58 @@ class DigitGetter:
                 self.__fill_digit(img, bounds, (x + move_x, y + move_y))
 
 
+    def __get_segment_type(self, segment_shape, img_shape):
+        """
+        Determines the contents of a segment based on its size and shape
+
+        Parameters:
+            segment_shape (int, int): The shape of the segment
+            img_shape (int, int): The shape of the original image
+
+        Returns:
+            SegmentType: The type of the segment
+        """
+
+        # Is this tall enough to be a digit?
+        if segment_shape[0] >= (img_shape[0] / 3):
+            return SegmentType.DIGIT
+
+        # Is this really small?
+        if segment_shape[0] < 10 and segment_shape[1] < 10:
+            return SegmentType.NOISE
+
+        # Is this flat and long?
+        if segment_shape[1] >= segment_shape[0] * 1.5:
+            return SegmentType.MINUS
+
+        # It's probably a decimal if we reach here
+        return SegmentType.DECIMAL
+
+
+    def __get_decimal_confidence(self, segment_shape):
+        """
+        Computes a confidence value for a decimal based on its eccentricity
+
+        Parameters:
+            segment_shape (int, int): The shape of the image segment containing the decimal point
+
+        Returns:
+            float: The confidence as a percentage
+        """
+
+        # Remove padding from the dimensions
+        shape_no_padding = (
+            segment_shape[0] - 2 * self.segment_padding_vert,
+            segment_shape[1] - 2 * self.segment_padding_hori
+        )
+
+        # Divide the smaller dimension by the larger dimension
+        # Multiply by 100 to convert to percentage
+        percentage = min(shape_no_padding) / 100.0 * max(shape_no_padding)
+
+        return percentage
+
+
 class Boundary:
     """
     A class for storing the location of an image slice
@@ -290,6 +357,10 @@ class Boundary:
         self.right = right
         self.bottom = bottom
         self.left = left
+
+
+    def shape(self):
+        return (self.bottom - self.top + 1, self.right - self.left + 1)
 
 
     def get_slice(self, img):
@@ -345,4 +416,21 @@ class Boundary:
 
         if self.left >= img.shape[1]:
             self.left = img.shape[1] - 1
+
+
+class SegmentType(Enum):
+    """
+    An enumerated type to differentiate between digits, minus symbols, decimals, and noise
+
+    Values:
+        NOISE = 0   : A few disconnected pixels that should be ignored
+        DIGIT = 1   : A digit that should be passed to the classifier
+        MINUS = 2   : A minus symbol that will likely be ignored
+        DECIMAL = 3 : A decimal point
+    """
+
+    NOISE = 0
+    DIGIT = 1
+    MINUS = 2
+    DECIMAL = 3
 
