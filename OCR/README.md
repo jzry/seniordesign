@@ -11,7 +11,7 @@ import okra
 
 dg = okra.DigitGetter()
 
-numbers, confidence = dg.digits_from_image(*** Your image loaded with opencv ***)
+numbers, confidence = dg.image_to_digits(*** Your image loaded with opencv ***)
 ```
 
 The return values is a tuple that contains two lists. The first list contains
