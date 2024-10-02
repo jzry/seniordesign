@@ -225,7 +225,9 @@ class DigitGetter:
         # Copy the box containing the digit from the image
         digit_segment = bounds.get_slice(img)
 
-        digit_segment = self.__apply_padding(digit_segment)
+        # Only apply padding if this is a digit
+        if segment_type == SegmentType.DIGIT:
+            digit_segment = self.__apply_padding(digit_segment)
 
         return (digit_segment, segment_type, next_column)
 
@@ -352,15 +354,9 @@ class DigitGetter:
             float: The confidence as a percentage
         """
 
-        # Remove padding from the dimensions
-        shape_no_padding = (
-            segment_shape[0] - 2 * self.segment_padding_vert,
-            segment_shape[1] - 2 * self.segment_padding_hori
-        )
-
         # Divide the smaller dimension by the larger dimension
         # Multiply by 100 to convert to percentage
-        percentage = min(shape_no_padding) / 100.0 * max(shape_no_padding)
+        percentage = 100.0 * min(segment_shape) / max(segment_shape)
 
         return percentage
 
