@@ -13,8 +13,7 @@ class DigitGetter:
     Attributes:
         debug_images (bool): Output the input image after the preprocessing stage (default=False)
         column_skip (int): The number of image columns to be skipped each loop of the scan (default=5)
-        segment_padding_hori (int): The amount of space to add to the left and right of digit segments (default=30)
-        segment_padding_vert (int): The amount of space to add to the top and bottom of digit segments (default=20)
+        fraction_padding (float): The minimum fractional percentage of the segmented image's height or width that should be padding (default=0.2)
     """
 
     def __init__(self):
@@ -30,8 +29,7 @@ class DigitGetter:
         # Set default attributes
         self.debug_images = False
         self.column_skip = 5
-        self.segment_padding_hori = 30
-        self.segment_padding_vert = 20
+        self.fraction_padding = 0.2
 
 
     def __preprocess_image(self, img):
@@ -224,13 +222,12 @@ class DigitGetter:
         # Figure out whats in this segment based on its size and shape
         segment_type = self.__get_segment_type(bounds.shape(), img.shape)
 
-        # Add padding around the digit
-        bounds.top -= self.segment_padding_vert
-        bounds.right += self.segment_padding_hori
-        bounds.bottom += self.segment_padding_vert
-        bounds.left -= self.segment_padding_hori
+        # Copy the box containing the digit from the image
+        digit_segment = bounds.get_slice(img)
 
-        return (bounds.get_slice(img), segment_type, next_column)
+        digit_segment = self.__apply_padding(digit_segment)
+
+        return (digit_segment, segment_type, next_column)
 
 
     def __fill_digit(self, img, bounds, pixel):
@@ -306,6 +303,42 @@ class DigitGetter:
 
         # It's probably a decimal if we reach here
         return SegmentType.DECIMAL
+
+
+    def __apply_padding(self, img):
+        """
+        Adds padding around an image. The resulting image will be very close to being square in shape
+
+        Parameters:
+            img (numpy.ndarray): The image to pad
+
+        Returns:
+            numpy.ndarray: The padded image
+        """
+
+        fixed_padding = int(max(img.shape) * self.fraction_padding)
+
+        # This will be the size of the image after padding
+        largest_dim = max(img.shape) + 2 * fixed_padding
+
+        # This is how much padding will be needed to make the image a square
+        dynamic_padding = int((largest_dim - min(img.shape)) / 2)
+
+        dynamic_pad = (dynamic_padding, dynamic_padding)
+        fixed_pad = (fixed_padding, fixed_padding)
+
+        # If the y dimension is smaller the x dimension
+        #     then use the dynamic pad on the y dimension (add more rows than columns)
+        #
+        # If the x dimension is smaller the y dimension
+        #     then use the dynamic pad on the x dimension (add more columns than rows)
+        #
+        if (img.shape[0] <= img.shape[1]):
+            img = np.pad(img, (dynamic_pad, fixed_pad))
+        else:
+            img = np.pad(img, (fixed_pad, dynamic_pad))
+
+        return img
 
 
     def __get_decimal_confidence(self, segment_shape):
