@@ -1,7 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import Home from './pages/Home';
-import PhotoOptions from './pages/PhotoOptions';
+import PhotoOptions from './pages/GetPhotos';
 
 function App() {
   return (

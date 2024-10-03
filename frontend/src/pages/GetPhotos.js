@@ -2,7 +2,7 @@ import React, { useState, useRef } from 'react';
 import CameraIcon from "../images/camera.png";
 import UploadIcon from "../images/upload.png";
 
-function PhotoOptions() {
+function GetPhotos() {
   const [imageSrc, setImageSrc] = useState(null); // State to store the captured image
   const fileInputRef = useRef(null); // Reference to the hidden file input
 
@@ -22,12 +22,6 @@ function PhotoOptions() {
   return (
     <div className="App">
       <div className="button-container">
-        {/* Take photo button */}
-        <div className="icon-button" onClick={handleTakePhoto}>
-          <img src={CameraIcon} alt="camera icon" />
-          <p>Take photo</p>
-        </div>
-
         {/* Hidden file input to trigger the camera */}
         <input
           type="file"
@@ -64,4 +58,4 @@ function PhotoOptions() {
   );
 }
 
-export default PhotoOptions;
+export default GetPhotos;
