@@ -7,10 +7,10 @@ function Home() {
     <div className="App">
       <div className="button-container">
         <Link to="/photo-options">
-          <button className="scorecard-button">CTR Scorecard</button>
+          <button className="scorecard-button">BCE Scorecard</button>
         </Link>
-        <Link to="/photo-options">
-          <button className="scorecard-button">BC Scorecard</button>
+        <Link to="/get-photos">
+          <button className="scorecard-button">CTR Scorecard</button>
         </Link>
       </div>
     </div>
