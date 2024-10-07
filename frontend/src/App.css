@@ -118,6 +118,11 @@ body {
   text-align: center;
   cursor: pointer;
   transition: background-color 0.3s ease;
+  color: black; /* Explicitly set font color to black */
+  text-decoration: none; /* Ensure no underlining */
+  -webkit-touch-callout: none; /* Disable link detection on iOS */
+  -webkit-user-select: none; /* Prevent selection */
+  user-select: none;
 }
 
 .scorecard-button:hover {
