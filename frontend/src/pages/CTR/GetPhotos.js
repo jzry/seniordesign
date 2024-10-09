@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import UploadIcon from "../../images/upload.png";
-import CTRHandwritingRecognition from './CTRHandWritingRecognition.js'; // Import the component
+import CTRExtractedValues from './CTRExtractedValues.js'; // Import the component
 
 function GetPhotos() {
   const [imageSrc, setImageSrc] = useState(null); // State to store the captured image
@@ -94,7 +94,7 @@ function GetPhotos() {
     <div className="App">
       {extractedData ? (
         // If we have extracted data, show the CTRHandwritingRecognition component
-        <CTRHandwritingRecognition extractedData={extractedData} />
+        <CTRExtractedValues extractedData={extractedData} />
       ) : (
         !imageSrc ? (
           <div className="button-container">
