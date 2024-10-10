@@ -4,7 +4,7 @@ import numpy as np
 import cv2
 import matplotlib.pyplot as plt
 from enum import Enum
-from OkraClassifier import OkraClassifier
+import OkraClassifier
 
 class DigitGetter:
     """
@@ -20,10 +20,7 @@ class DigitGetter:
         """Creates a new instance of DigitGetter"""
 
         # Load model
-        self.__model = OkraClassifier()
-        state_dict = torch.load('./okra3.model.weights', weights_only=True)
-        self.__model.load_state_dict(state_dict)
-        self.__model.to('cpu')
+        self.__model = OkraClassifier.get_model('./okra.resnet.weights')
         self.__model.eval()
 
         # Set default attributes
