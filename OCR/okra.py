@@ -14,6 +14,8 @@ class DigitGetter:
         debug_images (bool): Output the input image after the preprocessing stage (default=False)
         column_skip (int): The number of image columns to be skipped each loop of the scan (default=5)
         fraction_padding (float): The minimum fractional percentage of the segmented image's height or width that should be padding (default=0.2)
+        find_decimal_points (bool): Determines whether or not decimal points will appear in the output (default=True)
+        find_minus_signs (bool): Determines whether or not minus signs will appear in the output (default=False)
     """
 
     def __init__(self):
@@ -27,6 +29,8 @@ class DigitGetter:
         self.debug_images = False
         self.column_skip = 5
         self.fraction_padding = 0.2
+        self.find_decimal_points = True
+        self.find_minus_signs = False
 
 
     def __preprocess_image(self, img):
@@ -150,15 +154,25 @@ class DigitGetter:
 
             elif segment_type == SegmentType.DECIMAL:
 
-                conf = self.__get_decimal_confidence(segment.shape)
-                numbers.append('.')
-                confidence.append(conf)
+                if self.find_decimal_points:
+                    conf = self.__get_decimal_confidence(segment.shape)
+                    numbers.append('.')
+                    confidence.append(conf)
+
                 self.__show_debug_image(segment, 'Decimal Point')
+
+            elif segment_type == SegmentType.MINUS:
+
+                if self.find_minus_signs:
+                    conf = 100.0 - self.__get_decimal_confidence(segment.shape)
+                    numbers.append('-')
+                    confidence.append(conf)
+
+                self.__show_debug_image(segment, 'Minus Symbol')
+
             else:
-                if segment_type == SegmentType.MINUS:
-                    self.__show_debug_image(segment, 'Minus Symbol')
-                else:
-                    self.__show_debug_image(segment, 'Ignored')
+
+                self.__show_debug_image(segment, 'Ignored')
 
         return (numbers, confidence)
 
