@@ -211,7 +211,7 @@ class DigitGetter:
 
         # Find the actual boundary of the digit.
         # 'bounds' will be updated with the correct values.
-        self.__fill_digit(img, bounds, start_pixel)
+        self.__trace_digit(img, bounds, start_pixel)
 
         # The next column will be the column to the right of the segment
         next_column = bounds.right + 1
@@ -229,51 +229,84 @@ class DigitGetter:
         return (digit_segment, segment_type, next_column)
 
 
-    def __fill_digit(self, img, bounds, pixel):
+    def __trace_digit(self, img, bounds, pixel):
         """
-        A recursive, space fill, search algorithm thing...
+        An edge tracing algorithm that finds the smallest box that fits a digit
 
         Parameters:
             img (numpy.ndarray): An image
-            bounds (Boundary): The currently known boundary of the digit
-            pixel (int, int): The coordinate of the current pixel
+            bounds (Boundary): The object to store the bounds of the digit
+            pixel (int, int): The coordinate of the starting pixel
         """
 
-        x = pixel[0]
-        y = pixel[1]
+        def move(direction):
 
-        # Check if we're in bounds
-        if x < 0 or x >= img.shape[1]:
-            return
-        if y < 0 or y >= img.shape[0]:
-            return
+            move_val = directions[direction % len(directions)]
+            return (current_pixel[0] + move_val[0], current_pixel[1] + move_val[1])
 
-        # Check if this is part of the background
-        if img[y,x] == 0:
-            return
+        def in_bounds(location):
 
-        # Check if we've been here before
-        if img[y,x] == 254:
-            return
+            if location[0] < 0 or location[0] >= img.shape[1]:
+                return False
+            if location[1] < 0 or location[1] >= img.shape[0]:
+                return False
+            
+            return True
+        
+        def is_white(location):
 
-        # Mark this spot (Changing the color by 1 shouldn't hurt anything)
-        img[y,x] = 254
+            return img[location[1], location[0]] == 255
+        
+        def update_bounds(location):
 
-        # Adjust the boundary
-        if x > bounds.right:
-            bounds.right = x
-        elif x < bounds.left:
-            bounds.left = x
+            if location[0] > bounds.right:
+                bounds.right = location[0]
+            elif location[0] < bounds.left:
+                bounds.left = location[0]
 
-        if y > bounds.bottom:
-            bounds.bottom = y
-        elif y < bounds.top:
-            bounds.top = y
+            if location[1] > bounds.bottom:
+                bounds.bottom = location[1]
+            elif location[1] < bounds.top:
+                bounds.top = location[1]
 
-        # Move to the surrounding pixels
-        for move_x in [-1, 0, 1]:
-            for move_y in [-1, 0, 1]:
-                self.__fill_digit(img, bounds, (x + move_x, y + move_y))
+        def get_start_direction(direction):
+
+            direction = direction % len(directions)
+
+            if direction < 2:
+                return 6        # Left
+            elif direction < 4:
+                return 0        # Up
+            elif direction < 6:
+                return 2        # Right
+            else:
+                return 4        # Down
+
+        #                .         .                                                 .
+        #                |        /       __.      \       |        /      .__        \
+        #                                           '      '       '
+        directions = [(0, -1), (1, -1), (1, 0), (1, 1), (0, 1), (-1, 1), (-1, 0), (-1, -1)]
+
+        start_direction = 0    # Up
+
+        current_pixel = pixel
+
+        while True:
+
+            for next_direction in range(start_direction, start_direction + len(directions)):
+
+                next_pixel = move(next_direction)
+
+                if in_bounds(next_pixel):
+                    if is_white(next_pixel):
+
+                        update_bounds(next_pixel)
+                        start_direction = get_start_direction(next_direction)
+                        current_pixel = next_pixel
+                        break
+
+            if current_pixel == pixel:
+                break
 
 
     def __get_segment_type(self, segment_shape, img_shape):
