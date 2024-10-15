@@ -44,6 +44,10 @@ class DigitGetter:
             numpy.ndarray: The processed image
         """
 
+        # Convert to grayscale
+        if img.ndim == 3 and img.shape[2] == 3:
+            img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+
         # Apply a slight blur
         kernel = np.ones((3,3), np.float32) / 50
         img = cv2.filter2D(img, -1, kernel)
@@ -264,13 +268,13 @@ class DigitGetter:
                 return False
             if location[1] < 0 or location[1] >= img.shape[0]:
                 return False
-            
+
             return True
-        
+
         def is_white(location):
 
             return img[location[1], location[0]] == 255
-        
+
         def update_bounds(location):
 
             if location[0] > bounds.right:
