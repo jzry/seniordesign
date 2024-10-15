@@ -36,13 +36,13 @@ The image is then scanned by column for pixels corresponding to handwriting.
 </div>
 
 After a pixel has been found, the boundaries of the digit are found by running
-a fill algorithm that visits every pixel of the handwritten digit. A segment of
-the image can be taken using the boundary values.
+a trace algorithm that follows the edges of the digit until it has traced its entire outside border.
+A segment of the image can be taken using the boundary values.
 
 <div align="center">
-    <img src="readme_images/fill1.jpg" width="140">
-    <img src="readme_images/fill2.jpg" width="140">
-    <img src="readme_images/fill3.jpg" width="140">
+    <img src="readme_images/trace1.jpg" width="140">
+    <img src="readme_images/trace2.jpg" width="140">
+    <img src="readme_images/trace3.jpg" width="140">
 </div>
 
 ### Classification
