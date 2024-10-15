@@ -21,30 +21,6 @@ function GetPhotos() {
     setImageFile(null); // Clear the image file
   };
 
-  // const handleContinue = async () => {
-  //   if (imageFile) {
-  //     const formData = new FormData();
-  //     formData.append('image', imageFile);
-
-  //     try {
-  //       const response = await fetch('your-api-endpoint', {
-  //         method: 'POST',
-  //         body: formData,
-  //       });
-
-  //       const result = await response.json();
-  //       console.log('Image processed successfully:', result);
-
-  //       // Assuming result contains extracted values and confidence levels
-  //       setExtractedData(result); // Store the extracted values
-  //     } catch (error) {
-  //       console.error('Error uploading image:', error);
-  //     }
-  //   } else {
-  //     console.error("No image to upload.");
-  //   }
-  // };
-
   const handleContinue = async () => {
     if (imageFile) {
       const formData = new FormData();
