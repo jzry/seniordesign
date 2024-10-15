@@ -15,9 +15,11 @@ function CTRExtractedValues({ extractedData }) {
 
   const handleInputChange = (key, event) => {
     const newValue = event.target.value;
+
+    // Allow negative sign, empty string, or valid number as input
     setData({
       ...data,
-      [key]: { ...data[key], value: parseInt(newValue, 10) || 0 },
+      [key]: { ...data[key], value: newValue }, // Keep the value as string until final submission
     });
   };
 
