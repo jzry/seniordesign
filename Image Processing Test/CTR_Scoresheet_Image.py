@@ -74,10 +74,10 @@ Returns:
     warped_img (numpy.ndarray): The resulting image of the extracted and 
     warped score sheet with sharp borders.
 """
-def BC_Paper_Extraction(BC_scoresheet):
+def CTR_Paper_Extraction(BC_scoresheet):
 
     original_img = cv.imread(BC_scoresheet)
-    original_img = cm.resizeImageToScreen(original_img, 1.25, 1.25)
+    original_img = cm.resizeImageToScreen(original_img, 1, 2)
 
     # Prepocess Image
     gray_scale_img = cv.cvtColor(original_img, cv.COLOR_BGR2GRAY)
@@ -116,8 +116,8 @@ def BC_Paper_Extraction(BC_scoresheet):
 
     return warped_img
 
-extracted_paper = BC_Paper_Extraction('BC Scoresheet Pictures\BC-1.jpg')
+extracted_paper = CTR_Paper_Extraction('CTR Scoresheet Pictures\CTR-26.jpg')
 
-cv.imshow('Extracted Paper', extracted_paper)
+cv.imshow('CTR Extracted Paper', extracted_paper)
 cv.waitKey(0)
 cv.destroyAllWindows()
