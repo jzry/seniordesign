@@ -1,10 +1,14 @@
-import torch
+from torch.nn.functional import softmax
+from torch import argmax as torch_argmax
 import torchvision.transforms as transforms
+
 import numpy as np
 import cv2
 import matplotlib.pyplot as plt
 from enum import Enum
-import OkraClassifier
+from pathlib import Path
+
+from . import OkraClassifier
 
 class DigitGetter:
     """
@@ -22,7 +26,7 @@ class DigitGetter:
         """Creates a new instance of DigitGetter"""
 
         # Load model
-        self.__model = OkraClassifier.get_model('./okra.resnet.weights')
+        self.__model = OkraClassifier.get_model(Path(__file__).parent / 'okra.resnet.weights')
         self.__model.eval()
 
         # Set default attributes
@@ -109,10 +113,10 @@ class DigitGetter:
         results = self.__model(img)
 
         # Convert the results into probabilities
-        probabilities = torch.nn.functional.softmax(results[0], dim=0)
+        probabilities = softmax(results[0], dim=0)
 
         # The index with the highest probability is the predicted value
-        digit_value = torch.argmax(probabilities)
+        digit_value = torch_argmax(probabilities)
         confidence = probabilities[digit_value] * 100
 
         return (digit_value.item(), confidence.item())

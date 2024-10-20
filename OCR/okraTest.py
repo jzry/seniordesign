@@ -1,4 +1,4 @@
-import okra
+import OCR.okra as okra
 import cv2
 from termcolor import colored
 
