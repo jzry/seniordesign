@@ -28,7 +28,8 @@ app.post('/upload', function(req, res) {
   
     // The name of the input field (i.e. "sampleFile") is used to retrieve the uploaded file
     sampleFile = req.files.image;
-    uploadPath = path.join(__dirname, '/imgs/', sampleFile.name) 
+    // uploadPath = path.join(__dirname, '/imgs/', sampleFile.name) 
+    uploadPath = path.join(__dirname, '../Image Processing Test/test.jpg') 
   
 
     console.log('File received:', sampleFile.name);  // Log file details
