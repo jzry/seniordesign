@@ -12,7 +12,7 @@ to the PYTHONPATH environment variable.
 
 ### Linux
 
-`export PYTHONPATH="${PYTHONPATH}:/path/to/seniordesign"`
+ 
 
 ### Windows
 
