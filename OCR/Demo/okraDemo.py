@@ -47,7 +47,7 @@ input('>')
 
 ### Demonstrate digit finding
 
-wide_image = cv2.imread(Path(__file__).parent / 'Test Images' / 'neat_pen.jpg')
+wide_image = cv2.imread(Path(__file__).parent.parent / 'Test Images' / 'neat_pen.jpg')
 wide_image = cv2.cvtColor(wide_image, cv2.COLOR_BGR2RGB)
 
 plt.imshow(wide_image)
@@ -71,7 +71,7 @@ dg.debug_images = False
 
 for img_name in ['S1.jpg', 'S7.jpg', 'T9.jpg', 'T2.jpg', 'T5.jpg', 'T10.jpg']:
 
-    img = cv2.imread(Path(__file__).parent / 'Test Images' / f'{img_name}')
+    img = cv2.imread(Path(__file__).parent.parent / 'Test Images' / f'{img_name}')
     img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 
     plt.imshow(img)
