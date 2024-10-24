@@ -2,21 +2,30 @@ const express = require('express');
 const fileUpload = require('express-fileupload')
 const cors = require('cors');
 const path = require('path')
+
+// Get the fake API data simulating the affects of the OCR
+const fakeData = require('./fakeAPIData/fake-ctr-json.json')
+
+// The express app
 const app = express();
 
+// Allow cross-origin resource sharing
 app.use(cors())
+
+// Use express-fileupload
 app.use(fileUpload())
 
+// Basic t
 app.get('/', (req, res) => {
     res.send('Hello from our server!')
 })
 
-app.get('/test', (req, res) => {
-    console.log('Test route hit');
-    res.send('Test route works!');
-  });
+app.get('/ctr', (req, res) => {
+  res.json(fakeData)
+})
 
-app.post('/upload', function(req, res) {
+// Retrieve the uploaded image from the handleSubmit function in frontend/src/pages/crt/getPhotos.js
+app.post('/upload', (req, res) => {
     console.log('Upload endpoint hit');  // Log this to see if request is received
 
     let sampleFile;
@@ -44,6 +53,7 @@ app.post('/upload', function(req, res) {
   });
 
 
+// 8080 is the port we are using in the meantime, but may be changed later
 app.listen(8080, () => {
     console.log('server listening on port 8080')
 })
