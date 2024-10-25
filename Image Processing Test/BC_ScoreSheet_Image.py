@@ -114,6 +114,9 @@ def BC_Paper_Extraction(BC_scoresheet):
     # Get the sharp borders
     warped_img = cm.fourPointTransform(original_img, paper_pts)
 
+    # Resize image
+    warped_img = cm.resizeImageToScreen(warped_img, 2.5, 1.5)
+
     return warped_img
 
 extracted_paper = BC_Paper_Extraction('BC Scoresheet Pictures\BC-1.jpg')
