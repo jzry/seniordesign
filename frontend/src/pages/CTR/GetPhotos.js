@@ -1,4 +1,5 @@
 import React, { useState, useRef } from 'react';
+import axios from 'axios';
 import UploadIcon from "../../images/upload.png";
 import CTRExtractedValues from './CTRExtractedValues.js'; // Import the component
 
@@ -21,35 +22,30 @@ function GetPhotos() {
     setImageFile(null); // Clear the image file
   };
 
-  // const handleContinue = async () => {
-  //   if (imageFile) {
-  //     const formData = new FormData();
-  //     formData.append('image', imageFile);
+  const handleSubmit = async (event) => {
+    event.preventDefault();
 
-  //     try {
-  //       const response = await fetch('your-api-endpoint', {
-  //         method: 'POST',
-  //         body: formData,
-  //       });
+    const formData = new FormData();
+    formData.append('image', imageFile);
 
-  //       const result = await response.json();
-  //       console.log('Image processed successfully:', result);
+    try {
+      const response = await axios.post('http://localhost:8080/upload', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      console.log(response.data);
+    } catch (error) {
+      console.error('Error uploading file:', error);
+    }
+  };
 
-  //       // Assuming result contains extracted values and confidence levels
-  //       setExtractedData(result); // Store the extracted values
-  //     } catch (error) {
-  //       console.error('Error uploading image:', error);
-  //     }
-  //   } else {
-  //     console.error("No image to upload.");
-  //   }
-  // };
 
   const handleContinue = async () => {
     if (imageFile) {
       const formData = new FormData();
       formData.append('image', imageFile);
-  
+
       try {
         // Simulate the API response with a delay
         const result = await new Promise((resolve) => {
@@ -130,7 +126,7 @@ function GetPhotos() {
               <button className="scorecard-button" onClick={handleRetakePhoto}>
                 Retake Image
               </button>
-              <button className="scorecard-button" onClick={handleContinue}>
+              <button className="scorecard-button" onClick={(event) => {handleSubmit(event); handleContinue()}}>
                 Continue
               </button>
             </div>

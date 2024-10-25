@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import '../../styles/CTRHandWritingRecognitionStyles.css'; // Import the CSS file for styling
 
 function CTRExtractedValues({ extractedData }) {
   const [data, setData] = useState(extractedData); // Initialize with the extracted data

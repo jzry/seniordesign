@@ -2,15 +2,15 @@ import torch
 import torchvision
 from torch.utils.data import DataLoader
 import torchvision.transforms as transforms
-from OkraClassifier import OkraClassifier
+import OkraClassifier
 
 
 ###### Hyperparameters ######
 
-lr = 0.0001
+lr = 0.00001
 batch_size = 1000    # This should be adjusted to what your GPU can handle
-epochs = 5
-load_existing_model = False
+epochs = 15
+load_existing_model = True
 test_while_training = True
 
 #############################
@@ -42,19 +42,20 @@ def main():
     trainLoader = DataLoader(train, shuffle=True, batch_size=batch_size, num_workers=15)
     testLoader = DataLoader(test, shuffle=False, batch_size=batch_size, num_workers=15)
     # Prepare model
-    model = OkraClassifier()
+    weights_file = None
     if load_existing_model:
-        state_dict = torch.load('./okra.model.weights', weights_only=True)
-        model.load_state_dict(state_dict)
-    model.to(device);
+        weights_file = './okra.resnet.weights'
+    model = OkraClassifier.get_model(weights_file, device.type)
     # Prepare Optimizer
-    optimizer = torch.optim.Adam(model.parameters(), lr=lr)
+    optimizer = torch.optim.SGD(model.parameters(), lr=lr)
     # Prepare Loss Function
     loss_fn = torch.nn.CrossEntropyLoss()
     # Start training
     train_model(model, trainLoader, testLoader, optimizer, loss_fn)
     # Save the model
-    torch.save(model.state_dict(), 'okra.model.weights')
+    resp = input('Save model? [y/n]')
+    if resp == 'y':
+        torch.save(model.state_dict(), f'okraE{epochs}.resnet.weights')
 
 
 def train_model(model, trainData, testData, optimizer, loss_fn):
@@ -62,12 +63,19 @@ def train_model(model, trainData, testData, optimizer, loss_fn):
         if test_while_training:
             accuracy = test(model, testData)
             print(f'Accuracy after epoch {epoch}: {accuracy:>0.2f}%')
-            
+
+        if epoch != 0 and epoch % 3 == 0:
+            resp = input('Save model? [y/n]')
+            if resp == 'y':
+                torch.save(model.state_dict(), f'okraE{epoch}.resnet.weights')
+            elif resp == 'q':
+                return
+
         trainOneEpoch(model, trainData, optimizer, loss_fn)
-        
+
     accuracy = test(model, testData)
     print(f'Accuracy after epoch {epochs}: {accuracy:>0.2f}%')
-        
+
 
 def trainOneEpoch(model, data, optimizer, loss_fn):
     model.train()
@@ -77,13 +85,13 @@ def trainOneEpoch(model, data, optimizer, loss_fn):
         #x_batch = x_batch.view(x_batch.shape[0], -1)
         pred = model(x_batch)
         loss = loss_fn(pred, y_batch)
-        
+
         # This method is more efficient than zero_grad()
         # because it does not waste time overwriting
         # the gradients with zeros
         for param in model.parameters():
             param.grad = None
-            
+
         loss.backward()
         optimizer.step()
 
@@ -99,22 +107,10 @@ def test(model, data):
             #x_batch = x_batch.view(x_batch.shape[0], -1)
             pred = model(x_batch)
             correct += (torch.argmax(pred, 1) == y_batch).float().sum().item()
-    
-    return (correct / size) * 100
-            
 
-# def initModel():
-#     model = torch.nn.Sequential(
-#         nn.Linear(input_size, 128),
-#         nn.ReLU(),
-#         nn.Linear(128, 64),
-#         nn.ReLU(),
-#         nn.Linear(64, output_size),
-#         nn.LogSoftmax(dim=0)
-#     )
-#     return model
+    return (correct / size) * 100
 
 
 if __name__=="__main__":
     main()
-    
+

@@ -1,17 +1,42 @@
-# Okra Digit-OCR Library
+# Okra Digit-OCR Package
 
-This is a library to read handwritten digits from images
+This is a package to read handwritten digits from images
+
+## Configuration
+
+To import this package, Python must be able to find it. Add the repo's root folder
+to the PYTHONPATH environment variable.
+
+> [!IMPORTANT]
+> Make sure to use YOUR path to the repo folder and not the dummy path in the example commands!
+
+### Linux
+
+`export PYTHONPATH="${PYTHONPATH}:/path/to/seniordesign"`
+
+### Windows
+
+See if your editor has a PYTHONPATH manager or something similar.
+Otherwise, in Command Prompt try running *`set PYTHONPATH=%PYTHONPATH%;C:\path\to\seniordesign`
+
+### MacOS
+
+*`export PYTHONPATH="/path/to/seniordesign:$PYTHONPATH"`
+
+<br>
+
+__*Let Paul know if these commmands actually work ¯\\\_(ツ)\_/¯__
 
 ## Getting Started
 
-To get started, import okra, initialize a DigitGetter class, and start OCR'ing
+To get started, import the DigitGetter class, instantiate DigitGetter, and start OCR'ing
 
 ```
-import okra
+from OCR.okra import DigitGetter
 
-dg = okra.DigitGetter()
+dg = DigitGetter()
 
-numbers, confidence = dg.digits_from_image(*** Your image loaded with opencv ***)
+numbers, confidence = dg.image_to_digits(*** Your image data ***)
 ```
 
 The return values is a tuple that contains two lists. The first list contains
@@ -36,13 +61,13 @@ The image is then scanned by column for pixels corresponding to handwriting.
 </div>
 
 After a pixel has been found, the boundaries of the digit are found by running
-a fill algorithm that visits every pixel of the handwritten digit. A segment of
-the image can be taken using the boundary values.
+a trace algorithm that follows the edges of the digit until it has traced its entire outside border.
+A segment of the image can be taken using the boundary values.
 
 <div align="center">
-    <img src="readme_images/fill1.jpg" width="140">
-    <img src="readme_images/fill2.jpg" width="140">
-    <img src="readme_images/fill3.jpg" width="140">
+    <img src="readme_images/trace1.jpg" width="140">
+    <img src="readme_images/trace2.jpg" width="140">
+    <img src="readme_images/trace3.jpg" width="140">
 </div>
 
 ### Classification
