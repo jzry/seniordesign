@@ -106,8 +106,18 @@ app.get('/ctr', (req, res) => {
 app.post('/upload', validateCTRImage, (req, res) => {
   console.log('Upload endpoint hit');  // Log this to see if request is received
 
-  let sampleFile;
-  let uploadPath;
+    let sampleFile;
+    let uploadPath;
+  
+    if (!req.files || Object.keys(req.files).length === 0) {
+      return res.status(400).send('No files were uploaded.');
+    }
+  
+    // The name of the input field (i.e. "sampleFile") is used to retrieve the uploaded file
+    sampleFile = req.files.image;
+    // uploadPath = path.join(__dirname, '/imgs/', sampleFile.name) 
+    uploadPath = path.join(__dirname, '../Uploads/test.jpg') 
+  
 
   if (!req.files || Object.keys(req.files).length === 0) {
     return res.status(400).send('No files were uploaded.');
@@ -131,7 +141,5 @@ app.post('/upload', validateCTRImage, (req, res) => {
 });
 
 
-// 8080 is the port we are using in the meantime, but may be changed later
-app.listen(8080, () => {
-  console.log('server listening on port 8080')
-})
+module.exports = app
+
