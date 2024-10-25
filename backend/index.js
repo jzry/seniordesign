@@ -38,7 +38,7 @@ app.post('/upload', (req, res) => {
     // The name of the input field (i.e. "sampleFile") is used to retrieve the uploaded file
     sampleFile = req.files.image;
     // uploadPath = path.join(__dirname, '/imgs/', sampleFile.name) 
-    uploadPath = path.join(__dirname, '../Image Processing Test/test.jpg') 
+    uploadPath = path.join(__dirname, '../Uploads/test.jpg') 
   
 
     console.log('File received:', sampleFile.name);  // Log file details
@@ -53,7 +53,5 @@ app.post('/upload', (req, res) => {
   });
 
 
-// 8080 is the port we are using in the meantime, but may be changed later
-app.listen(8080, () => {
-    console.log('server listening on port 8080')
-})
+module.exports = app
+
