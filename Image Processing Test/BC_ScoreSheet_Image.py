@@ -2,6 +2,7 @@
 import cv2 as cv
 import numpy as np
 import Common_Methods as cm
+import BC_Template as bc_temp
 
 """
 Function Brief: Sorts four corner points of a contour in clockwise order, starting from the top-left point.
@@ -115,12 +116,13 @@ def BC_Paper_Extraction(BC_scoresheet):
     warped_img = cm.fourPointTransform(original_img, paper_pts)
 
     # Resize image
-    warped_img = cm.resizeImageToScreen(warped_img, 2.5, 1.5)
+    # warped_img = cm.resizeImageToScreen(warped_img, 2.5, 1.5)
+    warped_img = cv.resize(warped_img, (bc_temp.WIDTH, bc_temp.HEIGHT))
 
     return warped_img
 
-extracted_paper = BC_Paper_Extraction('BC Scoresheet Pictures\BC-1.jpg')
+# extracted_paper = BC_Paper_Extraction('BC Scoresheet Pictures\BC-1.jpg')
 
-cv.imshow('Extracted Paper', extracted_paper)
-cv.waitKey(0)
-cv.destroyAllWindows()
+# cv.imshow('Extracted Paper', extracted_paper)
+# cv.waitKey(0)
+# cv.destroyAllWindows()

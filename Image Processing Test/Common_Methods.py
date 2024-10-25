@@ -138,3 +138,14 @@ def fourPointTransform(image, contour_arr):
     warped = cv.warpPerspective(image, M, (maxWidth, maxHeight))
 
     return warped
+
+def unblurImage(blurred_img):
+    # Define a sharpening kernel (this is a simple one)
+    sharpening_kernel = np.array([[-1, -1, -1, -1, -1],
+                                  [-1, -1, 100, -1, -1],
+                                  [-1, -1, -1, -1, -1]])
+    
+    # Apply the sharpening filter using cv2.filter2D
+    unblurred_img = cv.filter2D(blurred_img, -5, sharpening_kernel)
+    
+    return unblurred_img

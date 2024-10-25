@@ -20,6 +20,16 @@ Both the scripts are designed to extract and standardize a specific type of scor
 # Common_Methods.py
 The Common_Methods.py file contains essential helper functions for image processing tasks, including resizing images to fit screen dimensions, ordering contour points to ensure they follow a specific sequence (top-left, top-right, bottom-right, bottom-left), and applying a four-point perspective transformation to create a top-down view of selected areas. Additionally, it includes functions to verify if a set of points forms a proper rectangle and to determine screen resolution, ensuring images are displayed with optimal dimensions. These utilities support accurate contour detection, transformation, and display, facilitating streamlined processing in various image manipulation workflows.
 
+# Scorefields.py
+Scorefields.py provides two main functions, BCSegments() and CTRSegments(), which enable targeted extraction of score fields from specific regions of a scoresheet image. These functions support OCR processing by allowing the identification of fields for different score categories: BC and CTR. Each segment is visually marked, saved, and stored in a dictionary, preparing them for further processing and score calculation.
+
+- BCSegments(): Extracts predefined fields for BC score sections from the scoresheet image.
+Detects and marks each field in the BC section, displays each segment with green rectangles, and saves each marked segment in a dictionary.
+
+- CTRSegments(): Similar to BCSegments(), this function targets CTR score sections.
+It extracts each predefined CTR score field, displays, marks, and saves the fields for efficient OCR integration.
+Both functions are designed to handle images with consistent scoresheet layouts, ensuring that extracted fields align correctly with OCR requirements
+
 --------------
 # How to use #
 --------------
