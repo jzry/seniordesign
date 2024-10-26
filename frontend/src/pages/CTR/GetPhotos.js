@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import UploadIcon from "../../images/upload.png";
-import CTRExtractedValues from './CTRExtractedValues.js'; // Import the component
+import CTRExtractedValues from './CTRExtractedValues.js';
 import '../../styles/CTRHandWritingRecognitionStyles.css';
 
 
@@ -8,7 +8,7 @@ function GetPhotos() {
   const [imageSrc, setImageSrc] = useState(null); // State to store the captured image
   const [imageFile, setImageFile] = useState(null); // State to store the image file for API
   const [extractedData, setExtractedData] = useState(null); // State to store extracted values from API
-  const fileInputRef = useRef(null); // Reference to the hidden file input
+  const fileInputRef = useRef(null); 
 
   const handleFileChange = (event) => {
     const file = event.target.files[0];
