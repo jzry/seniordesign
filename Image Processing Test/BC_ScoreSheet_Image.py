@@ -2,7 +2,6 @@
 import cv2 as cv
 import numpy as np
 import Common_Methods as cm
-import BC_Template as bc_temp
 
 """
 Function Brief: Sorts four corner points of a contour in clockwise order, starting from the top-left point.
@@ -78,27 +77,21 @@ Returns:
 def BC_Paper_Extraction(BC_scoresheet):
 
     original_img = cv.imread(BC_scoresheet)
-    original_img = cm.resizeImageToScreen(original_img, 1.25, 1.25)
 
     # Prepocess Image
     gray_scale_img = cv.cvtColor(original_img, cv.COLOR_BGR2GRAY)
     
     # Guassian to blur image 
-    kernel_size = max(int(gray_scale_img.shape[0] * 0.005), int(gray_scale_img.shape[1] * 0.005))
-    # Kernel must have odd values because of GaussianBlur
-    if kernel_size % 2 == 0:
-        kernel_size += 1
-    kernel = (kernel_size, kernel_size) #filter size
-    gaussian_img = cv.GaussianBlur(gray_scale_img, kernel, 1)
-
+    gaussian_img = cv.GaussianBlur(gray_scale_img, (17,17), 0)
+ 
     # Adaptive Threshold
     thresholded_img = cv.adaptiveThreshold(gaussian_img, 255,cv.ADAPTIVE_THRESH_MEAN_C, cv.THRESH_BINARY_INV, 21, 10)
+    cv.imwrite("threshold.jpg", thresholded_img)
 
-    # Laplacian
-    laplacian = cv.Laplacian(thresholded_img, cv.CV_64F)
-    laplacian = np.uint8(np.absolute(laplacian))
 
-    contours, _ = cv.findContours(laplacian, cv.RETR_CCOMP, cv.CHAIN_APPROX_SIMPLE)
+    contours, hierarchy = cv.findContours(thresholded_img, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
+    contour_img = cv.drawContours(original_img.copy(), contours, -1, (0,255, 0), thickness=2, lineType=cv.LINE_AA)
+    cv.imwrite("contour.jpg", contour_img)
 
     # Identify Contour with largest 4 sides
     paper_contour, paper_contour_approx = largestQuadrilateralContour(contours)
@@ -108,21 +101,12 @@ def BC_Paper_Extraction(BC_scoresheet):
     
     # Sort points in clockwise order, compute paper width and height
     paper_pts, paper_width, paper_height = processContour(paper_contour_approx[0])
-    
-    if not cm.isRectangle(paper_pts):
-        raise ValueError("The extracted paper is not a proper rectangle.")
-    
+
     # Get the sharp borders
     warped_img = cm.fourPointTransform(original_img, paper_pts)
 
-    # Resize image
-    # warped_img = cm.resizeImageToScreen(warped_img, 2.5, 1.5)
-    warped_img = cv.resize(warped_img, (bc_temp.WIDTH, bc_temp.HEIGHT))
+    cv.imwrite("warped.jpg", warped_img)
 
     return warped_img
 
-# extracted_paper = BC_Paper_Extraction('BC Scoresheet Pictures\BC-1.jpg')
-
-# cv.imshow('Extracted Paper', extracted_paper)
-# cv.waitKey(0)
-# cv.destroyAllWindows()
+extracted_paper = BC_Paper_Extraction('BC Scoresheet Pictures\BC-1.jpg')

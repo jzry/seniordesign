@@ -1,12 +1,13 @@
 # imports
 import cv2 as cv
 
-WIDTH = 760
-HEIGHT = 584
+BC_WIDTH = 760
+BC_HEIGHT = 584
 
 # Global dictionary containing score field coordinates for each rider
-TEMPLATE_FIELDS = {
+BC_TEMPLATE_FIELDS = {
     "Rider1": {
+        "Rider#": (122, 111, 38, 12),
         "recovery": (120, 175, 40, 15),  # (x, y, width, height)
         "hydration": (120, 188, 40, 15),
         "lesions": (120, 203, 40, 15),
@@ -16,6 +17,7 @@ TEMPLATE_FIELDS = {
         "rider1_weight": (108, 450, 40, 15)
     },
     "Rider2": {
+        "Rider#": (265, 114, 38, 12),
         "recovery": (260, 175, 40, 15),  # (x, y, width, height)
         "hydration": (263, 191, 40, 15),
         "lesions": (260, 203, 40, 15),
@@ -25,6 +27,7 @@ TEMPLATE_FIELDS = {
         "rider2_weight": (250, 450, 40, 15)
     },
     "Rider3": {
+        "Rider#": (405, 115, 38, 12),
         "recovery": (400, 180, 40, 15),  # (x, y, width, height)
         "hydration": (400, 193, 40, 15),
         "lesions": (403, 205, 40, 15),
@@ -34,6 +37,7 @@ TEMPLATE_FIELDS = {
         "rider3_weight": (390, 450, 40, 15)
     },
     "Rider4": {
+        "Rider#": (544, 115, 38, 12),
         "recovery": (543, 180, 40, 15),  # (x, y, width, height)
         "hydration": (543, 193, 40, 15),
         "lesions": (545, 205, 40, 15),
@@ -43,6 +47,7 @@ TEMPLATE_FIELDS = {
         "rider4_weight": (535, 450, 40, 15)
     },
     "Rider5": {
+        "Rider#":(685, 115, 38, 12),
         "recovery": (687, 178, 40, 15),  # (x, y, width, height)
         "hydration": (687, 193, 40, 15),
         "lesions": (687, 205, 40, 15),
@@ -53,15 +58,17 @@ TEMPLATE_FIELDS = {
     },
 }
 
+CTR_TEMPLATE_FIELDS = {}
+
 # def crop_field(image, x, y, w, h) :
-#     cv.rectangle(image, (x, y), (x + w, y + h), (0, 255, 0), 2)
+#     cv.rectangle(image, (x, y), (x + w, y + h), (0, 255, 0), 1)
 #     return image
 
 # image = cv.imread('template-image.jpg')
-# image = cv.resize(image, (WIDTH, HEIGHT))
+# image = cv.resize(image, (BC_WIDTH, BC_HEIGHT))
 
 # templated_bc_scores = {}
-# recovery_score = crop_field(image, 676, 333, 40, 15)
+# recovery_score = crop_field(image, 122, 111, 38, 12)
 
 # cv.imshow('Recovery Score', recovery_score)
 # cv.waitKey(0)
