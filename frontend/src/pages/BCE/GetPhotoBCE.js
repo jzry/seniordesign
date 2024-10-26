@@ -3,7 +3,7 @@ import UploadIcon from "../../images/upload.png";
 import BCEExtractedValues from './BCEExtractedValues';
 import '../../styles/CTRHandWritingRecognitionStyles.css';
 
-function GetPhotoBCE({ numberOfRiders }) {
+function GetPhotoBCE({ numberOfRiders, fastestRiderTime, heaviestRiderWeight }) {
   const [imageSrc1, setImageSrc1] = useState(null);
   const [imageSrc2, setImageSrc2] = useState(null);
   const [imageFile1, setImageFile1] = useState(null);
@@ -49,7 +49,6 @@ function GetPhotoBCE({ numberOfRiders }) {
           const results = await new Promise((resolve) => {
             setTimeout(() => {
               const generatedData = [];
-
               for (let i = 0; i < numberOfRiders; i++) {
                 generatedData.push({
                   "Rider number": { value: `L${i + 1}`, confidence: 0.8 + Math.random() * 0.2 },
@@ -62,7 +61,6 @@ function GetPhotoBCE({ numberOfRiders }) {
                   "Weight of this rider": { value: 150 + Math.floor(Math.random() * 50), confidence: 0.7 + Math.random() * 0.3 },
                 });
               }
-
               resolve(generatedData);
             }, 100);
           });
@@ -95,7 +93,13 @@ function GetPhotoBCE({ numberOfRiders }) {
       {currentStep === 3 ? (
         // If we have extracted data for all riders, show the BCEExtractedValues component for each rider
         <div className="bce-results-container">
-          <BCEExtractedValues extractedDataList={extractedDataList} onGoBackToUpload={handleGoBackToUpload} />
+          <BCEExtractedValues
+            extractedDataList={extractedDataList}
+            onGoBackToUpload={handleGoBackToUpload}
+            heaviestRiderWeight={heaviestRiderWeight}
+            fastestRiderTime={fastestRiderTime}
+            numberOfRiders={numberOfRiders}
+          />
         </div>
       ) : (
         <>

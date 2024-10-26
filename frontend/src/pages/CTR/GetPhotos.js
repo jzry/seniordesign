@@ -1,4 +1,5 @@
 import React, { useState, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import UploadIcon from "../../images/upload.png";
 import CTRExtractedValues from './CTRExtractedValues.js';
 import '../../styles/CTRHandWritingRecognitionStyles.css';
@@ -9,7 +10,7 @@ function GetPhotos() {
   const [imageFile, setImageFile] = useState(null); // State to store the image file for API
   const [extractedData, setExtractedData] = useState(null); // State to store extracted values from API
   const fileInputRef = useRef(null); 
-
+  const navigate = useNavigate();
   const handleFileChange = (event) => {
     const file = event.target.files[0];
     if (file) {
@@ -67,6 +68,9 @@ function GetPhotos() {
     }
   };
   
+  const handleGoBack = () => {
+    navigate('/'); // Redirect to the home page
+  };
   
   return (
     <div className="App">
@@ -98,6 +102,7 @@ function GetPhotos() {
                 <img src={UploadIcon} alt="upload icon" />
                 <p>Upload an image</p>
               </label>
+              <button className="go-back-button" onClick={handleGoBack}>Go Back</button>
             </div>
           </div>
         ) : (

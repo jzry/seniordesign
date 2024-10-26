@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import '../../styles/CTRHandWritingRecognitionStyles.css';
 import GetPhotoBCE from './GetPhotoBCE';
 
 function BCE() {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     numberOfScorecards: '',
     numberOfRiders: '',
@@ -19,11 +21,15 @@ function BCE() {
     });
   };
 
+  const handleGoBack = () => {
+    navigate('/');
+  }
+
   const handleContinue = () => {
-    if (formData.numberOfRiders) {
+    if (formData.numberOfRiders && formData.heaviestRiderWeight && formData.fastestRiderTime) {
       setShowGetPhotoBCE(true);
     } else {
-      alert('Please enter the number of riders before continuing.');
+      alert('Please fill in all fields before continuing.');
     }
   };
 
@@ -31,7 +37,11 @@ function BCE() {
     <div className="bce-container">
       {showGetPhotoBCE ? (
         // Render GetPhotoBCE when user clicks continue
-        <GetPhotoBCE numberOfRiders={parseInt(formData.numberOfRiders, 10)} />
+        <GetPhotoBCE
+          numberOfRiders={parseInt(formData.numberOfRiders, 10)}
+          fastestRiderTime={formData.fastestRiderTime}
+          heaviestRiderWeight={parseFloat(formData.heaviestRiderWeight)}
+        />
       ) : (
         <>
           <div className="input-group">
@@ -72,7 +82,7 @@ function BCE() {
           </div>
 
           <div className="button-container">
-            <button className="action-button" onClick={() => console.log("Go Back")}>
+            <button className="action-button" onClick={handleGoBack}>
               Go back
             </button>
             <button className="action-button" onClick={handleContinue}>
