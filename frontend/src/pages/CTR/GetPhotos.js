@@ -1,6 +1,8 @@
 import React, { useState, useRef } from 'react';
 import UploadIcon from "../../images/upload.png";
 import CTRExtractedValues from './CTRExtractedValues.js'; // Import the component
+import '../../styles/CTRHandWritingRecognitionStyles.css';
+
 
 function GetPhotos() {
   const [imageSrc, setImageSrc] = useState(null); // State to store the captured image
