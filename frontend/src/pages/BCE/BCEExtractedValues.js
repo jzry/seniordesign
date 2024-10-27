@@ -59,7 +59,7 @@ function BCEExtractedValues({ extractedDataList, onGoBackToUpload, heaviestRider
   };
 
   if (showResults) {
-    return <BCEResults extractedDataList={extractedDataList} heaviestRiderWeight={heaviestRiderWeight} />;
+    return <BCEResults extractedDataList={extractedDataList} fastestRiderTime={fastestRiderTime} heaviestRiderWeight={heaviestRiderWeight} />;
   }
 
   return (
