@@ -35,7 +35,7 @@ Both functions are designed to handle images with consistent scoresheet layouts,
 
 - Ensure that all dependencies (OpenCV, Numpy, Python3, etc.) are installed.
 
-- Open ScoreSheet_Image.py and ensure that the function call for ```Paper_Segmentation()``` is uncommented and input paramenter for the function to the input filename the image you want to process are set correctly. Modify the lines like ```extracted_paper = BC_Paper_Extraction('BC Scoresheet Pictures\BC-1.jpg')``` conrrectly
+- Open ScoreSheet_Image.py and ensure that the function call for ```Paper_Extraction()``` is uncommented and input paramenter for the function to the input filename the image you want to process are set correctly. Modify the lines like ```extracted_paper = Paper_Extraction('BC Scoresheet Pictures\BC-1.jpg')``` conrrectly
 
 - Run the following commands in the terminal:
 ```Python3 ScoreSheet_Image.py``` to generate a standardized output of the scoresheet image.

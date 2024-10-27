@@ -11,7 +11,7 @@ Returns:
     warped_img (numpy.ndarray): The resulting image of the extracted and 
     warped score sheet with sharp borders.
 """
-def BC_Paper_Extraction(BC_scoresheet):
+def Paper_Extraction(BC_scoresheet):
 
     output_filename = "output.jpg"
 
@@ -115,4 +115,4 @@ def BC_Paper_Extraction(BC_scoresheet):
 
     return scanned
 
-# extracted_paper = BC_Paper_Extraction('BC Scoresheet Pictures\BC-1.jpg')
+# extracted_paper = Paper_Extraction('BC Scoresheet Pictures\BC-1.jpg')
