@@ -14,11 +14,8 @@ The purpose of this image preprocessor is to support Optical Character Recogniti
 # Code Descriptions #
 ---------------------
 
-# BC_Scoresheet_Image.py and CTR_Scoresheet_Image.py
-Both the scripts are designed to extract and standardize a specific type of scoresheet from an image by detecting its corners and applying a perspective transformation to ensure the sheet appears flat and rectangular. It processes the image by converting it to grayscale, applying Gaussian blur, and adaptive thresholding, followed by detecting the largest quadrilateral contour. The script then sorts the corner points in clockwise order and uses helper functions from Common_Methods.py to resize and warp the image for a clear, sharp output. This prepares the image for further processing, such as segmentation or OCR.
-
-# Common_Methods.py
-The Common_Methods.py file contains essential helper functions for image processing tasks, including resizing images to fit screen dimensions, ordering contour points to ensure they follow a specific sequence (top-left, top-right, bottom-right, bottom-left), and applying a four-point perspective transformation to create a top-down view of selected areas. Additionally, it includes functions to verify if a set of points forms a proper rectangle and to determine screen resolution, ensuring images are displayed with optimal dimensions. These utilities support accurate contour detection, transformation, and display, facilitating streamlined processing in various image manipulation workflows.
+# Scoresheet_Image.py
+The scripts are designed to extract and standardize a specific type of scoresheet from an image by detecting its corners and applying a perspective transformation to ensure the sheet appears flat and rectangular. It processes the image by converting it to grayscale, applying Gaussian blur, and adaptive thresholding, followed by detecting the largest quadrilateral contour. The script then sorts the corner points in clockwise order to resize and warp the image for a clear, sharp output. This prepares the image for further processing, such as segmentation or OCR.
 
 # Scorefields.py
 Scorefields.py provides two main functions, BCSegments() and CTRSegments(), which enable targeted extraction of score fields from specific regions of a scoresheet image. These functions support OCR processing by allowing the identification of fields for different score categories: BC and CTR. Each segment is visually marked, saved, and stored in a dictionary, preparing them for further processing and score calculation.
@@ -38,7 +35,7 @@ Both functions are designed to handle images with consistent scoresheet layouts,
 
 - Ensure that all dependencies (OpenCV, Numpy, Python3, etc.) are installed.
 
-- Open BC_ScoreSheet_Image.py or CTR_ScoreSheet_Image.py and ensure that the input filepath and filename for the image you want to process are set correctly. Modify the lines like ```filePath = "BC Scoresheet Pictures/" (or "CTR Scoresheet Pictures/")``` and ```fileName = "BC-1.jpg" (or "CTR-1.jpg)``` respectively. 
+- Open ScoreSheet_Image.py and ensure that the function call for ```Paper_Segmentation()``` is uncommented and input paramenter for the function to the input filename the image you want to process are set correctly. Modify the lines like ```extracted_paper = BC_Paper_Extraction('BC Scoresheet Pictures\BC-1.jpg')``` conrrectly
 
 - Run the following commands in the terminal:
-```Python3 BC_ScoreSheet_Image.py``` or ```Python3 CTR_ScoreSheet_Image.py``` to generate a standardized output of the scoresheet image.
+```Python3 ScoreSheet_Image.py``` to generate a standardized output of the scoresheet image.
