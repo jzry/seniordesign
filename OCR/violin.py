@@ -68,6 +68,13 @@ def validate_rider_number(raw):
         if len(nums) > 3:
             __prune_to_length(nums, confs, 3)
 
+    elif len(nums) == 2:
+
+        if confs[0] < 90.0:
+
+            nums[0] = 'L'
+            confs[0] = 90.0
+
     return (__stringify(nums), __overall_confidence(confs))
 
 
@@ -140,6 +147,8 @@ def __remove_decimals(nums, confs):
             del nums[i]
             del confs[i]
 
+            __reduce_confidence(confs, 1.0)
+
         else:
 
             i += 1
@@ -150,11 +159,16 @@ def __remove_excess_decimals(nums, confs):
     num_decimals = nums.count('.')
 
     # remove trailing decimals
-    while nums[-1] == '.':
+    while len(nums) > 0:
+
+        if nums[-1] != '.':
+            break
 
         del nums[-1]
         del confs[-1]
         num_decimals -= 1
+
+        __reduce_confidence(confs, 1.0)
 
     if num_decimals > 1:
 
@@ -175,6 +189,8 @@ def __remove_excess_decimals(nums, confs):
                     i -= 1
                     best_decimal = i
 
+                    __reduce_confidence(confs, 1.0)
+
                 else:
 
                     del nums[i]
@@ -187,7 +203,9 @@ def __remove_excess_decimals(nums, confs):
 def __enforce_one_digit_score(nums, confs, max_val, min_value):
 
     __prune_to_length(nums, confs, 1)
-    nums[0], confs[0] = __force_into_range(nums[0], confs[0], max_val, min_value)
+
+    if len(nums) == 1:
+        nums[0], confs[0] = __force_into_range(nums[0], confs[0], max_val, min_value)
 
 
 def __enforce_two_digit_score(nums, confs, max_val, min_value):
@@ -199,13 +217,15 @@ def __enforce_two_digit_score(nums, confs, max_val, min_value):
 
         __prune_to_length(nums, confs, 2)
 
-        ones = max_val % 10
-        tens = max_val // 10
+        if len(nums) == 2:
 
-        nums[0], confs[0] = __force_into_range(nums[0], confs[0], tens, 1)
+            ones = max_val % 10
+            tens = max_val // 10
 
-        if nums[0] == tens:
-            nums[1], confs[1] = __force_into_range(nums[1], confs[1], ones)
+            nums[0], confs[0] = __force_into_range(nums[0], confs[0], tens, 1)
+
+            if nums[0] == tens:
+                nums[1], confs[1] = __force_into_range(nums[1], confs[1], ones)
 
 
 
@@ -231,6 +251,8 @@ def __prune_to_length(nums, confs, length):
         del nums[lowest_conf]
         del confs[lowest_conf]
 
+        __reduce_confidence(confs, 5.0)
+
 
 def __trim_until(nums, confs, stop_vals, stop_len=0):
 
@@ -241,6 +263,8 @@ def __trim_until(nums, confs, stop_vals, stop_len=0):
 
         del nums[0]
         del confs[0]
+
+        __reduce_confidence(confs, 5.0)
 
 
 def __force_into_range(num, conf, max_val, min_val=0):
@@ -258,9 +282,19 @@ def __force_into_range(num, conf, max_val, min_val=0):
     return num, conf
 
 
+def __reduce_confidence(confs, less):
+
+    for i in range(len(confs)):
+        confs[i] -= less
+
+
 def __stringify(nums):
     return ''.join(str(e) for e in nums)
 
 def __overall_confidence(confs):
+
+    if len(confs) == 0:
+        return 0.0
+
     return min(confs)
 
