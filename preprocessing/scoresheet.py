@@ -108,12 +108,10 @@ def Paper_Extraction(BC_scoresheet):
     scanned = cv.bitwise_and(warped, warped, mask=mask)
 
     # Save the output image
-    if not cv.imwrite(fileOutPath + output_filename, scanned):
+    if not cv.imwrite(output_filename, scanned):
         print(f"Could not save output image: {fileOutPath + output_filename}")
         return -1
 
     print(f"Processing complete. Output saved to {fileOutPath + output_filename}")
 
     return scanned
-
-# extracted_paper = Paper_Extraction('bc/BC-1.jpg')

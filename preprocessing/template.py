@@ -1,5 +1,5 @@
 # imports
-import cv2 as cv
+# import cv2 as cv
 
 BC_WIDTH = 760
 BC_HEIGHT = 584
@@ -7,7 +7,7 @@ BC_HEIGHT = 584
 # Global dictionary containing score field coordinates for each rider
 BC_TEMPLATE_FIELDS = {
     "Rider1": {
-        "Rider#": (122, 111, 38, 12),
+        "Rider#": (122, 111, 40, 15),
         "recovery": (120, 175, 40, 15),  # (x, y, width, height)
         "hydration": (120, 188, 40, 15),
         "lesions": (120, 203, 40, 15),
@@ -17,7 +17,7 @@ BC_TEMPLATE_FIELDS = {
         "rider1_weight": (108, 450, 40, 15)
     },
     "Rider2": {
-        "Rider#": (265, 114, 38, 12),
+        "Rider#": (265, 110, 40, 15),
         "recovery": (260, 175, 40, 15),  # (x, y, width, height)
         "hydration": (263, 191, 40, 15),
         "lesions": (260, 203, 40, 15),
@@ -27,7 +27,7 @@ BC_TEMPLATE_FIELDS = {
         "rider2_weight": (250, 450, 40, 15)
     },
     "Rider3": {
-        "Rider#": (405, 115, 38, 12),
+        "Rider#": (405, 110, 40, 15),
         "recovery": (400, 180, 40, 15),  # (x, y, width, height)
         "hydration": (400, 193, 40, 15),
         "lesions": (403, 205, 40, 15),
@@ -37,7 +37,7 @@ BC_TEMPLATE_FIELDS = {
         "rider3_weight": (390, 450, 40, 15)
     },
     "Rider4": {
-        "Rider#": (544, 115, 38, 12),
+        "Rider#": (544, 110, 40, 15),
         "recovery": (543, 180, 40, 15),  # (x, y, width, height)
         "hydration": (543, 193, 40, 15),
         "lesions": (545, 205, 40, 15),
@@ -47,14 +47,14 @@ BC_TEMPLATE_FIELDS = {
         "rider4_weight": (535, 450, 40, 15)
     },
     "Rider5": {
-        "Rider#":(685, 115, 38, 12),
+        "Rider#":(687, 110, 40, 15),
         "recovery": (687, 178, 40, 15),  # (x, y, width, height)
         "hydration": (687, 193, 40, 15),
         "lesions": (687, 205, 40, 15),
         "soundness": (687, 230, 40, 15),
         "qual_movement": (687, 245, 40, 15),
         "rider5_time": (677, 333, 40, 15),
-        "rider5_weight": (676, 452, 40, 15)
+        "rider5_weight": (676, 450, 40, 15)
     },
 }
 
