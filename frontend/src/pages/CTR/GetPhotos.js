@@ -1,5 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import UploadIcon from "../../images/upload.png";
 import CTRExtractedValues from './CTRExtractedValues.js';
 import '../../styles/CTRHandWritingRecognitionStyles.css';
@@ -24,11 +25,30 @@ function GetPhotos() {
     setImageFile(null); // Clear the image file
   };
 
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+
+    const formData = new FormData();
+    formData.append('image', imageFile);
+
+    try {
+      const response = await axios.post('http://localhost:8080/upload', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      console.log(response.data);
+    } catch (error) {
+      console.error('Error uploading file:', error);
+    }
+  };
+
+
   const handleContinue = async () => {
     if (imageFile) {
       const formData = new FormData();
       formData.append('image', imageFile);
-  
+
       try {
         // Simulate the API response with a delay
         const result = await new Promise((resolve) => {
@@ -113,7 +133,7 @@ function GetPhotos() {
               <button className="scorecard-button" onClick={handleRetakePhoto}>
                 Retake Image
               </button>
-              <button className="scorecard-button" onClick={handleContinue}>
+              <button className="scorecard-button" onClick={(event) => {handleSubmit(event); handleContinue()}}>
                 Continue
               </button>
             </div>

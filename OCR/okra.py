@@ -1,9 +1,14 @@
-import torch
+from torch.nn.functional import softmax
+from torch import argmax as torch_argmax
 import torchvision.transforms as transforms
+
 import numpy as np
 import cv2
 import matplotlib.pyplot as plt
-from OkraClassifier import OkraClassifier
+from enum import Enum
+from pathlib import Path
+
+from . import OkraClassifier
 
 class DigitGetter:
     """
@@ -11,25 +16,25 @@ class DigitGetter:
 
     Attributes:
         debug_images (bool): Output the input image after the preprocessing stage (default=False)
-        column_skip (int): The number of image columns to be skipped each loop of the scan
+        column_skip (int): The number of image columns to be skipped each loop of the scan (default=5)
+        fraction_padding (float): The minimum fractional percentage of the segmented image's height or width that should be padding (default=0.2)
+        find_decimal_points (bool): Determines whether or not decimal points will appear in the output (default=True)
+        find_minus_signs (bool): Determines whether or not minus signs will appear in the output (default=False)
     """
 
     def __init__(self):
         """Creates a new instance of DigitGetter"""
 
         # Load model
-        self.__model = OkraClassifier()
-        state_dict = torch.load('./okra3.model.weights', weights_only=True)
-        self.__model.load_state_dict(state_dict)
-        self.__model.to('cpu')
+        self.__model = OkraClassifier.get_model(Path(__file__).parent / 'okra.resnet.weights')
         self.__model.eval()
 
         # Set default attributes
         self.debug_images = False
         self.column_skip = 5
-
-        self.segment_padding_hori = 30
-        self.segment_padding_vert = 20
+        self.fraction_padding = 0.2
+        self.find_decimal_points = True
+        self.find_minus_signs = False
 
 
     def __preprocess_image(self, img):
@@ -42,6 +47,10 @@ class DigitGetter:
         Returns:
             numpy.ndarray: The processed image
         """
+
+        # Convert to grayscale
+        if img.ndim == 3 and img.shape[2] == 3:
+            img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
         # Apply a slight blur
         kernel = np.ones((3,3), np.float32) / 50
@@ -58,10 +67,7 @@ class DigitGetter:
             cv2.THRESH_BINARY_INV
         )
 
-        # Show debugging image
-        if self.debug_images:
-            plt.imshow(img)
-            plt.show()
+        self.__show_debug_image(img, 'Pre-processed Image')
 
         return img
 
@@ -97,10 +103,7 @@ class DigitGetter:
         transform = transforms.Compose([transforms.ToTensor(), transforms.Resize((28, 28))])
         img = transform(img)
 
-        # Show debugging image
-        if self.debug_images:
-            plt.imshow(img[0].numpy())
-            plt.show()
+        self.__show_debug_image(img[0].numpy(), 'Digit')
 
         # Adds two dimensions to the 28x28 img so it "fits" into the model.
         # This doesn't actually alter the data; it basically adds extra brackets around the array
@@ -110,10 +113,10 @@ class DigitGetter:
         results = self.__model(img)
 
         # Convert the results into probabilities
-        probabilities = torch.nn.functional.softmax(results[0], dim=0)
+        probabilities = softmax(results[0], dim=0)
 
         # The index with the highest probability is the predicted value
-        digit_value = torch.argmax(probabilities)
+        digit_value = torch_argmax(probabilities)
         confidence = probabilities[digit_value] * 100
 
         return (digit_value.item(), confidence.item())
@@ -148,12 +151,36 @@ class DigitGetter:
                 break
 
             # Get the slice of the image containing the digit
-            digit_segment, current_column = self.__segment_digit(img, digit_pixel)
+            segment, segment_type, current_column = self.__segment_digit(img, digit_pixel)
 
-            # Classify the digit
-            num, conf = self.__digit_from_image(digit_segment)
-            numbers.append(num)
-            confidence.append(conf)
+            if segment_type == SegmentType.DIGIT:
+
+                # Classify the digit
+                num, conf = self.__digit_from_image(segment)
+                numbers.append(num)
+                confidence.append(conf)
+
+            elif segment_type == SegmentType.DECIMAL:
+
+                if self.find_decimal_points:
+                    conf = self.__get_decimal_confidence(segment.shape)
+                    numbers.append('.')
+                    confidence.append(conf)
+
+                self.__show_debug_image(segment, 'Decimal Point')
+
+            elif segment_type == SegmentType.MINUS:
+
+                if self.find_minus_signs:
+                    conf = 100.0 - self.__get_decimal_confidence(segment.shape)
+                    numbers.append('-')
+                    confidence.append(conf)
+
+                self.__show_debug_image(segment, 'Minus Symbol')
+
+            else:
+
+                self.__show_debug_image(segment, 'Ignored')
 
         return (numbers, confidence)
 
@@ -199,71 +226,200 @@ class DigitGetter:
             start_pixel (int, int): The coordinate of the starting pixel
 
         Returns:
-            (numpy.ndarray, int): A tuple with a slice of img containing a single digit and the adjacent column's index
+            (numpy.ndarray, int): A 3-tuple with a slice of img containing a single digit, the type of segment, and the adjacent column's index
         """
 
         bounds = Boundary(start_pixel[1], start_pixel[0], start_pixel[1], start_pixel[0])
 
-        # Find the actual boundary of the digit
-        self.__fill_digit(img, bounds, start_pixel)
+        # Find the actual boundary of the digit.
+        # 'bounds' will be updated with the correct values.
+        self.__trace_digit(img, bounds, start_pixel)
 
         # The next column will be the column to the right of the segment
         next_column = bounds.right + 1
 
-        # Add padding around the digit
-        bounds.top -= self.segment_padding_vert
-        bounds.right += self.segment_padding_hori
-        bounds.bottom += self.segment_padding_vert
-        bounds.left -= self.segment_padding_hori
+        # Figure out whats in this segment based on its size and shape
+        segment_type = self.__get_segment_type(bounds.shape(), img.shape)
 
-        return (bounds.get_slice(img), next_column)
+        # Copy the box containing the digit from the image
+        digit_segment = bounds.get_slice(img)
+
+        # Only apply padding if this is a digit
+        if segment_type == SegmentType.DIGIT:
+            digit_segment = self.__apply_padding(digit_segment)
+
+        return (digit_segment, segment_type, next_column)
 
 
-    def __fill_digit(self, img, bounds, pixel):
+    def __trace_digit(self, img, bounds, pixel):
         """
-        A recursive, space fill, search algorithm thing...
+        An edge tracing algorithm that finds the smallest box that fits a digit
 
         Parameters:
             img (numpy.ndarray): An image
-            bounds (Boundary): The currently known boundary of the digit
-            pixel (int, int): The coordinate of the current pixel
+            bounds (Boundary): The object to store the bounds of the digit
+            pixel (int, int): The coordinate of the starting pixel
         """
 
-        x = pixel[0]
-        y = pixel[1]
+        def move(direction):
 
-        # Check if we're in bounds
-        if x < 0 or x >= img.shape[1]:
-            return
-        if y < 0 or y >= img.shape[0]:
-            return
+            move_val = directions[direction % len(directions)]
+            return (current_pixel[0] + move_val[0], current_pixel[1] + move_val[1])
 
-        # Check if this is part of the background
-        if img[y,x] == 0:
-            return
+        def in_bounds(location):
 
-        # Check if we've been here before
-        if img[y,x] == 254:
-            return
+            if location[0] < 0 or location[0] >= img.shape[1]:
+                return False
+            if location[1] < 0 or location[1] >= img.shape[0]:
+                return False
 
-        # Mark this spot (Changing the color by 1 shouldn't hurt anything)
-        img[y,x] = 254
+            return True
 
-        # Adjust the boundary
-        if x > bounds.right:
-            bounds.right = x
-        elif x < bounds.left:
-            bounds.left = x
+        def is_white(location):
 
-        if y > bounds.bottom:
-            bounds.bottom = y
-        elif y < bounds.top:
-            bounds.top = y
+            return img[location[1], location[0]] == 255
 
-        # Move to the surrounding pixels
-        for move_x in [-1, 0, 1]:
-            for move_y in [-1, 0, 1]:
-                self.__fill_digit(img, bounds, (x + move_x, y + move_y))
+        def update_bounds(location):
+
+            if location[0] > bounds.right:
+                bounds.right = location[0]
+            elif location[0] < bounds.left:
+                bounds.left = location[0]
+
+            if location[1] > bounds.bottom:
+                bounds.bottom = location[1]
+            elif location[1] < bounds.top:
+                bounds.top = location[1]
+
+        def get_start_direction(direction):
+
+            direction = direction % len(directions)
+
+            if direction < 2:
+                return 6        # Left
+            elif direction < 4:
+                return 0        # Up
+            elif direction < 6:
+                return 2        # Right
+            else:
+                return 4        # Down
+
+        #                .         .                                                 .
+        #                |        /       __.      \       |        /      .__        \
+        #                                           '      '       '
+        directions = [(0, -1), (1, -1), (1, 0), (1, 1), (0, 1), (-1, 1), (-1, 0), (-1, -1)]
+
+        start_direction = 0    # Up
+
+        current_pixel = pixel
+
+        while True:
+
+            for next_direction in range(start_direction, start_direction + len(directions)):
+
+                next_pixel = move(next_direction)
+
+                if in_bounds(next_pixel):
+                    if is_white(next_pixel):
+
+                        update_bounds(next_pixel)
+                        start_direction = get_start_direction(next_direction)
+                        current_pixel = next_pixel
+                        break
+
+            if current_pixel == pixel:
+                break
+
+
+    def __get_segment_type(self, segment_shape, img_shape):
+        """
+        Determines the contents of a segment based on its size and shape
+
+        Parameters:
+            segment_shape (int, int): The shape of the segment
+            img_shape (int, int): The shape of the original image
+
+        Returns:
+            SegmentType: The type of the segment
+        """
+
+        # Is this tall enough to be a digit?
+        if segment_shape[0] >= (img_shape[0] / 3):
+            return SegmentType.DIGIT
+
+        # Is this really small?
+        if segment_shape[0] < 10 and segment_shape[1] < 10:
+            return SegmentType.NOISE
+
+        # Is this flat and long?
+        if segment_shape[1] >= segment_shape[0] * 1.5:
+            return SegmentType.MINUS
+
+        # It's probably a decimal if we reach here
+        return SegmentType.DECIMAL
+
+
+    def __apply_padding(self, img):
+        """
+        Adds padding around an image. The resulting image will be very close to being square in shape
+
+        Parameters:
+            img (numpy.ndarray): The image to pad
+
+        Returns:
+            numpy.ndarray: The padded image
+        """
+
+        fixed_padding = int(max(img.shape) * self.fraction_padding)
+
+        # This will be the size of the image after padding
+        largest_dim = max(img.shape) + 2 * fixed_padding
+
+        # This is how much padding will be needed to make the image a square
+        dynamic_padding = int((largest_dim - min(img.shape)) / 2)
+
+        dynamic_pad = (dynamic_padding, dynamic_padding)
+        fixed_pad = (fixed_padding, fixed_padding)
+
+        # If the y dimension is smaller the x dimension
+        #     then use the dynamic pad on the y dimension (add more rows than columns)
+        #
+        # If the x dimension is smaller the y dimension
+        #     then use the dynamic pad on the x dimension (add more columns than rows)
+        #
+        if (img.shape[0] <= img.shape[1]):
+            img = np.pad(img, (dynamic_pad, fixed_pad))
+        else:
+            img = np.pad(img, (fixed_pad, dynamic_pad))
+
+        return img
+
+
+    def __get_decimal_confidence(self, segment_shape):
+        """
+        Computes a confidence value for a decimal based on its eccentricity
+
+        Parameters:
+            segment_shape (int, int): The shape of the image segment containing the decimal point
+
+        Returns:
+            float: The confidence as a percentage
+        """
+
+        # Divide the smaller dimension by the larger dimension
+        # Multiply by 100 to convert to percentage
+        percentage = 100.0 * min(segment_shape) / max(segment_shape)
+
+        return percentage
+
+
+    def __show_debug_image(self, img, title):
+        """Helper function to display a matplotlib plot of an image"""
+
+        if self.debug_images:
+            plt.imshow(img)
+            plt.title(title)
+            plt.show()
 
 
 class Boundary:
@@ -284,6 +440,10 @@ class Boundary:
         self.right = right
         self.bottom = bottom
         self.left = left
+
+
+    def shape(self):
+        return (self.bottom - self.top + 1, self.right - self.left + 1)
 
 
     def get_slice(self, img):
@@ -339,4 +499,21 @@ class Boundary:
 
         if self.left >= img.shape[1]:
             self.left = img.shape[1] - 1
+
+
+class SegmentType(Enum):
+    """
+    An enumerated type to differentiate between digits, minus symbols, decimals, and noise
+
+    Values:
+        NOISE = 0   : A few disconnected pixels that should be ignored
+        DIGIT = 1   : A digit that should be passed to the classifier
+        MINUS = 2   : A minus symbol that will likely be ignored
+        DECIMAL = 3 : A decimal point
+    """
+
+    NOISE = 0
+    DIGIT = 1
+    MINUS = 2
+    DECIMAL = 3
 

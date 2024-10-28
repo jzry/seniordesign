@@ -1,29 +1,23 @@
-import torch.nn as nn
+from torch.nn import Conv2d
+from torch import load as torch_load
+from torch import device as torch_device
+from torchvision.models import resnet18
 
-class OkraClassifier(nn.Module):
-    """
-    This is just a LeNet5 model
-    
-    """
-    
-    def __init__(self):
-        super().__init__()
-        self.feature = nn.Sequential(
-            nn.Conv2d(in_channels=1, out_channels=6, kernel_size=5, stride=1, padding=2),
-            nn.Tanh(),
-            nn.AvgPool2d(kernel_size=2, stride=2),
-            nn.Conv2d(in_channels=6, out_channels=16, kernel_size=5, stride=1),
-            nn.Tanh(),
-            nn.AvgPool2d(kernel_size=2, stride=2),
+
+def get_model(weights_file=None, device='cpu'):
+
+    model = resnet18(num_classes=10)
+    model.conv1 = Conv2d(1, 64, kernel_size=(7, 7), stride=(2, 2), padding=(3, 3), bias=False)
+
+    if weights_file is not None:
+        state_dict = torch_load(
+            weights_file,
+            weights_only=True,
+            map_location=torch_device(device)
         )
-        self.classifier = nn.Sequential(
-            nn.Flatten(),
-            nn.Linear(in_features=16*5*5, out_features=120),
-            nn.Tanh(),
-            nn.Linear(in_features=120, out_features=84),
-            nn.Tanh(),
-            nn.Linear(in_features=84, out_features=10),
-        )
-    
-    def forward(self, x):
-        return self.classifier(self.feature(x))
+        model.load_state_dict(state_dict)
+
+    model.to(device)
+
+    return model
+
