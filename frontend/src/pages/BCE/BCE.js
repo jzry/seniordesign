@@ -66,7 +66,7 @@ function BCE() {
             <label>Fastest rider time:</label>
             <input
               type="text"
-              placeholder="MM:SS" // Placeholder to indicate format
+              placeholder="HMM" // Placeholder to indicate format
               value={formData.fastestRiderTime}
               onChange={(e) => handleInputChange('fastestRiderTime', e)}
             />

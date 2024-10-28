@@ -4,7 +4,7 @@ import '../../styles/CTRHandWritingRecognitionStyles.css';
 function BCEResults({ extractedDataList, fastestRiderTime, heaviestRiderWeight }) {
   const calculateVeterinaryScore = (data) => {
     const { Recovery, Hydration, Lesions, Soundness, 'Qual Mvmt': QualMvmt } = data;
-    return (parseInt(Recovery.value, 10) + parseInt(Hydration.value, 10) + parseInt(Lesions.value, 10) + parseInt(Soundness.value, 10) + parseInt(QualMvmt.value, 10)) * 10;
+    return (parseFloat(Recovery.value, 10) + parseFloat(Hydration.value, 10) + parseFloat(Lesions.value, 10) + parseFloat(Soundness.value, 10) + parseFloat(QualMvmt.value, 10)) * 10;
   };
 
   const calculateWeightScore = (weight) => {
