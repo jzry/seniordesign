@@ -2,7 +2,7 @@ import torch
 import torchvision
 from torch.utils.data import DataLoader
 import torchvision.transforms as transforms
-import OkraClassifier
+from OCR import OkraClassifier
 
 
 ###### Hyperparameters ######

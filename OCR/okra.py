@@ -26,7 +26,7 @@ class DigitGetter:
         """Creates a new instance of DigitGetter"""
 
         # Load model
-        self.__model = OkraClassifier.get_model(Path(__file__).parent / 'okra.resnet.weights')
+        self.__model = OkraClassifier.get_model(Path(__file__).parent / 'weights' / 'okra.resnet.weights')
         self.__model.eval()
 
         # Set default attributes

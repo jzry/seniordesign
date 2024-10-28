@@ -1,6 +1,13 @@
-# Okra Digit-OCR Package
+# OCR Package
 
-This is a package to read handwritten digits from images
+This is a package to read handwritten digits from scoresheet images
+
+## Modules
+
+There are two modules:
+
+1. **okra** - Contains the DigitGetter class that handles OCR.
+1. **violin** - Contains validation/processing functions for raw OCR output.
 
 ## Configuration
 
@@ -41,7 +48,16 @@ numbers, confidence = dg.image_to_digits(*** Your image data ***)
 
 The return values is a tuple that contains two lists. The first list contains
 the digit values, and the second list contains confidence percentages for those
-values.
+values. Also, the *violin* package contains functions for automatically handling
+raw OCR output:
+
+```
+from OCR.violin import validate_score
+
+raw_output = dg.image_to_digits(*** Image of score field ***)
+
+output_string, overall_confidence = validate_score(raw_output, max=10, min=1)
+```
 
 ## How It Works
 

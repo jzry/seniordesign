@@ -18,7 +18,7 @@ dg = okra.DigitGetter()
 # .\neat_pencil.jpg
 # .\sloppy_pencil.jpg
 #
-img = cv2.imread(Path(__file__).parent / 'Test Images' / 'neat_pen.jpg', 0) # 0 is for monochrome
+img = cv2.imread(Path(__file__).parent.parent / 'Test Images' / 'neat_pen.jpg', 0) # 0 is for monochrome
 
 numbers, confidence = dg.image_to_digits(img)
 
