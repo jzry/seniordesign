@@ -110,3 +110,4 @@ class DigitGetterTestCase(unittest.TestCase):
         num, conf = self.dg.digit_from_image(non_blank_img)
         self.assertIsNotNone(num, 'Non-blank segment identified as blank')
 
+
