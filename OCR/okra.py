@@ -277,7 +277,7 @@ class DigitGetter:
 
         def is_white(location):
 
-            return img[location[1], location[0]] == 255
+            return img[location[1], location[0]] != 0
 
         def update_bounds(location):
 
