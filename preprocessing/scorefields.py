@@ -69,7 +69,7 @@ def BCSegments(image):
             cv.imwrite(field_path, field_image)
 
             # mark the fields on the image
-            field_image = cv.rectangle(marked_image, (x, y), (x + w, y + h), (255, 0, 0), 2)
+            marked_image = cv.rectangle(marked_image, (x, y), (x + w, y + h), (255, 0, 0), 1)
             '''------------------------------------------------------------------'''
 
             # Save the extracted field image
