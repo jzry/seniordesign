@@ -53,23 +53,22 @@ class DigitGetter:
         if img.ndim == 3 and img.shape[2] == 3:
             img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
+        # If there is a number in the image, there
+        # will be a large difference between the
+        # brightest pixel and the darkest pixel
         if (img.max() - img.min() <= self.blank_threshold):
             raise Exception
 
         # Apply a slight blur
-        kernel = np.ones((3,3), np.float32) / 50
-        img = cv2.filter2D(img, -1, kernel)
-
-        # Calculate a threshold value based on the darkest and brightest pixels
-        threshold = int(img.min() + (img.max() / 2))
+        img = cv2.bilateralFilter(img, 5, self.blank_threshold, 20)
 
         # Apply threshold
         _, img = cv2.threshold(
-            img,
-            threshold,
-            255,
-            cv2.THRESH_BINARY_INV
+            img, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU
         )
+
+        # Perform dilation to make digits stand out better
+        img = cv2.dilate(img, (3, 3), iterations=1)
 
         self.__show_debug_image(img, 'Pre-processed Image')
 
