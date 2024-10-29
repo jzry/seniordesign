@@ -1,60 +1,60 @@
 # imports
 # import cv2 as cv
 
-BC_WIDTH = 760
-BC_HEIGHT = 584
+BC_WIDTH = 2839
+BC_HEIGHT = 2103
 
 # Global dictionary containing score field coordinates for each rider
 BC_TEMPLATE_FIELDS = {
     "Rider1": {
-        "Rider#": (122, 111, 40, 15),
-        "recovery": (120, 175, 40, 15),  # (x, y, width, height)
-        "hydration": (120, 188, 40, 15),
-        "lesions": (120, 203, 40, 15),
-        "soundness": (120, 230, 40, 15),
-        "qual_movement": (120, 243, 40, 15),
-        "rider1_time": (108, 330, 40, 15),
-        "rider1_weight": (108, 450, 40, 15)
+        "Rider#": (456, 399, 149, 43),
+        "recovery": (448, 642, 149, 43),  # (x, y, width, height)
+        "hydration": (448, 690, 149, 43),
+        "lesions": (448, 736, 149, 43),
+        "soundness": (448, 828, 149, 43),
+        "qual_movement": (448, 882, 149, 43),
+        "rider_time": (403, 1204, 149, 43),
+        "rider_weight": (403, 1622, 149, 43)
     },
     "Rider2": {
-        "Rider#": (265, 110, 40, 15),
-        "recovery": (260, 175, 40, 15),  # (x, y, width, height)
-        "hydration": (263, 191, 40, 15),
-        "lesions": (260, 203, 40, 15),
-        "soundness": (260, 230, 40, 15),
-        "qual_movement": (260, 243, 40, 15),
-        "rider2_time": (250, 330, 40, 15),
-        "rider2_weight": (250, 450, 40, 15)
+        "Rider#": (988, 407, 149, 43),
+        "recovery": (971, 642, 149, 43),  # (x, y, width, height)
+        "hydration": (982, 692, 149, 43),
+        "lesions": (971, 742, 149, 43),
+        "soundness": (971, 834, 149, 43),
+        "qual_movement": (971, 882, 149, 43),
+        "rider_time": (934, 1203, 149, 43),
+        "rider_weight": (936, 1618, 149, 43)
     },
     "Rider3": {
-        "Rider#": (405, 110, 40, 15),
-        "recovery": (400, 180, 40, 15),  # (x, y, width, height)
-        "hydration": (400, 193, 40, 15),
-        "lesions": (403, 205, 40, 15),
-        "soundness": (400, 230, 40, 15),
-        "qual_movement": (400, 245, 40, 15),
-        "rider3_time": (390, 333, 40, 15),
-        "rider3_weight": (390, 450, 40, 15)
+        "Rider#": (1513, 409, 149, 43),
+        "recovery": (1494, 648, 149, 43),  # (x, y, width, height)
+        "hydration": (1494, 695, 149, 43),
+        "lesions": (1505, 742, 149, 43),
+        "soundness": (1494, 837, 149, 43),
+        "qual_movement": (1494, 883, 149, 43),
+        "rider_time": (1462, 1199, 149, 43),
+        "rider_weight": (1464, 1615, 149, 43)
     },
     "Rider4": {
-        "Rider#": (544, 110, 40, 15),
-        "recovery": (543, 180, 40, 15),  # (x, y, width, height)
-        "hydration": (543, 193, 40, 15),
-        "lesions": (545, 205, 40, 15),
-        "soundness": (545, 230, 40, 15),
-        "qual_movement": (545, 245, 40, 15),
-        "rider4_time": (535, 333, 40, 15),
-        "rider4_weight": (535, 450, 40, 15)
+        "Rider#": (2032, 400, 149, 43),
+        "recovery": (2028, 644, 149, 43),  # (x, y, width, height)
+        "hydration": (2028, 692, 149, 43),
+        "lesions": (2036, 741, 149, 43),
+        "soundness": (2036, 834, 149, 43),
+        "qual_movement": (2036, 882, 149, 43),
+        "rider_time": (1999, 1199, 149, 43),
+        "rider_weight": (1999, 1615, 149, 43)
     },
     "Rider5": {
-        "Rider#":(687, 110, 40, 15),
-        "recovery": (687, 178, 40, 15),  # (x, y, width, height)
-        "hydration": (687, 193, 40, 15),
-        "lesions": (687, 205, 40, 15),
-        "soundness": (687, 230, 40, 15),
-        "qual_movement": (687, 245, 40, 15),
-        "rider5_time": (677, 333, 40, 15),
-        "rider5_weight": (676, 450, 40, 15)
+        "Rider#":(2562, 398, 149, 43),
+        "recovery": (2562, 641, 149, 43),  # (x, y, width, height)
+        "hydration": (2562, 689, 149, 43),
+        "lesions": (2562, 736, 149, 43),
+        "soundness": (2562, 828, 149, 43),
+        "qual_movement": (2562, 880, 149, 43),
+        "rider_time": (2525, 1199, 149, 43),
+        "rider_weight": (2520, 1620, 149, 43)
     },
 }
 

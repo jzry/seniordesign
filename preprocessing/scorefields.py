@@ -1,5 +1,6 @@
 # Imports
 import os
+import numpy as np
 import cv2 as cv
 import template
 from scoresheet import Paper_Extraction
@@ -28,7 +29,17 @@ def BCSegments(image):
     # extracted_image = cv.imread(image)
     extracted_image = Paper_Extraction(image)
 
-    extracted_image = cv.resize(extracted_image, (template.BC_WIDTH, template.BC_HEIGHT))
+    # # Check if the result is an integer indicating failure
+    if isinstance(extracted_image, int) and extracted_image == -1:
+        print("Error: Cannot read image file after extraction.")
+        return -1
+    else:
+        # Get, Check and Resize(if needed) dimensions of extracted_image
+        height, width = extracted_image.shape[:2]
+        if(height != template.BC_HEIGHT and width != template.BC_WIDTH) :
+            extracted_image = cv.resize(extracted_image, (template.BC_WIDTH, template.BC_HEIGHT))
+
+    
     
     '''Just for the sake of verfiy the output
     ------------------------------------------------------------------'''
@@ -58,7 +69,7 @@ def BCSegments(image):
             cv.imwrite(field_path, field_image)
 
             # mark the fields on the image
-            field_image = cv.rectangle(marked_image, (x, y), (x + w, y + h), (255, 0, 0), 1)
+            field_image = cv.rectangle(marked_image, (x, y), (x + w, y + h), (255, 0, 0), 2)
             '''------------------------------------------------------------------'''
 
             # Save the extracted field image

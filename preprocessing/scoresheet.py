@@ -56,7 +56,7 @@ def Paper_Extraction(BC_scoresheet):
                 break
 
     if document_contour is None:
-        print("Document contour not found!")
+        print("Error: Document contour not found")
         return -1
     
     # Map the points to the original image size
@@ -109,9 +109,9 @@ def Paper_Extraction(BC_scoresheet):
 
     # Save the output image
     if not cv.imwrite(output_filename, scanned):
-        print(f"Could not save output image: {fileOutPath + output_filename}")
+        print(f"Error: Could not save output image: {fileOutPath + output_filename}")
         return -1
 
-    print(f"Processing complete. Output saved to {fileOutPath + output_filename}")
+    print(f"Success: Processing complete. Output saved to {fileOutPath + output_filename}!")
 
     return scanned
