@@ -35,6 +35,7 @@ class DigitGetter:
         self.fraction_padding = 0.2
         self.find_decimal_points = True
         self.find_minus_signs = False
+        self.blank_threshold = 120
 
 
     def __preprocess_image(self, img):
@@ -51,6 +52,9 @@ class DigitGetter:
         # Convert to grayscale
         if img.ndim == 3 and img.shape[2] == 3:
             img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+
+        if (img.max() - img.min() <= self.blank_threshold):
+            raise Exception
 
         # Apply a slight blur
         kernel = np.ones((3,3), np.float32) / 50
@@ -83,7 +87,11 @@ class DigitGetter:
             (int, float): A tuple with the digit's value and the confidence as a percentage
         """
 
-        img = self.__preprocess_image(img)
+        try:
+            img = self.__preprocess_image(img)
+        except:
+            return (None, None)
+
         return self.__digit_from_image(img)
 
 
@@ -133,7 +141,10 @@ class DigitGetter:
             (list(int), list(float)): A tuple with a list of digit values and a list of confidences as percentages
         """
 
-        img = self.__preprocess_image(img)
+        try:
+            img = self.__preprocess_image(img)
+        except:
+            return ([], [])
 
         # The return values
         numbers = []
