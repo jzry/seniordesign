@@ -4,6 +4,9 @@
 BC_WIDTH = 2839
 BC_HEIGHT = 2103
 
+CTR_WIDTH = 1971
+CTR_HEIGHT = 3169
+
 # Global dictionary containing score field coordinates for each rider
 BC_TEMPLATE_FIELDS = {
     "Rider1": {
@@ -58,18 +61,23 @@ BC_TEMPLATE_FIELDS = {
     },
 }
 
-CTR_TEMPLATE_FIELDS = {}
-
-# def crop_field(image, x, y, w, h) :
-#     cv.rectangle(image, (x, y), (x + w, y + h), (0, 255, 0), 1)
-#     return image
-
-# image = cv.imread('template-image.jpg')
-# image = cv.resize(image, (BC_WIDTH, BC_HEIGHT))
-
-# templated_bc_scores = {}
-# recovery_score = crop_field(image, 122, 111, 38, 12)
-
-# cv.imshow('Recovery Score', recovery_score)
-# cv.waitKey(0)
-# cv.destroyAllWindows()
+CTR_TEMPLATE_FIELDS = {
+    "initial_pulse_before": (1608, 1227, 115, 95), # (x, y, width, height)
+    "initial_pulse_after": (1608, 1337, 120, 120),
+    "mucous_membrane": (1607, 1587, 115, 42),
+    "capillary_refill": (1607, 1630, 115, 40),
+    "skin_pinch": (1607, 1674, 115, 40),
+    "jugular_vein_refill": (1607, 1721, 115, 40),
+    "gut_sounds": (1607, 1768, 115, 40),
+    "anal_tone": (1607, 1925, 115, 88),
+    "muscle_tone": (1606, 2020, 115, 40),
+    "unwillingness_to_trot": (1606, 2071, 115, 40),
+    "leg_injuries": (1607, 2120, 115, 120),
+    "injury_interference": (1607, 2255, 115, 55),
+    "lameness_grade1": (1607, 2340, 115, 80),
+    "lameness_grade2": (1607, 2430, 115, 44),
+    "back_stress": (1607, 2585, 115, 62),
+    "tack_area": (1607, 2679, 115, 65),
+    "hold_on_trail": (1728, 2777, 108, 40),
+    "time_penalty": (1728, 2824, 108, 50)
+}
