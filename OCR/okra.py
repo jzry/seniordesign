@@ -358,7 +358,7 @@ class DigitGetter:
             return SegmentType.DIGIT
 
         # Is this really small?
-        if segment_shape[0] < 10 and segment_shape[1] < 10:
+        if segment_shape[0] < (img_shape[0] / 7) or segment_shape[1] < (img_shape[0] / 7):
             return SegmentType.NOISE
 
         # Is this flat and long?
