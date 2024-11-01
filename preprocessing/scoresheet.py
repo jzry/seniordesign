@@ -3,12 +3,12 @@ import cv2 as cv
 import numpy as np
 
 """
-Function Brief: Extract and warp a score sheet from an input image by detecting 
+Function Brief: Extract and warp a score sheet from an input image by detecting
 the largest quadrilateral contour and applying a perspective transformation.
 Parameters:
     BC_scoresheet (str): The file path of the input image containing the score sheet.
 Returns:
-    warped_img (numpy.ndarray): The resulting image of the extracted and 
+    warped_img (numpy.ndarray): The resulting image of the extracted and
     warped score sheet with sharp borders.
 """
 def Paper_Extraction(BC_scoresheet):
@@ -16,7 +16,7 @@ def Paper_Extraction(BC_scoresheet):
     fileOutPath = "output/"
     output_filename = "output_extraction.jpg"
 
-    original_img = cv.imread(BC_scoresheet)
+    original_img = cv.imdecode(np.frombuffer(BC_scoresheet, dtype=np.uint8), cv.IMREAD_COLOR)
     if original_img is None:
         print(f"Cannot read image file: {BC_scoresheet}")
         return -1
@@ -36,7 +36,7 @@ def Paper_Extraction(BC_scoresheet):
     # Morphological operations to close gaps
     kernel = cv.getStructuringElement(cv.MORPH_RECT, (5, 5))
     closed = cv.morphologyEx(edged, cv.MORPH_CLOSE, kernel)
- 
+
     # Find contours
     contours, _ = cv.findContours(closed, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
 
@@ -58,7 +58,7 @@ def Paper_Extraction(BC_scoresheet):
     if document_contour is None:
         print("Error: Document contour not found")
         return -1
-    
+
     # Map the points to the original image size
     inverse_scale = 1.0 / scale
     document_contour = np.array([np.array([int(pt[0][0] * inverse_scale), int(pt[0][1] * inverse_scale)]) for pt in document_contour])

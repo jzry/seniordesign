@@ -33,6 +33,7 @@ import cv2
 # from scoresheet import Paper_Extraction # used to extract paper from original.
 import scorefields
 import horizontal_remover
+from pathlib import Path
 
 filePath = 'bc/'
 fileName = "BC-1.jpg"
@@ -42,21 +43,29 @@ fileName = "BC-1.jpg"
 # BCSegments and CTRSegments already calls this function inside it.
 ###################################################################
 
-# extracted_paper = Paper_Extraction(filePath + fileName)
+# with open(Path(filePath) / fileName, 'rb') as image_file:
+
+#     buffer = image_file.read()
+#     extracted_paper = Paper_Extraction(buffer)
 
 ####################################
 # CREATE THE DICTIONARY FOR THE BCE.
 ####################################
 
-extracted_fields = {}
-extracted_fields = scorefields.BCSegments(filePath + fileName)
+with open(Path(filePath) / fileName, 'rb') as image_file:
+
+    buffer = image_file.read()
+    extracted_fields = scorefields.BCSegments(buffer)
+
 
 ####################################
 # CREATE THE DICTIONARY FOR THE CTR.
 ####################################
 
-# extracted_fields = {}
-# extracted_fields = scorefields.CTRSegments(filePath + fileName)
+# with open(Path(filePath) / fileName, 'rb') as image_file:
+
+#     buffer = image_file.read()
+#     extracted_fields = scorefields.CTRSegments(buffer)
 
 
 ######################################################################################

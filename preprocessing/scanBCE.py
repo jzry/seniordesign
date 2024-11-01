@@ -38,7 +38,10 @@ def insert_into_dict(dictionary, rider, field, output):
 with redirect_stdout(open(devnull, 'w')):
 
     # Obtain the score fields
-    extracted_fields = BCSegments(Path('bc') / 'BC-1.jpg')
+    with open(Path('bc') / 'BC-1.jpg', 'rb') as image_file:
+
+        buffer = image_file.read()
+        extracted_fields = BCSegments(buffer)
 
 
     # Prepare the OCR

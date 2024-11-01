@@ -1,5 +1,6 @@
-__pycache__/
-intermediary_fields/
+__pycache__
+intermediary_fields
+extracted_fields
 
 example.jpg
 outfield.jpg
