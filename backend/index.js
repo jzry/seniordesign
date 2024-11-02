@@ -3,6 +3,8 @@ const fileUpload = require('express-fileupload')
 const cors = require('cors');
 const cookieParser = require('cookie-parser')
 const path = require('path')
+const pyconnect = require('./pyconnect')
+
 
 // Get the fake API data simulating the affects of the OCR
 const fakeData = require('./API-Tests/fake-ctr-json.json')
@@ -103,7 +105,7 @@ app.get('/ctr', (req, res) => {
 })
 
 // Retrieve the uploaded image from the handleSubmit function in frontend/src/pages/crt/getPhotos.js
-app.post('/upload', validateCTRImage, (req, res) => {
+app.post('/upload', validateCTRImage, async (req, res) => {
   console.log('Upload endpoint hit');  // Log this to see if request is received
 
     let sampleFile;
@@ -131,13 +133,13 @@ app.post('/upload', validateCTRImage, (req, res) => {
 
   console.log('File received:', sampleFile.name);  // Log file details
 
-  // Use the mv() method to place the file somewhere on your server
-  sampleFile.mv(uploadPath, function (err) {
-    if (err)
-      return res.status(500).send(err);
+  // Send the image to the Python code to be processed
+  output = await pyconnect.processBCE(sampleFile)
 
-    res.send('File uploaded!');
-  });
+  if (output.error)
+    res.status(500)
+
+  res.json(output)
 });
 
 
