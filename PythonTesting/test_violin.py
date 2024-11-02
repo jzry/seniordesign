@@ -44,6 +44,15 @@ class ViolinTestCase(unittest.TestCase):
                 out = violin.validate_score(integer_case[0], max_score)
                 self.assertEqual(out, integer_case[2], f'Integer case {case_num}, max_score={max_score}')
 
+                # Skip the next test for the first case
+                if case_num == 0:
+                    continue
+
+                out = violin.validate_score(integer_case[0], max_score, 1)
+                self.assertEqual(out, integer_case[2],
+                    f'Integer case {case_num}, max_score={max_score}, min_score=1'
+                )
+
         for case_num, float_case in enumerate(float_cases):
 
             for max_score in float_case[1]:

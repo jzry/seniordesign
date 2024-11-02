@@ -35,6 +35,7 @@ class DigitGetter:
         self.fraction_padding = 0.2
         self.find_decimal_points = True
         self.find_minus_signs = False
+        self.blank_threshold = 120
 
 
     def __preprocess_image(self, img):
@@ -52,20 +53,22 @@ class DigitGetter:
         if img.ndim == 3 and img.shape[2] == 3:
             img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
-        # Apply a slight blur
-        kernel = np.ones((3,3), np.float32) / 50
-        img = cv2.filter2D(img, -1, kernel)
+        # If there is a number in the image, there
+        # will be a large difference between the
+        # brightest pixel and the darkest pixel
+        if (img.max() - img.min() <= self.blank_threshold):
+            raise Exception
 
-        # Calculate a threshold value based on the darkest and brightest pixels
-        threshold = int(img.min() + (img.max() / 2))
+        # Apply a slight blur
+        img = cv2.bilateralFilter(img, 5, self.blank_threshold, 20)
 
         # Apply threshold
         _, img = cv2.threshold(
-            img,
-            threshold,
-            255,
-            cv2.THRESH_BINARY_INV
+            img, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU
         )
+
+        # Perform dilation to make digits stand out better
+        img = cv2.dilate(img, (3, 3), iterations=1)
 
         self.__show_debug_image(img, 'Pre-processed Image')
 
@@ -83,7 +86,11 @@ class DigitGetter:
             (int, float): A tuple with the digit's value and the confidence as a percentage
         """
 
-        img = self.__preprocess_image(img)
+        try:
+            img = self.__preprocess_image(img)
+        except:
+            return (None, None)
+
         return self.__digit_from_image(img)
 
 
@@ -133,7 +140,10 @@ class DigitGetter:
             (list(int), list(float)): A tuple with a list of digit values and a list of confidences as percentages
         """
 
-        img = self.__preprocess_image(img)
+        try:
+            img = self.__preprocess_image(img)
+        except:
+            return ([], [])
 
         # The return values
         numbers = []
@@ -277,7 +287,7 @@ class DigitGetter:
 
         def is_white(location):
 
-            return img[location[1], location[0]] == 255
+            return img[location[1], location[0]] != 0
 
         def update_bounds(location):
 
@@ -348,7 +358,7 @@ class DigitGetter:
             return SegmentType.DIGIT
 
         # Is this really small?
-        if segment_shape[0] < 10 and segment_shape[1] < 10:
+        if segment_shape[0] < (img_shape[0] / 7) or segment_shape[1] < (img_shape[0] / 7):
             return SegmentType.NOISE
 
         # Is this flat and long?
