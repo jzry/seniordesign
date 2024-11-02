@@ -40,7 +40,7 @@ of the prompt line in your terminal.
 
 Install the main dependencies with the following command in a terminal:
 
-`pip install opencv-python numpy matplotlib`
+`pip install opencv-python numpy matplotlib termcolor`
 
 [Install PyTorch](https://pytorch.org/get-started/locally/) using the
 command from their website. From the options on the linked page,
@@ -69,7 +69,7 @@ packages:
 > An editable install will allow you to edit the code in these packages without
 > having to reinstall them every time you make a change.
 
-If you need to unistall either of these packages:
+If you need to uninstall either of these packages:
 
 `pip uninstall OCR` or
 
