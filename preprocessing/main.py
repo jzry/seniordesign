@@ -31,12 +31,13 @@ intermediary, but it is cleaned of horizontal lines.
 
 import cv2
 # from scoresheet import Paper_Extraction # used to extract paper from original.
+import absolute_scorefields
 import scorefields
 import horizontal_remover
 from pathlib import Path
 
 filePath = 'bc/'
-fileName = "BC-1.jpg"
+fileName = "BC-4.jpg"
 
 ###################################################################
 # FUNCTION TO EXTRACT AND WARP PAPER USED ONLY FOR TESTING BECAUSE
@@ -55,6 +56,10 @@ fileName = "BC-1.jpg"
 with open(Path(filePath) / fileName, 'rb') as image_file:
 
     buffer = image_file.read()
+    # absolute
+    # extracted_fields = absolute_scorefields.BCSegments(buffer)
+
+    #aligned and relative
     extracted_fields = scorefields.BCSegments(buffer)
 
 
