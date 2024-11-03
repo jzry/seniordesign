@@ -32,7 +32,7 @@ If you succeed, you will see the text `(python_env)` appear at the beginning
 of the prompt line in your terminal.
 
 > [!IMPORTANT]
-> You may have to source the virtual environment every time each time you
+> You may have to source the virtual environment every time you
 > start your terminal. Make sure `(python_env)` appears in your terminal
 > before running python or pip!
 
@@ -40,7 +40,7 @@ of the prompt line in your terminal.
 
 Install the main dependencies (opencv, numpy, matplotlib) with the following command in a terminal:
 
-`pip install opencv-python numpy matplotlib`
+`pip install opencv-python numpy matplotlib termcolor`
 
 Or if you're using python3 (numpy is installed along with opencv-python):
 `python3 -m pip install opencv-python matplotlib`
@@ -75,7 +75,7 @@ packages:
 > An editable install will allow you to edit the code in these packages without
 > having to reinstall them every time you make a change.
 
-If you need to unistall either of these packages:
+If you need to uninstall either of these packages:
 
 `pip uninstall OCR` or
 
