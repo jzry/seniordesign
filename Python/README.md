@@ -38,9 +38,15 @@ of the prompt line in your terminal.
 
 ## Installing Packages
 
-Install the main dependencies with the following command in a terminal:
+Install the main dependencies (opencv, numpy, matplotlib) with the following command in a terminal:
 
-`pip install opencv-python numpy matplotlib termcolor`
+`pip install opencv-python numpy matplotlib`
+
+Or if you're using python3 (numpy is installed along with opencv-python):
+`python3 -m pip install opencv-python matplotlib`
+
+To check that you have the correct packages installed in your python virtual environment do:
+`pip list -l` or `pip3 list -l` depending on which version of python you are using and installing with.
 
 [Install PyTorch](https://pytorch.org/get-started/locally/) using the
 command from their website. From the options on the linked page,
@@ -69,9 +75,8 @@ packages:
 > An editable install will allow you to edit the code in these packages without
 > having to reinstall them every time you make a change.
 
-If you need to uninstall either of these packages:
+If you need to unistall either of these packages:
 
 `pip uninstall OCR` or
 
 `pip uninstall preprocessing`
-
