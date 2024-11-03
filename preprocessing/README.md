@@ -45,6 +45,9 @@ align_image.py provides functions to align input images of specific score catego
 
 Each function is designed to handle images with consistent layouts, making them suitable for precise field extraction and OCR operations in a controlled environment. The template-based alignment ensures that the resulting images are uniform, improving the accuracy of subsequent data extraction tasks.
 
+# check_extension.py
+check_extension.py provides a utility function that checks an image file's extension and converts unsupported formats to .jpg to maintain compatibility.
+
 --------------
 # How to use #
 --------------

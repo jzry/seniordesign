@@ -35,9 +35,14 @@ import absolute_scorefields
 import scorefields
 import horizontal_remover
 from pathlib import Path
+from check_extension import checkExtension
 
 filePath = 'bc/'
-fileName = "BC-4.jpg"
+fileName = "BC-20.heic"
+full_path = Path(filePath) / fileName
+
+# Check and convert image extension if necessary
+image_path = checkExtension(str(full_path))
 
 ###################################################################
 # FUNCTION TO EXTRACT AND WARP PAPER USED ONLY FOR TESTING BECAUSE
@@ -53,13 +58,13 @@ fileName = "BC-4.jpg"
 # CREATE THE DICTIONARY FOR THE BCE.
 ####################################
 
-with open(Path(filePath) / fileName, 'rb') as image_file:
+with open(image_path, 'rb') as image_file:
 
     buffer = image_file.read()
     # absolute
     # extracted_fields = absolute_scorefields.BCSegments(buffer)
 
-    #aligned and relative
+    # aligned and relative
     extracted_fields = scorefields.BCSegments(buffer)
 
 
