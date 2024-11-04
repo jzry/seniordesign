@@ -9,7 +9,7 @@ def main():
     ret_val = {}
 
     if len(sys.argv) == 2:
-    
+
         # The number of bytes to read from stdin
         input_length_bytes = int(sys.argv[1])
 
@@ -34,9 +34,9 @@ def main():
 
 
 
-# 
+#
 # Run all the code to process the BCE scoresheet
-# 
+#
 def process_BCE(image_buffer):
 
     from preprocessing.scorefields import BCSegments
@@ -72,9 +72,9 @@ def process_BCE(image_buffer):
 
     return output_dict
 
-# 
+#
 # Helper function to insert outputs into the dictionary
-# 
+#
 def insert_into_dict(dictionary, rider, field, output):
 
     num, conf = output
@@ -82,5 +82,38 @@ def insert_into_dict(dictionary, rider, field, output):
     dictionary[rider][field] = {'value': num, 'confidence': conf}
 
 
+def debug_main():
+
+    from termcolor import colored
+    from pathlib import Path
+
+    filename = 'BC-1.jpg'
+
+    full_path = Path(__file__).parent.parent / 'Python' / 'Preprocessing_Package' / 'preprocessing' / 'bc' / filename
+
+    with open(full_path, 'rb') as file:
+        image_buffer = file.read()
+
+    ret_val = process_BCE(image_buffer)
+
+    for rider_key in ret_val.keys():
+
+        print(colored(f'----------- {rider_key}', color='blue', attrs=['bold']))
+
+        for key in ret_val[rider_key].keys():
+
+            if ret_val[rider_key][key]['confidence'] >= 90.0:
+                print(key, colored(ret_val[rider_key][key]['value'], color='green', attrs=['bold']))
+            elif ret_val[rider_key][key]['confidence'] >= 80.0:
+                print(key, colored(ret_val[rider_key][key]['value'], color='yellow', attrs=['bold']))
+            elif ret_val[rider_key][key]['value'] == '':
+                print(colored(key, color='red', attrs=['bold']))
+            else:
+                print(key, colored(ret_val[rider_key][key]['value'], color='red', attrs=['bold']))
+
+
 # Do It
 main()
+
+# For debugging only
+# debug_main()
