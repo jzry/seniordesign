@@ -29,7 +29,7 @@ def validate_score(raw, max_score, min_score=0):
 
             if int_part > 0:
 
-                if max_score <= 9:
+                if max_score <= 10:
                     __enforce_one_digit_score(nums[:int_part], confs[:int_part], max_score - 1, min_score)
                 else:
                     __enforce_two_digit_score(nums[:int_part], confs[:int_part], max_score - 1, min_score)
