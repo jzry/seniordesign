@@ -2,6 +2,7 @@ import React, { useState, useRef } from 'react';
 import UploadIcon from "../../images/upload.png";
 import BCEExtractedValues from './BCEExtractedValues';
 import '../../styles/CTRHandWritingRecognitionStyles.css';
+import axios from 'axios';
 
 function GetPhotoBCE({ numberOfRiders, fastestRiderTime, heaviestRiderWeight }) {
   const [imageSrc1, setImageSrc1] = useState(null);
@@ -28,6 +29,43 @@ function GetPhotoBCE({ numberOfRiders, fastestRiderTime, heaviestRiderWeight }) 
     }
   };
 
+  const handleSubmit = async (event) => {
+    if (imageFile1 && !imageFile2) {
+      event.preventDefault();
+
+      const formData = new FormData();
+      formData.append('image', imageFile1);
+
+      try {
+        const response = await axios.post('http://localhost:8080/uploadBCE', formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        });
+        console.log(response.data);
+      } catch (error) {
+        console.error('Error uploading file:', error);
+      }
+    }
+    if (imageFile2) {
+      event.preventDefault();
+
+      const formData = new FormData();
+      formData.append('image', imageFile2);
+
+      try {
+        const response = await axios.post('http://localhost:8080/uploadBCE', formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        });
+        console.log(response.data);
+      } catch (error) {
+        console.error('Error uploading file:', error);
+      }
+    }
+  };
+
   const handleRetakePhoto = () => {
     if (currentStep === 1) {
       setImageSrc1(null);
@@ -46,11 +84,39 @@ function GetPhotoBCE({ numberOfRiders, fastestRiderTime, heaviestRiderWeight }) 
       } else {
         // Simulated API call to get mock information for riders
         try {
-          const results = await new Promise((resolve) => {
-            setTimeout(() => {
-              const generatedData = [];
+          // const results = await new Promise((resolve) => {
+          //   setTimeout(() => {
+          //     const generatedData = [];
+          //     for (let i = 0; i < numberOfRiders; i++) {
+          //       generatedData.push({
+          //         "Rider number": { value: `L${i + 1}`, confidence: 0.8 + Math.random() * 0.2 },
+          //         "Recovery": { value: Math.floor(Math.random() * 10), confidence: 0.5 + Math.random() * 0.5 },
+          //         "Hydration": { value: Math.floor(Math.random() * 10), confidence: 0.5 + Math.random() * 0.5 },
+          //         "Lesions": { value: Math.floor(Math.random() * 10), confidence: 0.5 + Math.random() * 0.5 },
+          //         "Soundness": { value: Math.floor(Math.random() * 10), confidence: 0.5 + Math.random() * 0.5 },
+          //         "Qual Mvmt": { value: Math.floor(Math.random() * 10), confidence: 0.5 + Math.random() * 0.5 },
+          //         "Ride time, this rider": { value: 300 + Math.floor(Math.random() * 100), confidence: 0.8 + Math.random() * 0.2 },
+          //         "Weight of this rider": { value: 150 + Math.floor(Math.random() * 50), confidence: 0.7 + Math.random() * 0.3 },
+          //       });
+          //     }
+          //     resolve(generatedData);
+          //   }, 100);
+          // });
+
+          let bceData = [];
+
+          axios.get('http://localhost:8080/bce')
+            .then(response => {
+              bceData.push(response.data);
+              console.log("Data Retrieved:")
+              console.log(bceData)
+              setExtractedDataList(bceData)
+              setCurrentStep(3);
+            })
+            .catch(error => {
+              console.error("Could not retrieve CTR data:", error)
               for (let i = 0; i < numberOfRiders; i++) {
-                generatedData.push({
+                bceData.push({
                   "Rider number": { value: `L${i + 1}`, confidence: 0.8 + Math.random() * 0.2 },
                   "Recovery": { value: Math.floor(Math.random() * 10), confidence: 0.5 + Math.random() * 0.5 },
                   "Hydration": { value: Math.floor(Math.random() * 10), confidence: 0.5 + Math.random() * 0.5 },
@@ -61,15 +127,16 @@ function GetPhotoBCE({ numberOfRiders, fastestRiderTime, heaviestRiderWeight }) 
                   "Weight of this rider": { value: 150 + Math.floor(Math.random() * 50), confidence: 0.7 + Math.random() * 0.3 },
                 });
               }
-              resolve(generatedData);
-            }, 100);
-          });
+              setExtractedDataList(bceData)
+              setCurrentStep(3);
+            })
 
-          console.log('Image processed successfully:', results);
 
-          // Store the extracted data for all riders
-          setExtractedDataList(results);
-          setCurrentStep(3); // Proceed to show extracted data
+          // console.log('Image processed successfully:', results);
+
+          // // Store the extracted data for all riders
+          // setExtractedDataList(results);
+           // Proceed to show extracted data
 
         } catch (error) {
           console.error('Error uploading image:', error);
@@ -139,7 +206,7 @@ function GetPhotoBCE({ numberOfRiders, fastestRiderTime, heaviestRiderWeight }) 
                 <button className="scorecard-button" onClick={handleRetakePhoto}>
                   Retake Image
                 </button>
-                <button className="scorecard-button" onClick={handleContinue}>
+                <button className="scorecard-button" onClick={(event) => { handleSubmit(event); handleContinue() }}>
                   {isTwoPhotosRequired && currentStep === 1 ? "Continue to Scorecard 2" : "Continue"}
                 </button>
               </div>

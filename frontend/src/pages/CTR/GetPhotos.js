@@ -33,7 +33,7 @@ function GetPhotos() {
     formData.append('image', imageFile);
 
     try {
-      const response = await axios.post('http://localhost:8080/upload', formData, {
+      const response = await axios.post('http://localhost:8080/uploadCTR', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },

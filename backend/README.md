@@ -6,7 +6,7 @@ The primary functionality of the backend of this application is to retrieve imag
 
 ### Node module installation
 
-Ener `npm i` terminal within the backend directory to download requisite node modules
+Enter `npm i` terminal within the backend directory to download requisite node modules
 
 ### To run
 

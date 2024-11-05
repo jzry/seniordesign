@@ -5,12 +5,13 @@ const cookieParser = require('cookie-parser')
 const path = require('path')
 
 // Get the fake API data simulating the affects of the OCR
-const fakeData = require('./API-Tests/fake-ctr-json.json')
+const fakeCTRData = require('./API-Tests/fake-ctr-json.json')
+const fakeBCEData = require('./API-Tests/fake-bce-json.json')
 
 // Request validation middleware for the CTR data from the OCR
 // Because the CTR data is not currently sourced from an api endpoint, this function only simulates the functionality of Express Middleware
-function validateCTRData(/*req, res, next*/ fakeData) {
-  let req = { body: fakeData }
+function validateData(/*req, res, next*/ fakeCTRData) {
+  let req = { body: fakeCTRData }
   if (typeof req.body !== 'object' || req.body === null) {
     return res.status(400).json({ error: 'Invalid JSON object in request body.' });
   }
@@ -44,7 +45,7 @@ function validateCTRData(/*req, res, next*/ fakeData) {
 }
 
 // Middleware function to validate the image input by the user
-function validateCTRImage(req, res, next) {
+function validateImage(req, res, next) {
   const allowedFileTypes = ['image/jpeg', 'image/png'];
   const maxSize = 5 * 1024 * 1024; // 5 MB limit
 
@@ -98,26 +99,21 @@ app.get('/', (req, res) => {
 })
 
 app.get('/ctr', (req, res) => {
-  /*validateCTRData*/
-  res.json(fakeData)
+  /*validateData*/
+  res.json(fakeCTRData)
+})
+
+app.get('/bce', (req, res) => {
+  /*validateData*/
+  res.json(fakeBCEData)
 })
 
 // Retrieve the uploaded image from the handleSubmit function in frontend/src/pages/crt/getPhotos.js
-app.post('/upload', validateCTRImage, (req, res) => {
-  console.log('Upload endpoint hit');  // Log this to see if request is received
+app.post('/uploadCTR', validateImage, (req, res) => {
+  console.log('CTR Upload endpoint hit');  // Log this to see if request is received
 
-    let sampleFile;
-    let uploadPath;
-  
-    if (!req.files || Object.keys(req.files).length === 0) {
-      return res.status(400).send('No files were uploaded.');
-    }
-  
-    // The name of the input field (i.e. "sampleFile") is used to retrieve the uploaded file
-    sampleFile = req.files.image;
-    // uploadPath = path.join(__dirname, '/imgs/', sampleFile.name) 
-    uploadPath = path.join(__dirname, '../Uploads/test.jpg') 
-  
+  let sampleFile;
+  let uploadPath;
 
   if (!req.files || Object.keys(req.files).length === 0) {
     return res.status(400).send('No files were uploaded.');
@@ -126,8 +122,33 @@ app.post('/upload', validateCTRImage, (req, res) => {
   // The name of the input field (i.e. "sampleFile") is used to retrieve the uploaded file
   sampleFile = req.files.image;
   // uploadPath = path.join(__dirname, '/imgs/', sampleFile.name) 
-  uploadPath = path.join(__dirname, './imgs/test.jpg')
+  uploadPath = path.join(__dirname, '../Uploads/testCTR.jpg')
 
+  console.log('File received:', sampleFile.name);  // Log file details
+
+  // Use the mv() method to place the file somewhere on your server
+  sampleFile.mv(uploadPath, function (err) {
+    if (err)
+      return res.status(500).send(err);
+
+    res.send('File uploaded!');
+  });
+});
+
+app.post('/uploadBCE', validateImage, (req, res) => {
+  console.log('BCE Upload endpoint hit');  // Log this to see if request is received
+
+  let sampleFile;
+  let uploadPath;
+
+  if (!req.files || Object.keys(req.files).length === 0) {
+    return res.status(400).send('No files were uploaded.');
+  }
+
+  // The name of the input field (i.e. "sampleFile") is used to retrieve the uploaded file
+  sampleFile = req.files.image;
+  // uploadPath = path.join(__dirname, '/imgs/', sampleFile.name) 
+  uploadPath = path.join(__dirname, '../Uploads/testBCE.jpg')
 
   console.log('File received:', sampleFile.name);  // Log file details
 
@@ -142,4 +163,6 @@ app.post('/upload', validateCTRImage, (req, res) => {
 
 
 module.exports = app
-
+// app.listen(8080, () => {
+//   console.log('server listening on port 8080')
+// })
