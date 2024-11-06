@@ -1,11 +1,9 @@
 # Imports
 import os
 import cv2 as cv
-import numpy as np
 from . import template
 from . import scoresheet
 from . import horizontal_remover
-from .align_image import BCAlignImage
 
 """
 Function Brief: Extracts and marks predefined segments (fields) for each rider section on an image. 
@@ -32,12 +30,6 @@ def BCSegments(image):
     # Gives the extracted image that is warped to fit a rectangle.
     extracted_image = scoresheet.Paper_Extraction(image)
 
-    # Gives aligned image to the template
-    extracted_image = BCAlignImage(extracted_image)
-
-    horizontal_scalefactor = 1
-    vertical_scalefactor = 1
-
     # Check if the result is an integer indicating failure
     if isinstance(extracted_image, int) and extracted_image == -1:
         print("Error: Cannot read image file after extraction.")
@@ -46,8 +38,7 @@ def BCSegments(image):
         # Get, Check and Resize(if needed) dimensions of extracted_image
         height, width = extracted_image.shape[:2]
         if(height != template.BC_HEIGHT and width != template.BC_WIDTH) :
-            horizontal_scalefactor = np.round(width / template.BC_WIDTH)
-            vertical_scalefactor = np.round(height / template.BC_HEIGHT)
+            extracted_image = cv.resize(extracted_image, (template.BC_WIDTH, template.BC_HEIGHT))
     
     '''This code is just to verify the output.
     ------------------------------------------------------------------'''
@@ -66,12 +57,6 @@ def BCSegments(image):
         '''------------------------------------------------------------------'''
         
         for field_name, (x, y, w, h) in fields.items():
-            
-            if horizontal_scalefactor != 1 or vertical_scalefactor != 1 :
-                x *= horizontal_scalefactor
-                w *= horizontal_scalefactor
-                y *= vertical_scalefactor
-                h *= vertical_scalefactor
             
             # We are cropping out field from the extracted image here.
             field_image = extracted_image[y:y + h, x:x + w]
@@ -172,4 +157,4 @@ def CTRSegments(image):
     
     return extracted_fields
         
-# BC_score_fields = BCSegments("bc/BC-1.jpg")
+# BC_score_fields = BCSegments('output_extraction.jpg')
