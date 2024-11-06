@@ -24,8 +24,8 @@ function CTRExtractedValues({ extractedData }) {
   };
 
   const getBorderColor = (confidence) => {
-    if (confidence > 0.8) return 'green';
-    if (confidence > 0.5) return 'yellow';
+    if (confidence > 90.0) return 'green';
+    if (confidence > 80.0) return 'yellow';
     return 'red';
   };
 

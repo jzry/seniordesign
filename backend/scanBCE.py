@@ -49,26 +49,26 @@ def process_BCE(image_buffer):
     dg = okra.DigitGetter()
 
     rider_keys = extracted_fields.keys()
-    output_dict = dict.fromkeys(rider_keys, {})
+    output_dict = {}
 
     for rider_key in rider_keys:
 
-        output_dict[rider_key] = dict.fromkeys(extracted_fields[rider_key].keys())
+        output_dict[rider_key] = {}
 
         #
         # Dictionary   <--   OCR validation   <--   OCR   <--   Image Segments
         #
 
-        insert_into_dict(output_dict, rider_key, 'Rider#',        v.validate_rider_number(dg.image_to_digits(extracted_fields[rider_key]['Rider#'])))
+        insert_into_dict(output_dict, rider_key, 'Rider number',        v.validate_rider_number(dg.image_to_digits(extracted_fields[rider_key]['Rider#'])))
 
-        insert_into_dict(output_dict, rider_key, 'recovery',      v.validate_score(dg.image_to_digits(extracted_fields[rider_key]['recovery']),      10, 1))
-        insert_into_dict(output_dict, rider_key, 'hydration',     v.validate_score(dg.image_to_digits(extracted_fields[rider_key]['hydration']),     10, 1))
-        insert_into_dict(output_dict, rider_key, 'lesions',       v.validate_score(dg.image_to_digits(extracted_fields[rider_key]['lesions']),       10, 1))
-        insert_into_dict(output_dict, rider_key, 'soundness',     v.validate_score(dg.image_to_digits(extracted_fields[rider_key]['soundness']),     10, 1))
-        insert_into_dict(output_dict, rider_key, 'qual_movement', v.validate_score(dg.image_to_digits(extracted_fields[rider_key]['qual_movement']), 10, 1))
+        insert_into_dict(output_dict, rider_key, 'Recovery',      v.validate_score(dg.image_to_digits(extracted_fields[rider_key]['recovery']),      10, 1))
+        insert_into_dict(output_dict, rider_key, 'Hydration',     v.validate_score(dg.image_to_digits(extracted_fields[rider_key]['hydration']),     10, 1))
+        insert_into_dict(output_dict, rider_key, 'Lesions',       v.validate_score(dg.image_to_digits(extracted_fields[rider_key]['lesions']),       10, 1))
+        insert_into_dict(output_dict, rider_key, 'Soundness',     v.validate_score(dg.image_to_digits(extracted_fields[rider_key]['soundness']),     10, 1))
+        insert_into_dict(output_dict, rider_key, 'Qual Mvmt', v.validate_score(dg.image_to_digits(extracted_fields[rider_key]['qual_movement']), 10, 1))
 
-        insert_into_dict(output_dict, rider_key, 'rider_time',    v.validate_time(dg.image_to_digits(extracted_fields[rider_key]['rider_time'])))
-        insert_into_dict(output_dict, rider_key, 'rider_weight',  v.validate_weight(dg.image_to_digits(extracted_fields[rider_key]['rider_weight'])))
+        insert_into_dict(output_dict, rider_key, 'Ride time, this rider',    v.validate_time(dg.image_to_digits(extracted_fields[rider_key]['rider_time'])))
+        insert_into_dict(output_dict, rider_key, 'Weight of this rider',  v.validate_weight(dg.image_to_digits(extracted_fields[rider_key]['rider_weight'])))
 
     return output_dict
 

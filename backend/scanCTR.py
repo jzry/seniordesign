@@ -50,9 +50,29 @@ def process_CTR(image_buffer):
 
     field_keys = extracted_fields.keys()
 
-    output_dict = dict.fromkeys(field_keys, {})
+    output_dict = {}
 
     max_score_per_field = [5, 5, 5, 5, 5, 3, 0, 2, 5, 5, 20, 5, 10, 25, 5, 5, None, None]
+    out_field_keys = [
+        'Pulse Before Trot Out',
+        'Pulse After Trot Out',
+        'Mucous Membrane',
+        'Capillary Refill',
+        'Skin Pinch',
+        'Jugular Vein Refill',
+        'Gut Sounds',
+        'Anal Tone',
+        'Muscle Tone',
+        'Unwillingness to trot',
+        'Tendons, Ligaments, Joints, Filings',
+        'Interferences',
+        'Grade 1',
+        'Grade 2',
+        'Back Tenderness',
+        'Tack Area',
+        'Hold on Trail',
+        'Time Penalty'
+    ]
 
     for i, key in enumerate(field_keys):
 
@@ -67,7 +87,7 @@ def process_CTR(image_buffer):
 
         num, conf = v.validate_score(raw_ouput, max_score_per_field[i])
 
-        output_dict[key] = {'value': num, 'confidence': conf}
+        output_dict[out_field_keys[i]] = {'value': num, 'confidence': conf}
 
 
 

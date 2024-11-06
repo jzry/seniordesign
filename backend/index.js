@@ -6,10 +6,6 @@ const path = require('path')
 const pyconnect = require('./pyconnect')
 
 
-// Get the fake API data simulating the affects of the OCR
-const fakeCTRData = require('./API-Tests/fake-ctr-json.json')
-const fakeBCEData = require('./API-Tests/fake-bce-json.json')
-
 // Request validation middleware for the CTR data from the OCR
 // Because the CTR data is not currently sourced from an api endpoint, this function only simulates the functionality of Express Middleware
 function validateData(/*req, res, next*/ fakeCTRData) {
@@ -100,23 +96,13 @@ app.get('/', (req, res) => {
   res.send('Hello from our server!')
 })
 
-app.get('/ctr', (req, res) => {
-  /*validateData*/
-  res.json(fakeCTRData)
-})
-
-app.get('/bce', (req, res) => {
-  /*validateData*/
-  res.json(fakeBCEData)
-})
 
 // Retrieve the uploaded image from the handleSubmit function in frontend/src/pages/crt/getPhotos.js
 
-app.post('/uploadCTR', validateImage, (req, res) => {
+app.post('/ctr', validateImage, async (req, res) => {
   console.log('CTR Upload endpoint hit');  // Log this to see if request is received
 
   let sampleFile;
-  let uploadPath;
 
   if (!req.files || Object.keys(req.files).length === 0) {
     return res.status(400).send('No files were uploaded.');
@@ -124,25 +110,22 @@ app.post('/uploadCTR', validateImage, (req, res) => {
 
   // The name of the input field (i.e. "sampleFile") is used to retrieve the uploaded file
   sampleFile = req.files.image;
-  // uploadPath = path.join(__dirname, '/imgs/', sampleFile.name) 
-  uploadPath = path.join(__dirname, '../Uploads/testCTR.jpg')
 
   console.log('File received:', sampleFile.name);  // Log file details
 
-  // Use the mv() method to place the file somewhere on your server
-  sampleFile.mv(uploadPath, function (err) {
-    if (err)
-      return res.status(500).send(err);
+  // Send the image to the Python code to be processed
+  output = await pyconnect.processCTR(sampleFile)
 
-    res.send('File uploaded!');
-  });
+  if (output.error)
+    res.status(500)
+
+  res.json(output)
 });
 
-app.post('/uploadBCE', validateImage, (req, res) => {
+app.post('/bce', validateImage, async (req, res) => {
   console.log('BCE Upload endpoint hit');  // Log this to see if request is received
 
   let sampleFile;
-  let uploadPath;
 
   if (!req.files || Object.keys(req.files).length === 0) {
     return res.status(400).send('No files were uploaded.');
@@ -150,8 +133,6 @@ app.post('/uploadBCE', validateImage, (req, res) => {
 
   // The name of the input field (i.e. "sampleFile") is used to retrieve the uploaded file
   sampleFile = req.files.image;
-  // uploadPath = path.join(__dirname, '/imgs/', sampleFile.name) 
-  uploadPath = path.join(__dirname, '../Uploads/testBCE.jpg')
 
   console.log('File received:', sampleFile.name);  // Log file details
 
@@ -166,6 +147,3 @@ app.post('/uploadBCE', validateImage, (req, res) => {
 
 
 module.exports = app
-// app.listen(8080, () => {
-//   console.log('server listening on port 8080')
-// })
