@@ -31,7 +31,7 @@ class DigitGetter:
 
         # Set default attributes
         self.debug_images = False
-        self.column_skip = 5
+        self.column_skip = 3
         self.fraction_padding = 0.2
         self.find_decimal_points = True
         self.find_minus_signs = False
@@ -358,7 +358,7 @@ class DigitGetter:
             return SegmentType.DIGIT
 
         # Is this really small?
-        if segment_shape[0] < (img_shape[0] / 7) or segment_shape[1] < (img_shape[0] / 7):
+        if segment_shape[0] < (img_shape[0] / 7) and segment_shape[1] < (img_shape[0] / 7):
             return SegmentType.NOISE
 
         # Is this flat and long?
