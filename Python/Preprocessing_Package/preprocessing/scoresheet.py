@@ -1,6 +1,7 @@
 # Imports
 import cv2 as cv
 import numpy as np
+from .check_extension import check_extension
 
 """
 Function Brief: Extract and warp a score sheet from an input image by detecting
@@ -16,7 +17,7 @@ def Paper_Extraction(BC_scoresheet):
     fileOutPath = "output/"
     output_filename = "output_extraction.jpg"
 
-    original_img = cv.imdecode(np.frombuffer(BC_scoresheet, dtype=np.uint8), cv.IMREAD_COLOR)
+    original_img = check_extension(BC_scoresheet)
     if original_img is None:
         print(f"Cannot read image file: {BC_scoresheet}")
         return -1
