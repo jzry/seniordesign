@@ -76,7 +76,7 @@ class DigitGetterTestCase(unittest.TestCase):
         seg_type = self.dg._DigitGetter__get_segment_type((9, 21), img_shape)
         self.assertEqual(seg_type, okra.SegmentType.MINUS, 'Minus segment not indentified correctly')
 
-        seg_type = self.dg._DigitGetter__get_segment_type((1, 7), img_shape)
+        seg_type = self.dg._DigitGetter__get_segment_type((1, 5), img_shape)
         self.assertEqual(seg_type, okra.SegmentType.NOISE, 'Noise segment not indentified correctly')
 
         seg_type = self.dg._DigitGetter__get_segment_type((0, 0), img_shape)
