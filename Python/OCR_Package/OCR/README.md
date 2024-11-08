@@ -4,59 +4,88 @@ This is a package to read handwritten digits from scoresheet images
 
 ## Modules
 
-There are two modules:
+### okra
 
-1. **okra** - Contains the DigitGetter class that handles OCR.
-1. **violin** - Contains validation/processing functions for raw OCR output.
+The **okra** module contains the DigitGetter class which is responsible for OCR.
 
-## Configuration
+- (class) `DigitGetter`
+    - (fn) `digit_from_image` -> Extracts a single digit from a square image. (Don't use this one)
+    - (fn) `image_to_digits`  -> Extracts a row of digits from an image. (Use this one)
 
-To import this package, Python must be able to find it. Add the repo's root folder
-to the PYTHONPATH environment variable.
+See *okra.py* for more detailed information.
 
-> [!IMPORTANT]
-> Make sure to use YOUR path to the repo folder and not the dummy path in the example commands!
+### violin
 
-### Linux
+The **violin** module contains validation/autocorrect functions that handle raw OCR output from the DigitGetter class.
 
-`export PYTHONPATH="${PYTHONPATH}:/path/to/seniordesign"`
+- (fn) `validate_score`        -> Enforces a score range.
+- (fn) `validate_rider_number` -> Returns a value of the form *L##*.
+- (fn) `validate_time`         -> Ensures that a reasonable time value is returned.
+- (fn) `validate_weight`       -> Ensures that a reasonable weight value is returned.
 
-### Windows
-
-See if your editor has a PYTHONPATH manager or something similar.
-Otherwise, in Command Prompt try running *`set PYTHONPATH=%PYTHONPATH%;C:\path\to\seniordesign`
-
-### MacOS
-
-*`export PYTHONPATH="/path/to/seniordesign:$PYTHONPATH"`
-
-<br>
-
-__*Let Paul know if these commmands actually work ¯\\\_(ツ)\_/¯__
+See *violin.py* for more detailed information.
 
 ## Getting Started
 
-To get started, import the DigitGetter class, instantiate DigitGetter, and start OCR'ing
+### Importing
 
+```python
+# Import the entire package
+import OCR
+
+# ...
+OCR.okra
+OCR.violin
+
+# Or import each module individually
+from OCR import okra
+from OCR import violin
+
+# ...
+okra
+violin
 ```
-from OCR.okra import DigitGetter
 
-dg = DigitGetter()
+### Running the OCR
 
-numbers, confidence = dg.image_to_digits(*** Your image data ***)
+```python
+# Create an instance of the DigitGetter class
+dg = okra.DigitGetter()
+
+# Call the image_to_digits method with an image
+output = dg.image_to_digits(*** Your image array ***)
+
+type(output) # <class 'tuple'>
+
+# Auto-unpack the output:
+# The first item is a list of the extracted values.
+# The second item is a list of percentages representing the confidence.
+numbers, confidence = output
+
+type(numbers) # <class 'list'>
+type(confidence) # <class 'list'>
+
+type(numbers[0]) # <class 'int'> or <class 'str'>
+type(confidence[0]) # <class 'float'>
 ```
 
-The return values is a tuple that contains two lists. The first list contains
-the digit values, and the second list contains confidence percentages for those
-values. Also, the *violin* package contains functions for automatically handling
-raw OCR output:
+### Validation
 
-```
-from OCR.violin import validate_score
+```python
+# All validation functions recieve OCR output and return:
+# 1. A string representing the extracted values.
+# 2. A percentage representing the confidence of the extraction.
 
-raw_output = dg.image_to_digits(*** Image of score field ***)
+# The score validation has optional max and min values
+output_string, output_confidence = violin.validate_score(ocr_output, max=10, min=1)
 
-output_string, overall_confidence = validate_score(raw_output, max=10, min=1)
+# The other validation functions only recieve the OCR output
+output_string, output_confidence = violin.validate_rider_number(ocr_output)
+output_string, output_confidence = violin.validate_time(ocr_output)
+output_string, output_confidence = violin.validate_weight(ocr_output)
+
+type(output_string) # <class 'str'>
+type(output_confidence) # <class 'float'>
 ```
 
 ## How It Works
