@@ -66,7 +66,7 @@ def check_extension(raw_image):
             if len(images) > 1:
                 print(f'Warning: Only keeping first page of pdf. Ignoring {len(images) - 1} pages')
 
-            return np.array(images[0])
+            return np.array(images[0], dtype=np.uint8)
 
         else:
              raise NotImplementedError('PDF loading not configured')
@@ -77,5 +77,11 @@ def check_extension(raw_image):
 
         image = Image.open(BytesIO(raw_image))
 
-        return np.array(image)
+        buffer = np.array(image, dtype=np.uint8)
+
+        if buffer.shape[2] == 4:
+            return buffer[:, :, :3]
+
+        else:
+            return buffer
 
