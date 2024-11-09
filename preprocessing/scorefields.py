@@ -32,9 +32,6 @@ def BCSegments(image):
     # Gives the extracted image that is warped to fit a rectangle.
     extracted_image = scoresheet.Paper_Extraction(image)
 
-    # Gives aligned image to the template
-    extracted_image = BCAlignImage(extracted_image)
-
     horizontal_scalefactor = 1
     vertical_scalefactor = 1
 
@@ -48,6 +45,9 @@ def BCSegments(image):
         if(height != template.BC_HEIGHT and width != template.BC_WIDTH) :
             horizontal_scalefactor = np.round(width / template.BC_WIDTH)
             vertical_scalefactor = np.round(height / template.BC_HEIGHT)
+
+    # Gives aligned image to the template
+    extracted_image = BCAlignImage(extracted_image)
     
     '''This code is just to verify the output.
     ------------------------------------------------------------------'''

@@ -93,9 +93,6 @@ def CTRAlignImage(image):
     num_matches = 50
     matches = matches[:num_matches]
 
-    # Draw matches for visualization (optional)
-    matched_image = cv.drawMatches(template, keypoints1, image, keypoints2, matches, None, flags=cv.DrawMatchesFlags_NOT_DRAW_SINGLE_POINTS)
-
     # Get matched keypoints for homography
     src_pts = np.float32([keypoints1[m.queryIdx].pt for m in matches]).reshape(-1, 1, 2)
     dst_pts = np.float32([keypoints2[m.trainIdx].pt for m in matches]).reshape(-1, 1, 2)
@@ -104,7 +101,7 @@ def CTRAlignImage(image):
     M, mask = cv.findHomography(dst_pts, src_pts, cv.RANSAC, 5.0)
 
     # Warp output_image to align with template_image
-    h, w = template.shape[:2]
+    h, w = image.shape[:2]
     aligned_image = cv.warpPerspective(image, M, (w, h))
 
     return aligned_image
