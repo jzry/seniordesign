@@ -2,10 +2,10 @@
 import os
 import cv2 as cv
 import numpy as np
-import template
-import scoresheet
-import horizontal_remover
-from align_image import BCAlignImage
+from . import template
+from . import scoresheet
+from . import horizontal_remover
+from .align_image import BCAlignImage
 
 """
 Function Brief: Extracts and marks predefined segments (fields) for each rider section on an image. 
