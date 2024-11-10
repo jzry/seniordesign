@@ -415,7 +415,7 @@ class DigitGetter:
             return SegmentType.NOISE
 
         # Is this flat and long?
-        if segment_shape[1] >= segment_shape[0] * 1.5:
+        if segment_shape[1] >= segment_shape[0] * 1.75:
             return SegmentType.MINUS
 
         # It's probably a decimal if we reach here
