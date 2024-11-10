@@ -5,11 +5,12 @@
 
 def validate_score(raw, max_score, min_score=0):
     """
-    Validates and auto-corrects a score field
+    Validates and auto-corrects a score field.
 
     Parameters:
         raw (list, list): The raw output of the OCR.
-        max_score (int): The upper-bound of the score. Pass None if there is no max value.
+        max_score (int): The upper-bound of the score. Pass None if there is
+                         no max value.
         min_score (int, optional): The lower-bound of the score. Defaults to 0.
 
     Returns:
@@ -46,7 +47,7 @@ def validate_score(raw, max_score, min_score=0):
 
 def validate_rider_number(raw):
     """
-    Validates and auto-corrects a rider number field
+    Validates and auto-corrects a rider number field.
 
     Parameters:
         raw (list, list): The raw output of the OCR.
@@ -80,7 +81,7 @@ def validate_rider_number(raw):
 
 def validate_time(raw):
     """
-    Validates and auto-corrects a time field
+    Validates and auto-corrects a time field.
 
     Parameters:
         raw (list, list): The raw output of the OCR.
@@ -109,7 +110,7 @@ def validate_time(raw):
 
 def validate_weight(raw):
     """
-    Validates and auto-corrects a weight field
+    Validates and auto-corrects a weight field.
 
     Parameters:
         raw (list, list): The raw output of the OCR.
@@ -137,6 +138,7 @@ def validate_weight(raw):
 
 
 def __remove_decimals(nums, confs):
+    """Removes all decimal points from the input"""
 
     i = 0
 
@@ -155,6 +157,7 @@ def __remove_decimals(nums, confs):
 
 
 def __remove_excess_decimals(nums, confs):
+    """Removes extra decimal points from the input"""
 
     num_decimals = nums.count('.')
 
@@ -201,6 +204,7 @@ def __remove_excess_decimals(nums, confs):
 
 
 def __enforce_one_digit_score(nums, confs, max_val, min_value):
+    """Ensures the input contains at most one digit"""
 
     __prune_to_length(nums, confs, 1)
 
@@ -209,6 +213,7 @@ def __enforce_one_digit_score(nums, confs, max_val, min_value):
 
 
 def __enforce_two_digit_score(nums, confs, max_val, min_value):
+    """Ensures the input contains at most two digits"""
 
     if len(nums) == 1:
         nums[0], confs[0] = __force_into_range(nums[0], confs[0], 9, min_value)
@@ -230,6 +235,7 @@ def __enforce_two_digit_score(nums, confs, max_val, min_value):
 
 
 def __prune_to_length(nums, confs, length):
+    """Removes digits until the input is at the specified length"""
 
     while len(nums) > length:
 
@@ -255,6 +261,7 @@ def __prune_to_length(nums, confs, length):
 
 
 def __trim_until(nums, confs, stop_vals, stop_len=0):
+    """Removes leading digits until one of the stop values is found"""
 
     while nums[0] not in stop_vals:
 
@@ -268,6 +275,7 @@ def __trim_until(nums, confs, stop_vals, stop_len=0):
 
 
 def __force_into_range(num, conf, max_val, min_val=0):
+    """Ensures a digit is within the valid range"""
 
     if num < min_val:
 
@@ -283,15 +291,19 @@ def __force_into_range(num, conf, max_val, min_val=0):
 
 
 def __reduce_confidence(confs, less):
+    """Lowers the confidence of all input values"""
 
     for i in range(len(confs)):
         confs[i] -= less
 
 
 def __stringify(nums):
+    """Converts the input list into a string"""
+
     return ''.join(str(e) for e in nums)
 
 def __overall_confidence(confs):
+    """Returns the lowest confidence value"""
 
     if len(confs) == 0:
         return 0.0

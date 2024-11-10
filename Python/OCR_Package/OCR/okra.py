@@ -12,14 +12,20 @@ from . import OkraClassifier
 
 class DigitGetter:
     """
-    A basic OCR class that only works with numbers
+    A basic OCR class that only recognizes numbers.
 
     Attributes:
-        debug_images (bool): Output the input image after the preprocessing stage (default=False)
-        column_skip (int): The number of image columns to be skipped each loop of the scan (default=5)
-        fraction_padding (float): The minimum fractional percentage of the segmented image's height or width that should be padding (default=0.2)
-        find_decimal_points (bool): Determines whether or not decimal points will appear in the output (default=True)
-        find_minus_signs (bool): Determines whether or not minus signs will appear in the output (default=False)
+        debug_images (bool): Output the input image after the preprocessing
+                             stage (default=False).
+        column_skip (int): The number of image columns to be skipped each loop
+                           of the scan (default=5).
+        fraction_padding (float): The minimum fractional percentage of the
+                                  segmented image's height or width that
+                                  should be padding (default=0.2).
+        find_decimal_points (bool): Determines whether or not decimal points
+                                    will appear in the output (default=True).
+        find_minus_signs (bool): Determines whether or not minus signs will
+                                 appear in the output (default=False).
     """
 
     def __init__(self):
@@ -40,13 +46,13 @@ class DigitGetter:
 
     def __preprocess_image(self, img):
         """
-        Prepares an image for OCRing
+        Prepares an image for OCRing.
 
         Parameters:
-            img (numpy.ndarray): The image to process
+            img (numpy.ndarray): The image to process.
 
         Returns:
-            numpy.ndarray: The processed image
+            numpy.ndarray: The processed image.
         """
 
         # Convert to grayscale
@@ -77,13 +83,14 @@ class DigitGetter:
 
     def digit_from_image(self, img):
         """
-        Extracts a single digit from an image
+        Extracts a single digit from an image.
 
         Parameters:
-            img (numpy.ndarray): An image containing a single digit
+            img (numpy.ndarray): An image containing a single digit.
 
         Returns:
-            (int, float): A tuple with the digit's value and the confidence as a percentage
+            (int, float): A tuple with the digit's value and the confidence as
+                          a percentage.
         """
 
         try:
@@ -96,13 +103,14 @@ class DigitGetter:
 
     def __digit_from_image(self, img):
         """
-        Extracts a single digit from an image (no pre-processing)
+        Extracts a single digit from an image (no pre-processing).
 
         Parameters:
-            img (numpy.ndarray): An image containing a single digit
+            img (numpy.ndarray): An image containing a single digit.
 
         Returns:
-            (int, float): A tuple with the digit's value and the confidence as a percentage
+            (int, float): A tuple with the digit's value and the confidence as
+                          a percentage.
         """
 
         # Covert the numpy array to a torch tensor.
@@ -131,13 +139,14 @@ class DigitGetter:
 
     def image_to_digits(self, img):
         """
-        Extracts a line of digits from an image
+        Extracts a line of digits from an image.
 
         Parameters:
-            img (numpy.ndarray): An image containing some digits
+            img (numpy.ndarray): An image containing some digits.
 
         Returns:
-            (list(int), list(float)): A tuple with a list of digit values and a list of confidences as percentages
+            (list(int), list(float)): A tuple with a list of digit values and
+                                      a list of confidences as percentages.
         """
 
         try:
@@ -197,15 +206,15 @@ class DigitGetter:
 
     def __scan_columns(self, img, start_column):
         """
-        Scans the columns of an image to find digits
+        Scans the columns of an image to find digits.
 
         Parameters:
-            img (numpy.ndarray): An image containing some digits
-            start_column (int): The column index to start at
+            img (numpy.ndarray): An image containing some digits.
+            start_column (int): The column index to start at.
 
         Returns:
-            (int, int): The coordinates of the first digit pixel encountered
-            None: No digits found
+            (int, int): The coordinates of the first digit pixel encountered.
+            None: No digits found.
         """
 
         # x is the current column
@@ -229,14 +238,16 @@ class DigitGetter:
 
     def __segment_digit(self, img, start_pixel):
         """
-        Segments out a single digit from an image
+        Segments out a single digit from an image.
 
         Parameters:
-            img (numpy.ndarray): An image
-            start_pixel (int, int): The coordinate of the starting pixel
+            img (numpy.ndarray): An image.
+            start_pixel (int, int): The coordinate of the starting pixel.
 
         Returns:
-            (numpy.ndarray, int): A 3-tuple with a slice of img containing a single digit, the type of segment, and the adjacent column's index
+            (numpy.ndarray, int): A 3-tuple with a slice of img containing a
+                                  single digit, the type of segment, and the
+                                  adjacent column's index.
         """
 
         bounds = Boundary(start_pixel[1], start_pixel[0], start_pixel[1], start_pixel[0])
@@ -263,12 +274,13 @@ class DigitGetter:
 
     def __trace_digit(self, img, bounds, pixel):
         """
-        An edge tracing algorithm that finds the smallest box that fits a digit
+        An edge tracing algorithm that finds the smallest box that fits a
+        digit.
 
         Parameters:
-            img (numpy.ndarray): An image
-            bounds (Boundary): The object to store the bounds of the digit
-            pixel (int, int): The coordinate of the starting pixel
+            img (numpy.ndarray): An image.
+            bounds (Boundary): The object to store the bounds of the digit.
+            pixel (int, int): The coordinate of the starting pixel.
         """
 
         def move(direction):
@@ -343,14 +355,14 @@ class DigitGetter:
 
     def __get_segment_type(self, segment_shape, img_shape):
         """
-        Determines the contents of a segment based on its size and shape
+        Determines the contents of a segment based on its size and shape.
 
         Parameters:
-            segment_shape (int, int): The shape of the segment
-            img_shape (int, int): The shape of the original image
+            segment_shape (int, int): The shape of the segment.
+            img_shape (int, int): The shape of the original image.
 
         Returns:
-            SegmentType: The type of the segment
+            SegmentType: The type of the segment.
         """
 
         # Is this tall enough to be a digit?
@@ -371,13 +383,14 @@ class DigitGetter:
 
     def __apply_padding(self, img):
         """
-        Adds padding around an image. The resulting image will be very close to being square in shape
+        Adds padding around an image. The resulting image will be very close
+        to being square in shape.
 
         Parameters:
-            img (numpy.ndarray): The image to pad
+            img (numpy.ndarray): The image to pad.
 
         Returns:
-            numpy.ndarray: The padded image
+            numpy.ndarray: The padded image.
         """
 
         fixed_padding = int(max(img.shape) * self.fraction_padding)
@@ -407,13 +420,14 @@ class DigitGetter:
 
     def __get_decimal_confidence(self, segment_shape):
         """
-        Computes a confidence value for a decimal based on its eccentricity
+        Computes a confidence value for a decimal based on how round it is.
 
         Parameters:
-            segment_shape (int, int): The shape of the image segment containing the decimal point
+            segment_shape (int, int): The shape of the image segment
+                                      containing the decimal point.
 
         Returns:
-            float: The confidence as a percentage
+            float: The confidence as a percentage.
         """
 
         # Divide the smaller dimension by the larger dimension
@@ -434,13 +448,13 @@ class DigitGetter:
 
 class Boundary:
     """
-    A class for storing the location of an image slice
+    A class for storing the location of an image slice.
 
     Attributes:
-        top (int): The index of the top edge
-        right (int): The index of the right edge
-        bottom (int): The index of the bottom edge
-        left (int): The index of the left edge
+        top (int): The index of the top edge.
+        right (int): The index of the right edge.
+        bottom (int): The index of the bottom edge.
+        left (int): The index of the left edge.
     """
 
     def __init__(self, top, right, bottom, left):
@@ -458,13 +472,13 @@ class Boundary:
 
     def get_slice(self, img):
         """
-        Returns a slice of an image within the boundary
+        Returns a slice of an image within the boundary.
 
         Parameters:
-            img (numpy.ndarray): An image
+            img (numpy.ndarray): An image.
 
         Returns:
-            numpy.ndarray: A slice of img
+            numpy.ndarray: A slice of img.
         """
 
         # Adjust the edges if necessary
@@ -476,10 +490,10 @@ class Boundary:
 
     def fit_image(self, img):
         """
-        Adjusts the boundary to fit within an image
+        Adjusts the boundary to fit within an image.
 
         Parameters:
-            img (numpy.ndarray): An image
+            img (numpy.ndarray): An image.
         """
 
         # Make sure there are no negative edges
@@ -513,13 +527,14 @@ class Boundary:
 
 class SegmentType(Enum):
     """
-    An enumerated type to differentiate between digits, minus symbols, decimals, and noise
+    An enumerated type to differentiate between digits, minus symbols,
+    decimals, and noise.
 
     Values:
-        NOISE = 0   : A few disconnected pixels that should be ignored
-        DIGIT = 1   : A digit that should be passed to the classifier
-        MINUS = 2   : A minus symbol that will likely be ignored
-        DECIMAL = 3 : A decimal point
+        NOISE = 0   : A few disconnected pixels that should be ignored.
+        DIGIT = 1   : A digit that should be passed to the classifier.
+        MINUS = 2   : A minus symbol that will likely be ignored.
+        DECIMAL = 3 : A decimal point.
     """
 
     NOISE = 0
