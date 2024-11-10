@@ -38,9 +38,17 @@ of the prompt line in your terminal.
 
 ## Installing Packages
 
-Install the main dependencies (opencv, numpy, matplotlib) with the following command in a terminal:
+Install the main dependencies (opencv, numpy, matplotlib, filetype, termcolor)
+with the following command in a terminal:
 
-`pip install opencv-python numpy matplotlib termcolor`
+`pip install opencv-python numpy matplotlib filetype termcolor`
+
+Optionally, you can support *.heic* or *.pdf* file types by installing
+these dependencies:
+
+`pip install pillow_heif`
+
+`pip install pdf2image`
 
 Or if you're using python3 (numpy is installed along with opencv-python):
 `python3 -m pip install opencv-python matplotlib`
