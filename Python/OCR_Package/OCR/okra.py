@@ -158,19 +158,19 @@ class DigitGetter:
         numbers = []
         confidence = []
 
-        # Start with the image's first column
-        current_column = 0
+        # A dictionary to save the state of the scan
+        scan_state = {}
 
         # Loop until the scan returns 'None'
         while True:
 
-            digit_pixel = self.__scan_columns(img, current_column)
+            digit_pixel = self.__scan_columns(img, scan_state)
 
             if digit_pixel == None:
                 break
 
             # Get the slice of the image containing the digit
-            segment, segment_type, current_column = self.__segment_digit(img, digit_pixel)
+            segment, segment_type = self.__segment_digit(img, digit_pixel, scan_state)
 
             if segment_type == SegmentType.DIGIT:
 
@@ -204,30 +204,58 @@ class DigitGetter:
         return (numbers, confidence)
 
 
-    def __scan_columns(self, img, start_column):
+    def __scan_columns(self, img, scan_state):
         """
         Scans the columns of an image to find digits.
 
         Parameters:
             img (numpy.ndarray): An image containing some digits.
-            start_column (int): The column index to start at.
+            scan_state (dict): A dictionary object to save the state of the
+                               scan between calls. This should be {} on the
+                               first call.
 
         Returns:
             (int, int): The coordinates of the first digit pixel encountered.
             None: No digits found.
         """
 
+        if scan_state == {}:
+
+            scan_state['column'] = 0
+
+            scan_state['upper'] = [0]
+            scan_state['lower'] = [img.shape[0]]
+            scan_state['upper_stop'] = [img.shape[1]]
+            scan_state['lower_stop'] = [img.shape[1]]
+
+
         # x is the current column
         # y is the current row
 
-        x = start_column
+        x = scan_state['column']
 
         while x < img.shape[1]:
-            for y in range(img.shape[0]):
 
-                # Handwriting will have a value of 255
-                # The background has a value of 0
+            while scan_state['upper_stop'][-1] < x:
+
+                del scan_state['upper'][-1]
+                del scan_state['upper_stop'][-1]
+
+            while scan_state['lower_stop'][-1] < x:
+
+                del scan_state['lower'][-1]
+                del scan_state['lower_stop'][-1]
+
+            upper = scan_state['upper'][-1]
+            lower = scan_state['lower'][-1]
+
+            for y in range(upper, lower):
+
+                # Handwriting will have a non-zero value.
+                # The background has a value of 0.
                 if img[y, x] != 0:
+
+                    scan_state['column'] = x
                     return (x, y)
 
             # Move to the next column
@@ -236,18 +264,20 @@ class DigitGetter:
         return None
 
 
-    def __segment_digit(self, img, start_pixel):
+    def __segment_digit(self, img, start_pixel, scan_state):
         """
         Segments out a single digit from an image.
 
         Parameters:
             img (numpy.ndarray): An image.
             start_pixel (int, int): The coordinate of the starting pixel.
+            scan_state (dict): A dictionary object to save the state of the
+                               scan between function calls.
 
         Returns:
-            (numpy.ndarray, int): A 3-tuple with a slice of img containing a
-                                  single digit, the type of segment, and the
-                                  adjacent column's index.
+            (numpy.ndarray, SegmentType): A tuple with a slice of img
+                                          containing a single digit and the
+                                          type of segment.
         """
 
         bounds = Boundary(start_pixel[1], start_pixel[0], start_pixel[1], start_pixel[0])
@@ -256,8 +286,19 @@ class DigitGetter:
         # 'bounds' will be updated with the correct values.
         self.__trace_digit(img, bounds, start_pixel)
 
-        # The next column will be the column to the right of the segment
-        next_column = bounds.right + 1
+        # Update the scan state
+        if bounds.bottom < img.shape[0] // 2:
+
+            scan_state['upper'].append(bounds.bottom + 1)
+            scan_state['upper_stop'].append(bounds.right)
+
+        elif bounds.top > img.shape[0] // 2:
+
+            scan_state['lower'].append(bounds.top)
+            scan_state['lower_stop'].append(bounds.right)
+
+        else:
+            scan_state['column'] = bounds.right + 1
 
         # Figure out whats in this segment based on its size and shape
         segment_type = self.__get_segment_type(bounds.shape(), img.shape)
@@ -269,7 +310,7 @@ class DigitGetter:
         if segment_type == SegmentType.DIGIT:
             digit_segment = self.__apply_padding(digit_segment)
 
-        return (digit_segment, segment_type, next_column)
+        return (digit_segment, segment_type)
 
 
     def __trace_digit(self, img, bounds, pixel):
