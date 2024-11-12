@@ -10,54 +10,54 @@ CTR_HEIGHT = 3169
 # Global dictionary containing score field coordinates for each rider
 BC_TEMPLATE_FIELDS = {
     "Rider1": {
-        "Rider#": (363, 327, 95, 32),
-        "recovery": (361, 516, 107, 37),  # (x, y, width, height)
-        "hydration": (361, 561, 107, 29),
-        "lesions": (361, 600, 107, 29),
-        "soundness": (361, 670, 107, 37),
-        "qual_movement": (361, 717, 107, 29),
-        "rider_time": (307, 977, 116, 32),
-        "rider_weight": (307, 1316, 119, 32)
+        'Rider#': (363, 321, 95, 44),
+        'recovery': (361, 510, 107, 49), # (x, y, width, height)
+        'hydration': (361, 555, 107, 41),
+        'lesions': (361, 594, 107, 41),
+        'soundness': (361, 664, 107, 49),
+        'qual_movement': (361, 711, 107, 41),
+        'rider_time': (307, 971, 116, 44),
+        'rider_weight': (307, 1310, 119, 44)
     },
     "Rider2": {
-        'Rider#': (770, 327, 95, 32),
-        'recovery': (768, 516, 107, 37),
-        'hydration': (768, 561, 107, 29),
-        'lesions': (768, 600, 107, 29),
-        'soundness': (768, 670, 107, 37),
-        'qual_movement': (768, 717, 107, 29),
-        'rider_time': (714, 977, 116, 32),
-        'rider_weight': (714, 1316, 119, 32)
+        'Rider#': (770, 321, 95, 44),
+        'recovery': (768, 510, 107, 49),
+        'hydration': (768, 555, 107, 41),
+        'lesions': (768, 594, 107, 41),
+        'soundness': (768, 664, 107, 49),
+        'qual_movement': (768, 711, 107, 41),
+        'rider_time': (714, 971, 116, 44),
+        'rider_weight': (714, 1310, 119, 44)
     },
     "Rider3": {
-        'Rider#': (1183, 327, 95, 32),
-        'recovery': (1181, 516, 107, 37),
-        'hydration': (1181, 561, 107, 29),
-        'lesions': (1181, 600, 107, 29),
-        'soundness': (1181, 670, 107, 37),
-        'qual_movement': (1181, 717, 107, 29),
-        'rider_time': (1127, 977, 116, 32),
-        'rider_weight': (1127, 1316, 119, 32)
+        'Rider#': (1183, 321, 95, 44),
+        'recovery': (1181, 510, 107, 49),
+        'hydration': (1181, 555, 107, 41),
+        'lesions': (1181, 594, 107, 41),
+        'soundness': (1181, 664, 107, 49),
+        'qual_movement': (1181, 711, 107, 41),
+        'rider_time': (1127, 971, 116, 44),
+        'rider_weight': (1127, 1310, 119, 44)
     },
     "Rider4": {
-        'Rider#': (1590, 327, 95, 32),
-        'recovery': (1588, 516, 107, 37),
-        'hydration': (1588, 561, 107, 29),
-        'lesions': (1588, 600, 107, 29),
-        'soundness': (1588, 670, 107, 37),
-        'qual_movement': (1588, 717, 107, 29),
-        'rider_time': (1534, 977, 116, 32),
-        'rider_weight': (1534, 1316, 119, 32)
+        'Rider#': (1590, 321, 95, 44),
+        'recovery': (1588, 510, 107, 49),
+        'hydration': (1588, 555, 107, 41),
+        'lesions': (1588, 594, 107, 41),
+        'soundness': (1588, 664, 107, 49),
+        'qual_movement': (1588, 711, 107, 41),
+        'rider_time': (1534, 971, 116, 44),
+        'rider_weight': (1534, 1310, 119, 44)
     },
     "Rider5": {
-        'Rider#': (2003, 327, 95, 32),
-        'recovery': (2001, 516, 107, 37),
-        'hydration': (2001, 561, 107, 29),
-        'lesions': (2001, 600, 107, 29),
-        'soundness': (2001, 670, 107, 37),
-        'qual_movement': (2001, 717, 107, 29),
-        'rider_time': (1947, 977, 116, 32),
-        'rider_weight': (1947, 1316, 119, 32)
+        'Rider#': (2003, 321, 95, 44),
+        'recovery': (2001, 510, 107, 49),
+        'hydration': (2001, 555, 107, 41),
+        'lesions': (2001, 594, 107, 41),
+        'soundness': (2001, 664, 107, 49),
+        'qual_movement': (2001, 711, 107, 41),
+        'rider_time': (1947, 971, 116, 44),
+        'rider_weight': (1947, 1310, 119, 44)
     },
 }
 
