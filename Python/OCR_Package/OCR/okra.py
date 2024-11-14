@@ -1,14 +1,15 @@
-from torch.nn.functional import softmax
-from torch import argmax as torch_argmax
-import torchvision.transforms as transforms
-
 import numpy as np
 import cv2
-import matplotlib.pyplot as plt
 from enum import Enum
-from pathlib import Path
+import requests
+import json
 
-from . import OkraClassifier
+try:
+    import matplotlib.pyplot as plt
+    MATPLOTLIB_ENABLED = True
+except ImportError:
+    MATPLOTLIB_ENABLED = False
+
 
 class DigitGetter:
     """
@@ -28,14 +29,20 @@ class DigitGetter:
                                  appear in the output (default=False).
     """
 
-    def __init__(self):
+    def __init__(self, debug=False):
         """Creates a new instance of DigitGetter"""
 
-        # Load model
-        self.__model = OkraClassifier.get_model(Path(__file__).parent / 'weights' / 'okra.resnet.weights')
-        self.__model.eval()
+        self.__debug = debug
+
+        if debug:
+
+            from .OkraHandler import OkraHandler            
+            
+            self.__model_handle = OkraHandler()
+            self.__model_handle.initialize()
 
         # Set default attributes
+        
         self.debug_images = False
         self.column_skip = 3
         self.fraction_padding = 0.2
@@ -113,28 +120,25 @@ class DigitGetter:
                           a percentage.
         """
 
-        # Covert the numpy array to a torch tensor.
-        # Resize it to 28x28 (This is the size of the MNIST images).
-        transform = transforms.Compose([transforms.ToTensor(), transforms.Resize((28, 28))])
-        img = transform(img)
+        self.__show_debug_image(img, 'Digit')
+        
+        req = {"data": img.tobytes(), "x": img.shape[1], "y": img.shape[0]}
 
-        self.__show_debug_image(img[0].numpy(), 'Digit')
+        if self.__debug:
 
-        # Adds two dimensions to the 28x28 img so it "fits" into the model.
-        # This doesn't actually alter the data; it basically adds extra brackets around the array
-        img = img.reshape((1, 1, 28, 28))
+            res = self.__model_handle.handle(req)
+            body = json.loads(res[0])
 
-        # Run the model with the image
-        results = self.__model(img)
+        else:
 
-        # Convert the results into probabilities
-        probabilities = softmax(results[0], dim=0)
+            res = requests.post('http://localhost:6060/predictions/OkraClassifier', data=req)
+            body = res.json()
 
-        # The index with the highest probability is the predicted value
-        digit_value = torch_argmax(probabilities)
-        confidence = probabilities[digit_value] * 100
+            if res.status_code != 200:
+                print(body)
+                raise Exception('Torchserve error')
 
-        return (digit_value.item(), confidence.item())
+        return (body['Digit'], body['Confidence'])
 
 
     def image_to_digits(self, img):
@@ -481,10 +485,17 @@ class DigitGetter:
     def __show_debug_image(self, img, title):
         """Helper function to display a matplotlib plot of an image"""
 
-        if self.debug_images:
-            plt.imshow(img)
-            plt.title(title)
-            plt.show()
+        if self.__debug:
+            if self.debug_images:
+                if MATPLOTLIB_ENABLED:
+
+                    plt.imshow(img)
+                    plt.title(title)
+                    plt.show()
+
+                else:
+
+                    print('Warning: matplotlib is not configured')
 
 
 class Boundary:

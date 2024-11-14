@@ -4,7 +4,7 @@ from termcolor import colored
 from pathlib import Path
 
 
-dg = okra.DigitGetter()
+dg = okra.DigitGetter(debug=True)
 
 # Uncomment this line to display images while OCRing
 #dg.debug_images = True
