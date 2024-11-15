@@ -1,6 +1,7 @@
 import cv2 as cv
 import numpy as np
 
+from . import template
 
 
 def BCAlignImage(image):
@@ -12,6 +13,85 @@ def BCAlignImage(image):
 
     Returns:
         numpy.ndarray: The aligned image.
+    """
+
+    # Locate the corners of the page inside the margin
+    scanned_corners = __find_corners(image)
+
+    # Compute the scale between this image and the template image
+    x_scale = image.shape[1] / template.BC_WIDTH
+    y_scale = image.shape[0] / template.BC_HEIGHT
+
+    # Calculate the the locations of the template corners at the scale of this
+    # image
+    template_corners = np.float32([
+        [100  * x_scale, 96   * y_scale],
+        [2098 * x_scale, 100  * y_scale],
+        [100  * x_scale, 1587 * y_scale],
+        [2098 * x_scale, 1587 * y_scale]
+    ])
+
+    # Apply a perspective transformation to align the image
+    M = cv.getPerspectiveTransform(scanned_corners, template_corners)
+    image = cv.warpPerspective(image, M, (image.shape[1], image.shape[0]))
+
+    return image
+
+
+def CTRAlignImage(image):
+    """
+    Aligns an extracted CTR page with the template page.
+
+    Parameters:
+        image (numpy.ndarray): The image to align.
+
+    Returns:
+        numpy.ndarray: The aligned image.
+    """
+
+    # Locate the corners of the page inside the margin
+    scanned_corners = __find_corners(image)
+
+    # Compute the scale between this image and the template image
+    x_scale = image.shape[1] / template.CTR_WIDTH
+    y_scale = image.shape[0] / template.CTR_HEIGHT
+
+    # Calculate the the locations of the template corners at the scale of this
+    # image
+    template_corners = np.float32([
+        [117  * x_scale, 69   * y_scale],
+        [1583 * x_scale, 64   * y_scale],
+        [117  * x_scale, 2748 * y_scale],
+        [1584 * x_scale, 2749 * y_scale]
+    ])
+
+    # Apply a perspective transformation to align the image
+    M = cv.getPerspectiveTransform(scanned_corners, template_corners)
+    image = cv.warpPerspective(image, M, (image.shape[1], image.shape[0]))
+
+    # for c in scanned_corners:
+    #     cv.circle(image, (int(c[0]), int(c[1])), radius=6, color=(0, 0, 255), thickness=-1)
+
+    # resized = cv.resize(image, (0, 0), fx = 0.3, fy = 0.3, interpolation=cv.INTER_AREA)
+
+    # cv.imshow('image', resized)
+    # cv.waitKey(0)
+    # cv.destroyAllWindows()
+
+
+    return image
+
+
+def __find_corners(image):
+    """
+    Locates the corners of the page inside the margins.
+
+    Parameters:
+        image (numpy.ndarray): The image of the page.
+
+    Returns:
+        numpy.ndarray: A array with shape (4, 2) containing the coordinates of
+                       the four corners.
     """
 
     # Create grayscale version of the image
@@ -38,81 +118,19 @@ def BCAlignImage(image):
     BR_Y = thresh_image.shape[0] - 1
 
 
-    def fit_x(col, row_slice, step):
-        """
-        Repeatedly checks a column of pixels until a black pixel is found
-
-        Parameters:
-            col (int): The index of the starting column.
-            row_slice (slice): A slice defining which rows to check.
-            step (int): The direction col should be updated after each check.
-                        This should be either +1 or -1.
-
-        Returns:
-            int: The index of the column in which the first black pixel
-                 was found.
-        """
-
-        while thresh_image[row_slice, col].min() == 0:
-            col += step
-
-        while thresh_image[row_slice, col].min() != 0:
-            col += step
-
-        return col
-
-
-    def fit_y(row, col_slice, step):
-        """
-        Repeatedly checks a row of pixels until a black pixel is found
-
-        Parameters:
-            row (int): The index of the starting row.
-            col_slice (slice): A slice defining which columns to check.
-            step (int): The direction row should be updated after each check.
-                        This should be either +1 or -1.
-
-        Returns:
-            int: The index of the row in which the first black pixel
-                 was found.
-        """
-
-        while thresh_image[row, col_slice].min() == 0:
-            row += step
-
-        while thresh_image[row, col_slice].min() != 0:
-            row += step
-
-        return row
-
-
     # Find the corners
 
-    TL_X = fit_x(TL_X, slice(100, 800), +1)
-    TL_Y = fit_y(TL_Y, slice(100, 800), +1)
+    TL_X = __fit_x(thresh_image, TL_X, slice(100, 800), +1)
+    TL_Y = __fit_y(thresh_image, TL_Y, slice(100, 800), +1)
 
-    TR_X = fit_x(TR_X, slice(100, 800), -1)
-    TR_Y = fit_y(TR_Y, slice(-800, -100), +1)
+    TR_X = __fit_x(thresh_image, TR_X, slice(100, 800), -1)
+    TR_Y = __fit_y(thresh_image, TR_Y, slice(-800, -100), +1)
 
-    BL_X = fit_x(BL_X, slice(-800, -100), +1)
-    BL_Y = fit_y(BL_Y, slice(100, 800), -1)
+    BL_X = __fit_x(thresh_image, BL_X, slice(-800, -100), +1)
+    BL_Y = __fit_y(thresh_image, BL_Y, slice(100, 800), -1)
 
-    BR_X = fit_x(BR_X, slice(-800, -100), -1)
-    BR_Y = fit_y(BR_Y, slice(-800, -100), -1)
-
-
-    # Compute the scale between this image and the template image
-    x_scale = image.shape[1] / 2200
-    y_scale = image.shape[0] / 1700
-
-    # Calculate the the locations of the template corners at the scale of this
-    # image
-    template_corners = np.float32([
-        [100  * x_scale, 96   * y_scale],
-        [2098 * x_scale, 100  * y_scale],
-        [100  * x_scale, 1587 * y_scale],
-        [2098 * x_scale, 1587 * y_scale]
-    ])
+    BR_X = __fit_x(thresh_image, BR_X, slice(-800, -100), -1)
+    BR_Y = __fit_y(thresh_image, BR_Y, slice(-800, -100), -1)
 
     # Place the corner coordinates in a numpy array
     scanned_corners = np.float32([
@@ -122,21 +140,56 @@ def BCAlignImage(image):
         [BR_X, BR_Y]
     ])
 
-    # Apply a perspective transformation to align the image
-    M = cv.getPerspectiveTransform(scanned_corners, template_corners)
-    image = cv.warpPerspective(image, M, (image.shape[1], image.shape[0]))
+    return scanned_corners
 
 
-    # for c in template_corners:
-    #     cv.circle(image, (int(c[0]), int(c[1])), radius=6, color=(0, 0, 255), thickness=-1)
+def __fit_x(image, col, row_slice, step):
+    """
+    Repeatedly checks a column of pixels until a black pixel is found
 
-    # resized = cv.resize(image, (0, 0), fx = 0.4, fy = 0.4, interpolation=cv.INTER_AREA)
+    Parameters:
+        image (numpy.ndarray): A thresholded version of the image being
+                               aligned.
+        col (int): The index of the starting column.
+        row_slice (slice): A slice defining which rows to check.
+        step (int): The direction col should be updated after each check.
+                    This should be either +1 or -1.
 
-    # cv.imwrite('corner.jpg', resized)
-    # cv.imshow('image', resized)
-    # cv.waitKey(0)
-    # cv.destroyAllWindows()
+    Returns:
+        int: The index of the column in which the first black pixel
+             was found.
+    """
+
+    while image[row_slice, col].min() == 0:
+        col += step
+
+    while image[row_slice, col].min() != 0:
+        col += step
+
+    return col
 
 
-    return image
+def __fit_y(image, row, col_slice, step):
+    """
+    Repeatedly checks a row of pixels until a black pixel is found
 
+    Parameters:
+        image (numpy.ndarray): A thresholded version of the image being
+                               aligned.
+        row (int): The index of the starting row.
+        col_slice (slice): A slice defining which columns to check.
+        step (int): The direction row should be updated after each check.
+                    This should be either +1 or -1.
+
+    Returns:
+        int: The index of the row in which the first black pixel
+             was found.
+    """
+
+    while image[row, col_slice].min() == 0:
+        row += step
+
+    while image[row, col_slice].min() != 0:
+        row += step
+
+    return row

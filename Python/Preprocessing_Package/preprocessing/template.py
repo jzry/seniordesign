@@ -4,8 +4,8 @@
 BC_WIDTH = 2200
 BC_HEIGHT = 1700
 
-CTR_WIDTH = 1971
-CTR_HEIGHT = 3169
+CTR_WIDTH = 1700
+CTR_HEIGHT = 2800
 
 # Global dictionary containing score field coordinates for each rider
 BC_TEMPLATE_FIELDS = {
@@ -62,22 +62,22 @@ BC_TEMPLATE_FIELDS = {
 }
 
 CTR_TEMPLATE_FIELDS = {
-    "initial_pulse_before": (1608, 1227, 115, 95), # (x, y, width, height)
-    "initial_pulse_after": (1608, 1337, 120, 120),
-    "mucous_membrane": (1607, 1587, 115, 42),
-    "capillary_refill": (1607, 1630, 115, 40),
-    "skin_pinch": (1607, 1674, 115, 40),
-    "jugular_vein_refill": (1607, 1721, 115, 40),
-    "gut_sounds": (1607, 1768, 115, 40),
-    "anal_tone": (1607, 1925, 115, 88),
-    "muscle_tone": (1606, 2020, 115, 40),
-    "unwillingness_to_trot": (1606, 2071, 115, 40),
-    "leg_injuries": (1607, 2120, 115, 120),
-    "injury_interference": (1607, 2255, 115, 55),
-    "lameness_grade1": (1607, 2340, 115, 80),
-    "lameness_grade2": (1607, 2430, 115, 44),
-    "back_stress": (1607, 2585, 115, 62),
-    "tack_area": (1607, 2679, 115, 65),
-    "hold_on_trail": (1728, 2777, 108, 40),
-    "time_penalty": (1728, 2824, 108, 50)
+    "initial_pulse_before": (1384, 1110, 89, 76), # (x, y, width, height)
+    "initial_pulse_after": (1384, 1202, 89, 102),
+    "mucous_membrane": (1384, 1428, 89, 29),
+    "capillary_refill": (1384, 1467, 89, 29),
+    "skin_pinch": (1384, 1509, 89, 29),
+    "jugular_vein_refill": (1384, 1548, 89, 29),
+    "gut_sounds": (1384, 1589, 89, 29),
+    "anal_tone": (1384, 1731, 89, 72),
+    "muscle_tone": (1384, 1815, 89, 37),
+    "unwillingness_to_trot": (1384, 1863, 89, 27),
+    "leg_injuries": (1384, 1903, 89, 109),
+    "injury_interference": (1384, 2025, 89, 46),
+    "lameness_grade1": (1384, 2097, 89, 74),
+    "lameness_grade2": (1384, 2182, 89, 37),
+    "back_stress": (1384, 2317, 89, 54),
+    "tack_area": (1384, 2404, 89, 53),
+    "hold_on_trail": (1489, 2489, 86, 30),
+    "time_penalty": (1489, 2531, 86, 43)
 }

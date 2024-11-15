@@ -5,7 +5,7 @@ import numpy as np
 from . import template
 from . import scoresheet
 # from . import horizontal_remover
-from .lime import BCAlignImage
+from .lime import BCAlignImage, CTRAlignImage
 
 """
 Function Brief: Extracts and marks predefined segments (fields) for each rider section on an image.
@@ -132,6 +132,13 @@ def CTRSegments(image):
     # extracted_image = cv.imread(image)
     extracted_image = scoresheet.Paper_Extraction(image)
 
+    # Gives aligned image to the template
+    extracted_image = CTRAlignImage(extracted_image)
+
+
+    horizontal_scalefactor = 1
+    vertical_scalefactor = 1
+
     # # Check if the result is an integer indicating failure
     if isinstance(extracted_image, int) and extracted_image == -1:
         print("Error: Cannot read image file after extraction.")
@@ -139,8 +146,8 @@ def CTRSegments(image):
     else:
         # Get, Check and Resize(if needed) dimensions of extracted_image
         height, width = extracted_image.shape[:2]
-        if(height != template.CTR_HEIGHT and width != template.CTR_WIDTH) :
-            extracted_image = cv.resize(extracted_image, (template.CTR_WIDTH, template.CTR_HEIGHT))
+        horizontal_scalefactor = width / template.CTR_WIDTH
+        vertical_scalefactor = height / template.CTR_HEIGHT
 
     '''Just for the sake of verfiy the output
     ------------------------------------------------------------------'''
@@ -148,6 +155,12 @@ def CTRSegments(image):
     '''------------------------------------------------------------------'''
 
     for field_name, (x, y, w, h) in template.CTR_TEMPLATE_FIELDS.items():
+
+        x = int(np.round(x * horizontal_scalefactor))
+        w = int(np.round(w * horizontal_scalefactor))
+        y = int(np.round(y * vertical_scalefactor))
+        h = int(np.round(h * vertical_scalefactor))
+
         # Extract each field from the image
         field_image = extracted_image[y:y + h, x:x + w]
 
@@ -166,7 +179,7 @@ def CTRSegments(image):
 
 
     if cv.imwrite('outfield.jpg', marked_image):
-        print(f"Extraction complete. Output saved to {marked_image}")
+        print("Extraction complete. Output saved.")
 
     return extracted_fields
 
