@@ -72,6 +72,15 @@ def process_BCE(image_buffer):
         insert_into_dict(rider_dict, 'Ride time, this rider', v.validate_time(dg.image_to_digits(extracted_fields[rider_key]['rider_time'])))
         insert_into_dict(rider_dict, 'Weight of this rider',  v.validate_weight(dg.image_to_digits(extracted_fields[rider_key]['rider_weight'])))
 
+        numBlank = 0
+
+        for key in rider_dict.keys():
+            if rider_dict[key]['value'] == '':
+                numBlank += 1
+
+        if numBlank >= 5:
+            break
+
         output_dict['riderData'].append(rider_dict)
         output_dict['riderCount'] += 1
 
@@ -120,7 +129,7 @@ def debug_main():
 
 
 # Do It
-main()
+# main()
 
 # For debugging only
-# debug_main()
+debug_main()
