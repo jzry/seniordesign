@@ -129,7 +129,7 @@ def debug_main():
 
 
 # Do It
-# main()
+main()
 
 # For debugging only
-debug_main()
+# debug_main()
