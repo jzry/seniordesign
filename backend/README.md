@@ -19,3 +19,7 @@ Once running, navigate to "http://localhost:8080/" in your web browser. If succe
 ### Test with frontend
 
 While running the application, open up a new terminal window, navigate to the frontend directory, and enter `npm run start` to start up the React app on "http://localhost:3000/". If you navigate to the CTR Scorecard and submit an uploaded image, this image should be sent to the "Image Processing Test"
+
+## API Documentation
+
+Read the [API Documentation](API.md)
