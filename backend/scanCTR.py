@@ -51,6 +51,7 @@ def process_CTR(image_buffer):
     field_keys = extracted_fields.keys()
 
     output_dict = {}
+    output_dict['riderData'] = {}
 
     max_score_per_field = [5, 5, 5, 5, 5, 3, 0, 2, 5, 5, 20, 5, 10, 25, 5, 5, None, None]
     out_field_keys = [
@@ -87,7 +88,7 @@ def process_CTR(image_buffer):
 
         num, conf = v.validate_score(raw_ouput, max_score_per_field[i])
 
-        output_dict[out_field_keys[i]] = {'value': num, 'confidence': conf}
+        output_dict['riderData'][out_field_keys[i]] = {'value': num, 'confidence': conf}
 
 
 
@@ -99,7 +100,7 @@ def debug_main():
     from termcolor import colored
     from pathlib import Path
 
-    filename = 'CTR-1.jpg'
+    filename = 'CTR-black-1.jpg'
 
     full_path = Path(__file__).parent.parent / 'Python' / 'Preprocessing_Package' / 'preprocessing' / 'ctr' / filename
 
@@ -108,19 +109,21 @@ def debug_main():
 
     ret_val = process_CTR(image_buffer)
 
-    for key in ret_val.keys():
+    rider_dict = ret_val['riderData']
+
+    for key in rider_dict.keys():
 
         if key == 'gut_sounds':
             continue
 
-        if ret_val[key]['confidence'] >= 90.0:
-            print(key, colored(ret_val[key]['value'], color='green', attrs=['bold']))
-        elif ret_val[key]['confidence'] >= 80.0:
-            print(key, colored(ret_val[key]['value'], color='yellow', attrs=['bold']))
-        elif ret_val[key]['value'] == '':
+        if rider_dict[key]['confidence'] >= 90.0:
+            print(key, colored(rider_dict[key]['value'], color='green', attrs=['bold']))
+        elif rider_dict[key]['confidence'] >= 80.0:
+            print(key, colored(rider_dict[key]['value'], color='yellow', attrs=['bold']))
+        elif rider_dict[key]['value'] == '':
             print(colored(key, color='red', attrs=['bold']))
         else:
-            print(key, colored(ret_val[key]['value'], color='red', attrs=['bold']))
+            print(key, colored(rider_dict[key]['value'], color='red', attrs=['bold']))
 
 
 

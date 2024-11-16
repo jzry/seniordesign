@@ -50,36 +50,41 @@ def process_BCE(image_buffer):
 
     rider_keys = extracted_fields.keys()
     output_dict = {}
+    output_dict['riderData'] = []
+    output_dict['riderCount'] = 0
 
     for rider_key in rider_keys:
 
-        output_dict[rider_key] = {}
+        rider_dict = {}
 
         #
         # Dictionary   <--   OCR validation   <--   OCR   <--   Image Segments
         #
 
-        insert_into_dict(output_dict, rider_key, 'Rider number',        v.validate_rider_number(dg.image_to_digits(extracted_fields[rider_key]['Rider#'])))
+        insert_into_dict(rider_dict, 'Rider number', v.validate_rider_number(dg.image_to_digits(extracted_fields[rider_key]['Rider#'])))
 
-        insert_into_dict(output_dict, rider_key, 'Recovery',      v.validate_score(dg.image_to_digits(extracted_fields[rider_key]['recovery']),      10, 1))
-        insert_into_dict(output_dict, rider_key, 'Hydration',     v.validate_score(dg.image_to_digits(extracted_fields[rider_key]['hydration']),     10, 1))
-        insert_into_dict(output_dict, rider_key, 'Lesions',       v.validate_score(dg.image_to_digits(extracted_fields[rider_key]['lesions']),       10, 1))
-        insert_into_dict(output_dict, rider_key, 'Soundness',     v.validate_score(dg.image_to_digits(extracted_fields[rider_key]['soundness']),     10, 1))
-        insert_into_dict(output_dict, rider_key, 'Qual Mvmt', v.validate_score(dg.image_to_digits(extracted_fields[rider_key]['qual_movement']), 10, 1))
+        insert_into_dict(rider_dict, 'Recovery',  v.validate_score(dg.image_to_digits(extracted_fields[rider_key]['recovery']),      10, 1))
+        insert_into_dict(rider_dict, 'Hydration', v.validate_score(dg.image_to_digits(extracted_fields[rider_key]['hydration']),     10, 1))
+        insert_into_dict(rider_dict, 'Lesions',   v.validate_score(dg.image_to_digits(extracted_fields[rider_key]['lesions']),       10, 1))
+        insert_into_dict(rider_dict, 'Soundness', v.validate_score(dg.image_to_digits(extracted_fields[rider_key]['soundness']),     10, 1))
+        insert_into_dict(rider_dict, 'Qual Mvmt', v.validate_score(dg.image_to_digits(extracted_fields[rider_key]['qual_movement']), 10, 1))
 
-        insert_into_dict(output_dict, rider_key, 'Ride time, this rider',    v.validate_time(dg.image_to_digits(extracted_fields[rider_key]['rider_time'])))
-        insert_into_dict(output_dict, rider_key, 'Weight of this rider',  v.validate_weight(dg.image_to_digits(extracted_fields[rider_key]['rider_weight'])))
+        insert_into_dict(rider_dict, 'Ride time, this rider', v.validate_time(dg.image_to_digits(extracted_fields[rider_key]['rider_time'])))
+        insert_into_dict(rider_dict, 'Weight of this rider',  v.validate_weight(dg.image_to_digits(extracted_fields[rider_key]['rider_weight'])))
+
+        output_dict['riderData'].append(rider_dict)
+        output_dict['riderCount'] += 1
 
     return output_dict
 
 #
 # Helper function to insert outputs into the dictionary
 #
-def insert_into_dict(dictionary, rider, field, output):
+def insert_into_dict(dictionary, field, output):
 
     num, conf = output
 
-    dictionary[rider][field] = {'value': num, 'confidence': conf}
+    dictionary[field] = {'value': num, 'confidence': conf}
 
 
 def debug_main():
@@ -87,7 +92,7 @@ def debug_main():
     from termcolor import colored
     from pathlib import Path
 
-    filename = 'BC-1.jpg'
+    filename = 'BC-black-1.jpg'
 
     full_path = Path(__file__).parent.parent / 'Python' / 'Preprocessing_Package' / 'preprocessing' / 'bc' / filename
 
@@ -96,20 +101,22 @@ def debug_main():
 
     ret_val = process_BCE(image_buffer)
 
-    for rider_key in ret_val.keys():
+    for riderNumber in range(ret_val['riderCount']):
 
-        print(colored(f'----------- {rider_key}', color='blue', attrs=['bold']))
+        print(colored(f'----------- Rider {riderNumber + 1}', color='blue', attrs=['bold']))
 
-        for key in ret_val[rider_key].keys():
+        rider_dict = ret_val['riderData'][riderNumber]
 
-            if ret_val[rider_key][key]['confidence'] >= 90.0:
-                print(key, colored(ret_val[rider_key][key]['value'], color='green', attrs=['bold']))
-            elif ret_val[rider_key][key]['confidence'] >= 80.0:
-                print(key, colored(ret_val[rider_key][key]['value'], color='yellow', attrs=['bold']))
-            elif ret_val[rider_key][key]['value'] == '':
+        for key in rider_dict.keys():
+
+            if rider_dict[key]['confidence'] >= 90.0:
+                print(key, colored(rider_dict[key]['value'], color='green', attrs=['bold']))
+            elif rider_dict[key]['confidence'] >= 80.0:
+                print(key, colored(rider_dict[key]['value'], color='yellow', attrs=['bold']))
+            elif rider_dict[key]['value'] == '':
                 print(colored(key, color='red', attrs=['bold']))
             else:
-                print(key, colored(ret_val[rider_key][key]['value'], color='red', attrs=['bold']))
+                print(key, colored(rider_dict[key]['value'], color='red', attrs=['bold']))
 
 
 # Do It
