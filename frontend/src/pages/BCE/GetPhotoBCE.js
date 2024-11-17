@@ -54,6 +54,7 @@ function GetPhotoBCE({ numberOfRiders, fastestRiderTime, heaviestRiderWeight }) 
         console.error("The image was not processed correctly")
       }
 
+
       let bceData = extractedDataList
 
       Object.keys(response.data).forEach(key => {

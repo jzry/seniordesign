@@ -90,6 +90,10 @@ if (devMode === 'development') {
   app.use(cors(corsOptions))
 }
 
+if (devMode === 'production') {
+  app.use(express.static(path.join(__dirname, '../frontend/build')))
+}
+
 // Use cookie parser
 app.use(cookieParser())
 
