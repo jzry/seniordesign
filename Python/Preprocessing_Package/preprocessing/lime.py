@@ -49,8 +49,17 @@ def CTRAlignImage(image):
         numpy.ndarray: The aligned image.
     """
 
-    # Locate the corners of the page inside the margin
-    scanned_corners = __find_corners(image)
+    try:
+
+        # Locate the corners of the page inside the margin
+        scanned_corners = __find_corners(image)
+
+    except RuntimeError:
+
+        print('Warning: lime.py failed to align the image.')
+
+        # If we can't find the corners, return the original image
+        return image
 
     # Compute the scale between this image and the template image
     x_scale = image.shape[1] / template.CTR_WIDTH
@@ -92,6 +101,9 @@ def __find_corners(image):
     Returns:
         numpy.ndarray: A array with shape (4, 2) containing the coordinates of
                        the four corners.
+
+    Raises:
+        RuntimeError: Unable to locate all corners
     """
 
     # Create grayscale version of the image
@@ -158,13 +170,24 @@ def __fit_x(image, col, row_slice, step):
     Returns:
         int: The index of the column in which the first black pixel
              was found.
+
+    Raises:
+        RuntimeError: Unable to locate corner x-coordinate
     """
 
     while image[row_slice, col].min() == 0:
+
         col += step
 
+        if col >= image.shape[1] or col < 0:
+            raise RuntimeError('Unable to find x-coordinate of corner')
+
     while image[row_slice, col].min() != 0:
+
         col += step
+
+        if col >= image.shape[1] or col < 0:
+            raise RuntimeError('Unable to find x-coordinate of corner')
 
     return col
 
@@ -184,12 +207,23 @@ def __fit_y(image, row, col_slice, step):
     Returns:
         int: The index of the row in which the first black pixel
              was found.
+
+    Raises:
+        RuntimeError: Unable to locate corner y-coordinate
     """
 
     while image[row, col_slice].min() == 0:
+
         row += step
 
+        if row >= image.shape[0] or row < 0:
+            raise RuntimeError('Unable to find y-coordinate of corner')
+
     while image[row, col_slice].min() != 0:
+
         row += step
+
+        if row >= image.shape[0] or row < 0:
+            raise RuntimeError('Unable to find y-coordinate of corner')
 
     return row
