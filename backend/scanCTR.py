@@ -46,7 +46,7 @@ def process_CTR(image_buffer):
     extracted_fields = CTRSegments(image_buffer)
 
     # Prepare the OCR
-    dg = okra.DigitGetter()
+    dg = okra.DigitGetter(debug=True)
 
     field_keys = extracted_fields.keys()
 

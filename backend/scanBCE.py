@@ -46,7 +46,7 @@ def process_BCE(image_buffer):
     extracted_fields = BCSegments(image_buffer)
 
     # Prepare the OCR
-    dg = okra.DigitGetter()
+    dg = okra.DigitGetter(debug=True)
 
     rider_keys = extracted_fields.keys()
     output_dict = {}
