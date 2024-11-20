@@ -43,7 +43,14 @@ Prediction = {    // A JSON object
 
 ___
 
+Status Code **400**
+- Unsupported image format
+
 Status Code **500**
+- Internal Server Error
+
+Status Code **555**
+- Failed to process image
 
 ```javascript
 {
@@ -59,7 +66,7 @@ Receives a single image.
 
 - **Headers**
     - `Content-Type`: `multipart/form-data`
-    
+
 - **Form**
     - `image`: *\<image data\>*
 
@@ -103,7 +110,14 @@ Prediction = {    // A JSON object
 
 ___
 
+Status Code **400**
+- Unsupported image format
+
 Status Code **500**
+- Internal Server Error
+
+Status Code **555**
+- Failed to process image
 
 ```javascript
 {

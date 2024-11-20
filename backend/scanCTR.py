@@ -22,11 +22,23 @@ def main():
 
             print('ERROR if you see this message')
 
-            ret_val = process_CTR(image_buffer)
+            try:
+                ret_val = process_CTR(image_buffer)
+
+            except TypeError as e:
+                ret_val['error'] = str(e)
+                ret_val['status'] = 400
+
+            except NotImplementedError as e:
+                ret_val['error'] = str(e)
+                ret_val['status'] = 400
+
+            except RuntimeError as e:
+                ret_val['error'] = str(e)
+                ret_val['status'] = 555
 
     else:
-
-        ret_val['error'] = 'Incorrect number of arguments'
+        raise Exception('ScanCTR.py: Incorrect number of arguments')
 
 
     # Return the results as JSON through stdout

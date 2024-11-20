@@ -31,7 +31,7 @@ function runPythonProcess(scriptName, image)
 
         // Create the process. Pass the script name and the number of bytes as command line arguments
         //
-        const pythonProcess = spawn('python3', [scriptName, image.size])
+        const pythonProcess = spawn('python', [scriptName, image.size])
 
         let result = ''
         let errResult = ''
@@ -54,7 +54,7 @@ function runPythonProcess(scriptName, image)
                 console.warn(`(${__filename}) ${err}`)
             })
         }
-        
+
         // Read response data
         //
         pythonProcess.stdout.on('data', (data) => {
@@ -98,17 +98,31 @@ async function runScript(scriptName, image)
     catch (e)
     {
         console.error(e)
-        return { error: 'The python code has encountered an error' }
+        return {
+            error: 'The child process has encountered an error',
+            status: 500
+        }
     }
 
     try
     {
         var ret = JSON.parse(res)
+
+        if (ret.status)
+        {
+            if (ret.status >= 500)
+                console.error(ret.error)
+            else
+                console.warn(ret.error)
+        }
     }
     catch (e)
     {
         console.error(`ERROR (${__filename}): ${e.message}\n${res}`)
-        var ret = { error: 'Unable to parse python return value as JSON' }
+        var ret = {
+            error: 'The child process returned a corrupted value',
+            status: 500
+        }
     }
 
     return ret

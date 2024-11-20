@@ -27,7 +27,7 @@ function validateData(/*req, res, next*/ fakeCTRData) {
       return res.status(400).json({ error: `Invalid format for key "${key}". Each value should contain "value" and "confidence" fields.` });
     }
 
-    // Validate that the request 
+    // Validate that the request
     if (!Number.isInteger(item.value)) {
       return res.status(400).json({ error: `Invalid value for "${key}". "value" must be an integer.` });
     }
@@ -116,10 +116,13 @@ app.post('/ctr', validateImage, async (req, res) => {
   // Send the image to the Python code to be processed
   output = await pyconnect.processCTR(sampleFile)
 
-  if (output.error)
-    res.status(500)
-
-  res.json(output)
+  if (output.status) {
+    res.status(output.status)
+    res.json({'error': output.error})
+  }
+  else {
+    res.json(output)
+  }
 });
 
 app.post('/bce', validateImage, async (req, res) => {
@@ -139,10 +142,13 @@ app.post('/bce', validateImage, async (req, res) => {
   // Send the image to the Python code to be processed
   output = await pyconnect.processBCE(sampleFile)
 
-  if (output.error)
-    res.status(500)
-
-  res.json(output)
+  if (output.status) {
+    res.status(output.status)
+    res.json({'error': output.error})
+  }
+  else {
+    res.json(output)
+  }
 });
 
 
