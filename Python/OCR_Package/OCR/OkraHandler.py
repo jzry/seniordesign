@@ -1,4 +1,13 @@
-from ts.torch_handler.base_handler import BaseHandler
+try:
+    from ts.torch_handler.base_handler import BaseHandler
+
+except ImportError:
+    
+    # If were not using TorchServe,
+    # we don't really need to inherit
+    # from the actual torchserve handler.
+    class BaseHandler:
+        pass
 
 from torch import load as torch_load, device as torch_device, argmax as torch_argmax, no_grad
 from torch.nn.functional import softmax
