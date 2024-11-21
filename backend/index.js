@@ -44,8 +44,16 @@ function validateData(/*req, res, next*/ fakeCTRData) {
 
 // Middleware function to validate the image input by the user
 function validateImage(req, res, next) {
-  const allowedFileTypes = ['image/jpeg', 'image/png'];
-  const maxSize = 5 * 1024 * 1024; // 5 MB limit
+  const allowedFileTypes = [
+    'image/jpeg',
+    'image/png',
+    'application/pdf',
+    'image/heif',
+    'image/tiff',
+    'image/bmp'
+  ];
+  const maxMegabytes = 5
+  const maxSize = maxMegabytes * 1024 * 1024
 
   // Check if file exists
   if (!req.files || !req.files.image) {
@@ -57,14 +65,17 @@ function validateImage(req, res, next) {
 
   // Check file size
   if (image.size > maxSize) {
-    console.log('File size exceeds limit of 5 MB.')
-    return res.status(400).send('File size exceeds limit of 5 MB.');
+    let imageMegabytes = image.size / 1024.0 / 1024.0
+    let errorStr = `File size (${imageMegabytes.toFixed(2)} MB) exceeds limit of ${maxMegabytes} MB.`
+    console.warn(errorStr)
+    return res.status(400).json({'error': errorStr})
   }
 
   // Check file type
   if (!allowedFileTypes.includes(image.mimetype)) {
-    console.log('Invalid file type. Only JPEG, PNG allowed.')
-    return res.status(400).send('Invalid file type. Only JPEG, PNG allowed.');
+    let errorStr = 'Invalid file type. Only JPEG, PNG, PDF, HEIC, TIFF, and BMP allowed.'
+    console.warn(errorStr)
+    return res.status(400).json({ 'error': errorStr })
   }
 
   // If all checks pass, proceed
