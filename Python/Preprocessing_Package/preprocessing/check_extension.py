@@ -75,9 +75,12 @@ def check_extension(raw_image):
 
         # Decode the image with Pillow and return a numpy array
 
-        image = Image.open(BytesIO(raw_image))
+        try:
+            image = Image.open(BytesIO(raw_image))
+            buffer = np.array(image, dtype=np.uint8)
 
-        buffer = np.array(image, dtype=np.uint8)
+        except:
+            raise TypeError('Image file is corrupt')
 
         if buffer.shape[2] == 4:
             return buffer[:, :, :3]
