@@ -1,5 +1,5 @@
 import numpy as np
-from PIL import Image
+from PIL import Image, ImageOps
 import filetype
 from io import BytesIO
 
@@ -76,6 +76,8 @@ def check_extension(raw_image):
         # Decode the image with Pillow and return a numpy array
 
         image = Image.open(BytesIO(raw_image))
+
+        ImageOps.exif_transpose(image, in_place=True)
 
         buffer = np.array(image, dtype=np.uint8)
 
