@@ -8,7 +8,7 @@ from . import horizontal_remover
 from .align_image import BCAlignImage
 
 """
-Function Brief: Extracts and marks predefined segments (fields) for each rider section on an image. 
+Function Brief: Extracts and marks predefined segments (fields) for each rider section on an image.
                 It draws rectangles on each defined field, displaying them and saving each segment in a dictionary.
 Parameters:
     image (str): Path to the source image from which segments need to be extracted.
@@ -26,7 +26,7 @@ def BCSegments(image):
     '''-------------------------------------------'''
 
     extracted_fields = {}
-    
+
     # imread() when image is file path
     # extracted_image = cv.imread(image)
     # Gives the extracted image that is warped to fit a rectangle.
@@ -38,17 +38,12 @@ def BCSegments(image):
     horizontal_scalefactor = 1
     vertical_scalefactor = 1
 
-    # Check if the result is an integer indicating failure
-    if isinstance(extracted_image, int) and extracted_image == -1:
-        print("Error: Cannot read image file after extraction.")
-        return -1
-    else:
-        # Get, Check and Resize(if needed) dimensions of extracted_image
-        height, width = extracted_image.shape[:2]
-        if(height != template.BC_HEIGHT and width != template.BC_WIDTH) :
-            horizontal_scalefactor = np.round(width / template.BC_WIDTH)
-            vertical_scalefactor = np.round(height / template.BC_HEIGHT)
-    
+    # Get, Check and Resize(if needed) dimensions of extracted_image
+    height, width = extracted_image.shape[:2]
+    if(height != template.BC_HEIGHT and width != template.BC_WIDTH) :
+        horizontal_scalefactor = np.round(width / template.BC_WIDTH)
+        vertical_scalefactor = np.round(height / template.BC_HEIGHT)
+
     '''This code is just to verify the output.
     ------------------------------------------------------------------'''
     marked_image = extracted_image.copy()
@@ -64,15 +59,15 @@ def BCSegments(image):
         if not os.path.exists(rider_folder):
             os.makedirs(rider_folder)
         '''------------------------------------------------------------------'''
-        
+
         for field_name, (x, y, w, h) in fields.items():
-            
+
             if horizontal_scalefactor != 1 or vertical_scalefactor != 1 :
                 x *= horizontal_scalefactor
                 w *= horizontal_scalefactor
                 y *= vertical_scalefactor
                 h *= vertical_scalefactor
-            
+
             # We are cropping out field from the extracted image here.
             field_image = extracted_image[y:y + h, x:x + w]
 
@@ -104,14 +99,14 @@ def BCSegments(image):
 
             # Setting the dictionary key to the segmented image.
             extracted_fields[rider][field_name] = field_image_no_horizontals
-    
+
     if cv.imwrite('outfield.jpg', marked_image):
         print(f"Extraction complete. Output saved to {marked_image}")
 
     return extracted_fields
 
 """
-Function Brief: Extracts and marks predefined segments (fields) for a judge scoresheet. 
+Function Brief: Extracts and marks predefined segments (fields) for a judge scoresheet.
                 It draws rectangles on each defined field, displaying them and saving each segment in a dictionary.
 Parameters:
     image (str): Path to the source image from which segments need to be extracted.
@@ -129,21 +124,16 @@ def CTRSegments(image):
     '''-------------------------------------------'''
 
     extracted_fields = {}
-    
+
     # imread() when image is file path
     # extracted_image = cv.imread(image)
     extracted_image = scoresheet.Paper_Extraction(image)
 
-    # # Check if the result is an integer indicating failure
-    if isinstance(extracted_image, int) and extracted_image == -1:
-        print("Error: Cannot read image file after extraction.")
-        return -1
-    else:
-        # Get, Check and Resize(if needed) dimensions of extracted_image
-        height, width = extracted_image.shape[:2]
-        if(height != template.CTR_HEIGHT and width != template.CTR_WIDTH) :
-            extracted_image = cv.resize(extracted_image, (template.CTR_WIDTH, template.CTR_HEIGHT))
-    
+    # Get, Check and Resize(if needed) dimensions of extracted_image
+    height, width = extracted_image.shape[:2]
+    if(height != template.CTR_HEIGHT and width != template.CTR_WIDTH) :
+        extracted_image = cv.resize(extracted_image, (template.CTR_WIDTH, template.CTR_HEIGHT))
+
     '''Just for the sake of verfiy the output
     ------------------------------------------------------------------'''
     marked_image = extracted_image.copy()
@@ -165,11 +155,11 @@ def CTRSegments(image):
 
         # Store the extracted field image in the dictionary
         extracted_fields[field_name] = field_image
-    
-    
+
+
     if cv.imwrite('outfield.jpg', marked_image):
         print(f"Extraction complete. Output saved to {marked_image}")
-    
+
     return extracted_fields
-        
+
 # BC_score_fields = BCSegments("bc/BC-1.jpg")

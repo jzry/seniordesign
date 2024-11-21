@@ -10,7 +10,9 @@ Parameters:
     BC_scoresheet (str): The file path of the input image containing the score sheet.
 Returns:
     warped_img (numpy.ndarray): The resulting image of the extracted and
-    warped score sheet with sharp borders.
+                                warped score sheet with sharp borders.
+Raises:
+    RuntimeError: The page contour could not be found
 """
 def Paper_Extraction(BC_scoresheet):
 
@@ -18,9 +20,6 @@ def Paper_Extraction(BC_scoresheet):
     output_filename = "output_extraction.jpg"
 
     original_img = check_extension(BC_scoresheet)
-    if original_img is None:
-        print(f"Cannot read image file: {BC_scoresheet}")
-        return -1
 
     # Resize image for faster processing, maintaining aspect ratio
     max_dimension = 1000
@@ -57,8 +56,8 @@ def Paper_Extraction(BC_scoresheet):
                 break
 
     if document_contour is None:
-        print("Error: Document contour not found")
-        return -1
+        raise RuntimeError('Document contour not found')
+
 
     # Map the points to the original image size
     inverse_scale = 1.0 / scale
@@ -111,8 +110,7 @@ def Paper_Extraction(BC_scoresheet):
     # Save the output image
     if not cv.imwrite(output_filename, scanned):
         print(f"Error: Could not save output image: {fileOutPath + output_filename}")
-        return -1
-
-    print(f"Success: Processing complete. Output saved to {fileOutPath + output_filename}!")
+    else:
+        print(f"Success: Processing complete. Output saved to {fileOutPath + output_filename}!")
 
     return scanned
