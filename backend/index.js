@@ -6,7 +6,7 @@ const cookieParser = require('cookie-parser')
 const path = require('path')
 const pyconnect = require('./pyconnect')
 
-devMode = process.env.MODE
+const devMode = process.env.MODE
 
 
 // Request validation middleware for the CTR data from the OCR
