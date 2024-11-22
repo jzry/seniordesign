@@ -1,1 +1,6 @@
-node_modules
+node_modules/
+extracted_fields/
+intermediary_fields/
+outfield.jpg
+output_extraction.jpg
+example.jpg
