@@ -1,56 +1,89 @@
-import cv2 as cv
-import os
 import numpy as np
-from pdf2image import convert_from_path
-from PIL import Image
-from pillow_heif import register_heif_opener
+from PIL import Image, ImageOps
+import filetype
+from io import BytesIO
 
-"""
-Function Brief: Checks the file extension of an image file. If the extension is not one of the allowed types 
-                (jpg, jpeg, png, bmp, tif, tiff), the function converts the image to JPG format and saves it
-                with a .jpg extension.
+try:
+    from pdf2image import convert_from_bytes
+    PDF_ENABLED = True
+except:
+    PDF_ENABLED = False
 
-Parameters:
-    file_path (str): Path to the image file to be checked and potentially converted.
+try:
+    from pillow_heif import register_heif_opener
 
-Returns:
-    new_file_path (str): Path to the image file, either the original path (if the extension was allowed) 
-                         or the path to the converted JPG file.
-"""
-def checkExtension(image_path):
-    allowed_extensions = {'jpg', 'jpeg', 'png', 'bmp', 'tif', 'tiff'}
+    # Register HEIF opener with Pillow
+    register_heif_opener()
 
-    extension = image_path.split('.')[-1].lower()
+    HEIC_ENABLED = True
+except:
+    HEIC_ENABLED = False
+
+
+def check_extension(raw_image):
+    """
+    Function Brief: Checks the file extension of an image file and loads the
+                    pixel data into a numpy array. The allowed types are
+                    (jpg, png, bmp, tif, heic, and pdf)
+
+    Parameters:
+        raw_image (bytes): A buffer holding the raw byte data of an image.
+
+    Returns:
+        np.ndarray : The pixel data loaded into a numpy array.
+
+    Raises:
+        TypeError : Unable to determine file type
+        TypeError : File type is not supported
+        NotImplementedError : HEIC loading not configured
+        NotImplementedError : PDF loading not configured
+    """
+
+    allowed_extensions = {'jpg', 'png', 'bmp', 'tif', 'pdf', 'heic'}
+
+    extension = filetype.guess_extension(raw_image)
+
+    # Check if the file extension was found
+    if extension is None:
+        raise TypeError('Unable to determine file type')
 
     # Check if the file extension is in the allowed list
     if extension not in allowed_extensions:
-        print(f"File extension '.{extension}' is not supported. Converting to JPG...")
+        raise TypeError('File type is not supported')
 
-        if extension == 'heic' or extension == 'HEIC':
+    # Make sure the heif package is available for heic images
+    if extension == 'heic' and not HEIC_ENABLED:
+        raise NotImplementedError('HEIC loading not configured')
 
-            # Register HEIF opener with Pillow
-            register_heif_opener()
+    # PDF files are a special case
+    if extension == 'pdf':
 
-            # Open the HEIC file using Pillow
-            image = Image.open(image_path)
+        if PDF_ENABLED:
 
-            # Convert the image to a numpy array that OpenCV can use
-            img_np = cv.cvtColor(np.array(image), cv.COLOR_RGB2BGR)
+            # Convert the PDF to image
+            images = convert_from_bytes(raw_image)
 
-            # Define the new file path
-            new_file_path = os.path.splitext(image_path)[0] + '.jpg'
-            cv.imwrite(new_file_path, img_np)
+            if len(images) > 1:
+                print(f'Warning: Only keeping first page of pdf. Ignoring {len(images) - 1} pages')
 
-        if extension == 'pdf' or extension == 'PDF':
+            return np.array(images[0], dtype=np.uint8)
 
-            # Convert the PDF to images
-            images = convert_from_path(image_path)
+        else:
+             raise NotImplementedError('PDF loading not configured')
 
-            # Save the images as JPG files
-            new_file_path = os.path.splitext(image_path)[0] + '.jpg'
-            image.save(new_file_path, 'JPEG')
-
-        return new_file_path
     else:
-        print(f"File extension '.{extension}' is supported.")
-        return image_path
+
+        # Decode the image with Pillow and return a numpy array
+
+        image = Image.open(BytesIO(raw_image))
+
+        ImageOps.exif_transpose(image, in_place=True)
+
+        buffer = np.array(image, dtype=np.uint8)
+
+        if buffer.shape[2] == 4:
+            return buffer[:, :, :3]
+
+        else:
+            return buffer
+

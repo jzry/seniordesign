@@ -13,6 +13,8 @@ function GetPhotoBCE({ numberOfRiders, fastestRiderTime, heaviestRiderWeight }) 
   const [extractedDataList, setExtractedDataList] = useState([]);
   const [currentStep, setCurrentStep] = useState(1);
   const fileInputRef = useRef(null);
+  const apiUrl = process.env.REACT_APP_API_URL
+
 
   const isTwoPhotosRequired = numberOfRiders > 5;
 
@@ -47,7 +49,7 @@ function GetPhotoBCE({ numberOfRiders, fastestRiderTime, heaviestRiderWeight }) 
         return
     }
 
-    axios.post('http://localhost:8080/bce', formData, {
+    axios.post(apiUrl.concat('/bce'), formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
@@ -56,6 +58,7 @@ function GetPhotoBCE({ numberOfRiders, fastestRiderTime, heaviestRiderWeight }) 
       if (response.data.error) {
         console.error("The image was not processed correctly")
       }
+
 
       let bceData = extractedDataList
 

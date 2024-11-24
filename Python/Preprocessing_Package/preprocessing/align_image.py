@@ -105,7 +105,7 @@ def CTRAlignImage(image):
     M, mask = cv.findHomography(dst_pts, src_pts, cv.RANSAC, 5.0)
 
     # Warp output_image to align with template_image
-    h, w = template.shape[:2]
+    h, w = image.shape[:2]
     aligned_image = cv.warpPerspective(image, M, (w, h))
 
     return aligned_image

@@ -12,7 +12,7 @@ function GetPhotos() {
   const [extractedData, setExtractedData] = useState(null); // State to store extracted values from API
   const fileInputRef = useRef(null); 
   const navigate = useNavigate();
-
+  const apiUrl = process.env.REACT_APP_API_URL
   // Handles file selection for uploading an image
   const handleFileChange = (event) => {
     const file = event.target.files[0];
@@ -36,7 +36,7 @@ function GetPhotos() {
       const formData = new FormData();
       formData.append('image', imageFile);
 
-      axios.post('http://localhost:8080/ctr', formData, {
+      axios.post(apiUrl.concat('/ctr'), formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },

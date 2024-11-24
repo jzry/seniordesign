@@ -29,20 +29,20 @@ The end of the program should have a dictionary that is identical to the
 intermediary, but it is cleaned of horizontal lines.
 '''
 
-import cv2
+# import cv2
 # from scoresheet import Paper_Extraction # used to extract paper from original.
-import absolute_scorefields
-import scorefields
-import horizontal_remover
+# from preprocessing import absolute_scorefields
+from preprocessing import scorefields
+# import horizontal_remover
 from pathlib import Path
-from check_extension import checkExtension
+# from check_extension import checkExtension
 
-filePath = 'bc/'
-fileName = "BC-20.heic"
+filePath = 'bc'
+fileName = "BC-black-1.jpg"
 full_path = Path(filePath) / fileName
 
 # Check and convert image extension if necessary
-image_path = checkExtension(str(full_path))
+# image_path = checkExtension(str(full_path))
 
 ###################################################################
 # FUNCTION TO EXTRACT AND WARP PAPER USED ONLY FOR TESTING BECAUSE
@@ -58,7 +58,7 @@ image_path = checkExtension(str(full_path))
 # CREATE THE DICTIONARY FOR THE BCE.
 ####################################
 
-with open(image_path, 'rb') as image_file:
+with open(full_path, 'rb') as image_file:
 
     buffer = image_file.read()
     # absolute

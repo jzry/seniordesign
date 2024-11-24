@@ -24,13 +24,19 @@ class DigitGetterTestCase(unittest.TestCase):
             [0, 0, 0, 0, 0]
         ], np.uint8)
 
-        first_pixel = self.dg._DigitGetter__scan_columns(img, 0)
+        scan_state = {}
+
+        first_pixel = self.dg._DigitGetter__scan_columns(img, scan_state)
         self.assertEqual(first_pixel, (0, 0), 'Did not find the first pixel')
 
-        second_pixel = self.dg._DigitGetter__scan_columns(img, 1)
+        scan_state['column'] = 1
+
+        second_pixel = self.dg._DigitGetter__scan_columns(img, scan_state)
         self.assertEqual(second_pixel, (3, 3), 'Did not find the second pixel')
 
-        third_pixel = self.dg._DigitGetter__scan_columns(img, 4)
+        scan_state['column'] = 4
+
+        third_pixel = self.dg._DigitGetter__scan_columns(img, scan_state)
         self.assertIsNone(third_pixel, 'Should return None for no pixels found')
 
 
@@ -76,7 +82,7 @@ class DigitGetterTestCase(unittest.TestCase):
         seg_type = self.dg._DigitGetter__get_segment_type((9, 21), img_shape)
         self.assertEqual(seg_type, okra.SegmentType.MINUS, 'Minus segment not indentified correctly')
 
-        seg_type = self.dg._DigitGetter__get_segment_type((1, 7), img_shape)
+        seg_type = self.dg._DigitGetter__get_segment_type((1, 5), img_shape)
         self.assertEqual(seg_type, okra.SegmentType.NOISE, 'Noise segment not indentified correctly')
 
         seg_type = self.dg._DigitGetter__get_segment_type((0, 0), img_shape)

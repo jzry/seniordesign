@@ -1,6 +1,7 @@
 # Imports
 import cv2 as cv
 import numpy as np
+from .check_extension import check_extension
 
 """
 Function Brief: Extract and warp a score sheet from an input image by detecting
@@ -16,7 +17,7 @@ def Paper_Extraction(BC_scoresheet):
     fileOutPath = "output/"
     output_filename = "output_extraction.jpg"
 
-    original_img = cv.imdecode(np.frombuffer(BC_scoresheet, dtype=np.uint8), cv.IMREAD_COLOR)
+    original_img = check_extension(BC_scoresheet)
     if original_img is None:
         print(f"Cannot read image file: {BC_scoresheet}")
         return -1
@@ -100,18 +101,18 @@ def Paper_Extraction(BC_scoresheet):
     warped = cv.warpPerspective(original_img, M, (max_width, max_height))
 
     # Convert to grayscale and apply adaptive threshold for mask
-    warped_gray = cv.cvtColor(warped, cv.COLOR_BGR2GRAY)
-    mask = cv.adaptiveThreshold(warped_gray, 255, cv.ADAPTIVE_THRESH_GAUSSIAN_C,
-                                cv.THRESH_BINARY, 15, 15)
+    # warped_gray = cv.cvtColor(warped, cv.COLOR_BGR2GRAY)
+    # mask = cv.adaptiveThreshold(warped_gray, 255, cv.ADAPTIVE_THRESH_GAUSSIAN_C,
+                                # cv.THRESH_BINARY, 15, 15)
 
     # Apply mask to each channel of the original warped image to retain color
-    scanned = cv.bitwise_and(warped, warped, mask=mask)
+    # scanned = cv.bitwise_and(warped, warped, mask=mask)
 
     # Save the output image
-    if not cv.imwrite(output_filename, scanned):
+    if not cv.imwrite(output_filename, warped):
         print(f"Error: Could not save output image: {fileOutPath + output_filename}")
         return -1
 
     print(f"Success: Processing complete. Output saved to {fileOutPath + output_filename}!")
 
-    return scanned
+    return warped

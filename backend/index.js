@@ -1,9 +1,12 @@
+require('dotenv').config({ path: '../process.env' });
 const express = require('express');
 const fileUpload = require('express-fileupload')
 const cors = require('cors');
 const cookieParser = require('cookie-parser')
 const path = require('path')
 const pyconnect = require('./pyconnect')
+
+const devMode = process.env.MODE
 
 
 // Request validation middleware for the CTR data from the OCR
@@ -72,17 +75,24 @@ function validateImage(req, res, next) {
 }
 
 // Cross-Origin Resource Sharing Middleware to only accept data originating from our frontend
-const corsOptions = {
-  origin: /^http:\/\/localhost:3000(\/.*)?$/,
-  optionsSuccessStatus: 200,
-};
+
 
 
 // The express app
 const app = express();
 
-// Allow cross-origin resource sharing
-app.use(cors(corsOptions))
+// Allow cross-origin resource sharing for our react development build
+if (devMode === 'development') {
+  const corsOptions = {
+    origin: /^http:\/\/localhost:3000(\/.*)?$/,
+    optionsSuccessStatus: 200,
+  };
+  app.use(cors(corsOptions))
+}
+
+if (devMode === 'production') {
+  app.use(express.static(path.join(__dirname, '../frontend/build')))
+}
 
 // Use cookie parser
 app.use(cookieParser())
