@@ -4,6 +4,7 @@ import BCEExtractedValues from './BCEExtractedValues';
 import '../../styles/CTRHandWritingRecognitionStyles.css';
 import axios from 'axios';
 
+// GetPhotoBCE Component: Handles image uploads and sends data to the backend
 function GetPhotoBCE({ numberOfRiders, fastestRiderTime, heaviestRiderWeight }) {
   const [imageSrc1, setImageSrc1] = useState(null);
   const [imageSrc2, setImageSrc2] = useState(null);
@@ -15,6 +16,7 @@ function GetPhotoBCE({ numberOfRiders, fastestRiderTime, heaviestRiderWeight }) 
 
   const isTwoPhotosRequired = numberOfRiders > 5;
 
+  // Handles file selection for images
   const handleFileChange = (event) => {
     const file = event.target.files[0];
     if (file) {
@@ -29,6 +31,7 @@ function GetPhotoBCE({ numberOfRiders, fastestRiderTime, heaviestRiderWeight }) 
     }
   };
 
+  // Submits selected images to the backend
   const handleSubmit = async (event) => {
     event.preventDefault()
 
@@ -75,6 +78,7 @@ function GetPhotoBCE({ numberOfRiders, fastestRiderTime, heaviestRiderWeight }) 
     })
   };
 
+  // Retakes the current photo
   const handleRetakePhoto = () => {
     if (currentStep === 1) {
       setImageSrc1(null);
@@ -85,6 +89,7 @@ function GetPhotoBCE({ numberOfRiders, fastestRiderTime, heaviestRiderWeight }) 
     }
   };
 
+  // Go to the next step or the next photo
   const handleContinue = async () => {
     if (isTwoPhotosRequired && currentStep === 1) {
       // Move to step 2 to capture the second photo for the current group
@@ -96,6 +101,7 @@ function GetPhotoBCE({ numberOfRiders, fastestRiderTime, heaviestRiderWeight }) 
     console.log(currentStep)
   };
 
+  // Returns to the upload step
   const handleGoBackToUpload = () => {
     setCurrentStep(1);
     setImageSrc1(null);

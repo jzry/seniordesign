@@ -1,18 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import '../../styles/CTRHandWritingRecognitionStyles.css';
 
+// Displays and edits extracted data, and calculates scores
 function CTRExtractedValues({ extractedData }) {
   const [data, setData] = useState(extractedData); // Initialize with the extracted data
   const [step, setStep] = useState(1); // Tracks the current step (1: edit, 2: go back/calculate, 3: show score)
   const [totalScore, setTotalScore] = useState(null); // State to store the total score
 
-  // Sync extractedData with component state when it changes
+  // Updates component state when extractedData changes
   useEffect(() => {
     if (extractedData) {
       setData(extractedData);
     }
   }, [extractedData]);
 
+  // Updates the input value for a specific field
   const handleInputChange = (key, event) => {
     const newValue = event.target.value;
 
@@ -23,6 +25,7 @@ function CTRExtractedValues({ extractedData }) {
     });
   };
 
+  // Determines the border color based on confidence level
   const getBorderColor = (confidence) => {
     if (confidence > 90.0) return 'green';
     if (confidence > 80.0) return 'yellow';
