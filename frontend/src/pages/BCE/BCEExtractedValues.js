@@ -2,19 +2,21 @@ import React, { useState, useEffect } from 'react';
 import BCEResults from './BCEResults';
 import '../../styles/CTRHandWritingRecognitionStyles.css';
 
+// Displays and edits extracted data for each rider
 function BCEExtractedValues({ extractedDataList, onGoBackToUpload, heaviestRiderWeight, fastestRiderTime, numberOfRiders }) {
   const [currentRiderIndex, setCurrentRiderIndex] = useState(0); // Index to track the current rider
   const [data, setData] = useState({ ...extractedDataList[currentRiderIndex] }); // Initialize with the first rider's data
   const [step, setStep] = useState(1); // Tracks the current step (1: edit, 2: go back/calculate, 3: show score)
   const [showResults, setShowResults] = useState(false); // State to determine if we should show BCEResults
 
-  // Sync extractedDataList with component state when currentRiderIndex changes
+  // Updates component state when the current rider index changes
   useEffect(() => {
     if (extractedDataList[currentRiderIndex]) {
       setData({ ...extractedDataList[currentRiderIndex] });
     }
   }, [currentRiderIndex, extractedDataList]);
 
+  // Updates the input value for a specific key
   const handleInputChange = (key, event) => {
     const newValue = event.target.value;
     setData(prevData => {
@@ -34,10 +36,12 @@ function BCEExtractedValues({ extractedDataList, onGoBackToUpload, heaviestRider
     return 'red';
   };
 
+  // Determines the border color based on confidence level
   const handleCalculateScore = () => {
     setShowResults(true); // Show the results after calculation
   };
 
+  // Returns to the previous step or rider
   const handleGoBack = () => {
     if (step === 2) {
       setStep(1); // Go back to editing the current rider
@@ -49,6 +53,7 @@ function BCEExtractedValues({ extractedDataList, onGoBackToUpload, heaviestRider
     }
   };
 
+  // Proceeds to the next rider or calculation step
   const handleContinue = () => {
     if (currentRiderIndex < extractedDataList.length - 1) {
       setCurrentRiderIndex(currentRiderIndex + 1);

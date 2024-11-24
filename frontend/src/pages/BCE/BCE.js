@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import '../../styles/CTRHandWritingRecognitionStyles.css';
 import GetPhotoBCE from './GetPhotoBCE';
 
+// BCE Component: Handles input collection and navigation to GetPhotoBCE
 function BCE() {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
@@ -14,6 +15,7 @@ function BCE() {
 
   const [showGetPhotoBCE, setShowGetPhotoBCE] = useState(false);
 
+  // Handles input changes for form fields
   const handleInputChange = (field, event) => {
     setFormData({
       ...formData,
@@ -21,10 +23,12 @@ function BCE() {
     });
   };
 
+  // Navigates back to the main menu
   const handleGoBack = () => {
     navigate('/');
   }
 
+  // Validates form and navigates to photo upload step
   const handleContinue = () => {
     if (formData.numberOfRiders && formData.heaviestRiderWeight && formData.fastestRiderTime) {
       setShowGetPhotoBCE(true);
