@@ -406,12 +406,21 @@ class DigitGetter:
             SegmentType: The type of the segment.
         """
 
+        if img_shape[0] > img_shape[1]:
+            size_criteria = img_shape[0] // 2
+
+        else:
+            size_criteria = img_shape[0]
+
+        digit_min_height = size_criteria // 3
+        noise_max_size = size_criteria // 7
+
         # Is this tall enough to be a digit?
-        if segment_shape[0] >= (img_shape[0] / 3):
+        if segment_shape[0] >= digit_min_height:
             return SegmentType.DIGIT
 
         # Is this really small?
-        if segment_shape[0] < (img_shape[0] / 7) and segment_shape[1] < (img_shape[0] / 7):
+        if segment_shape[0] < noise_max_size and segment_shape[1] < noise_max_size:
             return SegmentType.NOISE
 
         # Is this flat and long?
