@@ -206,6 +206,20 @@ def __remove_excess_decimals(nums, confs):
 def __enforce_one_digit_score(nums, confs, max_val, min_value):
     """Ensures the input contains at most one digit"""
 
+    # This might be a decimal number where the OCR missed the decimal point
+    if len(nums) == 2:
+        if nums[0] != '.':
+            if nums[0] < max_val:
+
+                nums.insert(1, '.')
+                confs.insert(1, 90.0)
+
+                if nums[2] != 5:
+                    nums[2] = 5
+                    confs[2] -= 5.0
+
+                return
+
     __prune_to_length(nums, confs, 1)
 
     if len(nums) == 1:
@@ -214,6 +228,20 @@ def __enforce_one_digit_score(nums, confs, max_val, min_value):
 
 def __enforce_two_digit_score(nums, confs, max_val, min_value):
     """Ensures the input contains at most two digits"""
+
+    # This might be a decimal number where the OCR missed the decimal point
+    if len(nums) == 2:
+        if nums[0] != '.':
+            if nums[0] > (max_val // 10):
+
+                nums.insert(1, '.')
+                confs.insert(1, 90.0)
+
+                if nums[2] != 5:
+                    nums[2] = 5
+                    confs[2] -= 5.0
+
+                return
 
     if len(nums) == 1:
         nums[0], confs[0] = __force_into_range(nums[0], confs[0], 9, min_value)
