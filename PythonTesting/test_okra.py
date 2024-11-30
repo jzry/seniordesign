@@ -8,7 +8,7 @@ class DigitGetterTestCase(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.dg = okra.DigitGetter()
+        cls.dg = okra.DigitGetter(debug=True)
 
 
     def test_column_scan(self):

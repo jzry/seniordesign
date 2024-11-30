@@ -41,7 +41,7 @@ of the prompt line in your terminal.
 Install the main dependencies (opencv, numpy, matplotlib, filetype, termcolor)
 with the following command in a terminal:
 
-`pip install opencv-python numpy matplotlib filetype termcolor`
+`pip install opencv-python numpy matplotlib filetype termcolor requests`
 
 Optionally, you can support *.heic* or *.pdf* file types by installing
 these dependencies:

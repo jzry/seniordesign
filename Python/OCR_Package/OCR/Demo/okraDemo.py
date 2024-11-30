@@ -36,7 +36,7 @@ def confidence2color(confidence):
 
 ############################################################
 
-dg = okra.DigitGetter()
+dg = okra.DigitGetter(debug=True)
 
 ############################################################
 

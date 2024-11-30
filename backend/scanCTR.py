@@ -1,6 +1,6 @@
 import sys
 import json
-from contextlib import redirect_stdout
+from contextlib import redirect_stdout, redirect_stderr
 from os import devnull
 
 
@@ -16,13 +16,15 @@ def main():
         # Read the image data from stdin
         image_buffer = sys.stdin.buffer.read(input_length_bytes)
 
-        # Temporarily redirect stdout so random
-        # messages aren't sent to Express
-        with redirect_stdout(open(devnull, 'w')):
+        # Temporarily redirect stdout and stderr so
+        # random messages aren't sent to Express
+        with open(devnull, 'w') as null_device:
+            with redirect_stdout(null_device):
+                with redirect_stderr(null_device):
 
-            print('ERROR if you see this message')
+                    print('ERROR if you see this message')
 
-            ret_val = process_CTR(image_buffer)
+                    ret_val = process_CTR(image_buffer)
 
     else:
 
@@ -46,7 +48,7 @@ def process_CTR(image_buffer):
     extracted_fields = CTRSegments(image_buffer)
 
     # Prepare the OCR
-    dg = okra.DigitGetter()
+    dg = okra.DigitGetter(debug=True)
 
     field_keys = extracted_fields.keys()
 
