@@ -3,7 +3,7 @@ const express = require('express');
 const fileUpload = require('express-fileupload')
 const cors = require('cors');
 const cookieParser = require('cookie-parser')
-const path = require('path')
+const rateLimit = require('express-rate-limit')
 const pyconnect = require('./pyconnect')
 
 const devMode = process.env.MODE
@@ -30,7 +30,7 @@ function validateData(/*req, res, next*/ fakeCTRData) {
       return res.status(400).json({ error: `Invalid format for key "${key}". Each value should contain "value" and "confidence" fields.` });
     }
 
-    // Validate that the request 
+    // Validate that the request
     if (!Number.isInteger(item.value)) {
       return res.status(400).json({ error: `Invalid value for "${key}". "value" must be an integer.` });
     }
@@ -105,6 +105,17 @@ app.use(fileUpload())
 app.get('/', (req, res) => {
   res.send('Hello from our server!')
 })
+
+
+// Configure API rate limiting
+const limiter = rateLimit({
+	windowMs: 20 * 1000,   // 20 seconds
+	max: 4,                // Limit each IP to 4 requests per 'window'
+	standardHeaders: true, // Return rate limit info in the 'RateLimit-*' headers
+	legacyHeaders: false,  // Disable the 'X-RateLimit-*' headers
+})
+
+app.use(limiter)
 
 
 // Retrieve the uploaded image from the handleSubmit function in frontend/src/pages/crt/getPhotos.js
