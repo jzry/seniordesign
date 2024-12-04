@@ -93,6 +93,18 @@ if (devMode === 'development') {
 
 if (devMode === 'production') {
   app.use(express.static(path.join(__dirname, '../frontend/build')))
+  
+  app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, '../frontend/build', 'index.html'));
+  })
+  
+  app.get('/ctr', (req, res) => {
+    res.sendFile(path.join(__dirname, '../frontend/build', 'index.html'));
+  })
+
+  app.get('/bce', (req, res) => {
+    res.sendFile(path.join(__dirname, '../frontend/build', 'index.html'));
+  })
 }
 
 // Use cookie parser
@@ -101,11 +113,6 @@ app.use(cookieParser())
 // Use express-fileupload
 app.use(fileUpload())
 
-
-
-app.get('/', (req, res) => {
-  res.send('Hello from our server!')
-})
 
 
 // Configure API rate limiting
