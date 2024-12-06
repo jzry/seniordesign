@@ -1,11 +1,31 @@
 const app = require('./index')
-require('dotenv').config({ path: '../process.env' });
-
 
 const port = process.env.PORT
+const protocol = process.env.PROTOCOL
 
 
-// 8080 is the port we are using in the meantime, but may be changed later (probably)
-app.listen(port, () => {
-    console.log('server listening on port ' + port)
-})
+if (protocol.toLowerCase() === 'https')
+{
+    const https = require('https')
+    const fs = require('fs')
+    
+    const config = {
+        key: fs.readFileSync(process.env.KEY_FILE),
+        cert: fs.readFileSync(process.env.CERT_FILE),
+    }
+
+    // Create the https server with the certificate and key
+    const server = https.createServer(config, app)
+    
+    server.listen(port, () => {
+        console.log('https server listening on port ' + port)
+    })
+}
+else
+{
+    // 8080 is the port we are using in the meantime, but may be changed later (probably)
+    app.listen(port, () => {
+        console.log('server listening on port ' + port)
+    })
+}
+
