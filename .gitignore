@@ -2,3 +2,4 @@
 .vscode/
 Uploads/
 python_env/
+process.env
