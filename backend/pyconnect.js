@@ -29,9 +29,16 @@ function runPythonProcess(scriptName, image)
 {
     return new Promise((accept, reject) => {
 
+        let useTorchServe = process.env.TORCHSERVE
+        
+        if (!useTorchServe)
+        {
+            useTorchServe = 'no_torchserve'
+        }
+
         // Create the process. Pass the script name and the number of bytes as command line arguments
         //
-        const pythonProcess = spawn('python3', [scriptName, image.size])
+        const pythonProcess = spawn('python3', [scriptName, image.size, useTorchServe])
 
         let result = ''
         let errResult = ''

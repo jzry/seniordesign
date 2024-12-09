@@ -8,7 +8,7 @@ def main():
 
     ret_val = {}
 
-    if len(sys.argv) == 2:
+    if len(sys.argv) == 3:
 
         # The number of bytes to read from stdin
         input_length_bytes = int(sys.argv[1])
@@ -24,7 +24,7 @@ def main():
 
                     print('ERROR if you see this message')
 
-                    ret_val = process_CTR(image_buffer)
+                    ret_val = process_CTR(image_buffer, sys.argv[2] == 'torchserve')
 
     else:
 
@@ -39,7 +39,7 @@ def main():
 #
 # Run all the code to process the CTR scoresheet
 #
-def process_CTR(image_buffer):
+def process_CTR(image_buffer, torchserve):
 
     from preprocessing.scorefields import CTRSegments
     from OCR import okra
@@ -48,7 +48,7 @@ def process_CTR(image_buffer):
     extracted_fields = CTRSegments(image_buffer)
 
     # Prepare the OCR
-    dg = okra.DigitGetter(debug=True)
+    dg = okra.DigitGetter(ts=torchserve)
 
     field_keys = extracted_fields.keys()
 
