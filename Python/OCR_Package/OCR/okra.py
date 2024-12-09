@@ -29,12 +29,12 @@ class DigitGetter:
                                  appear in the output (default=False).
     """
 
-    def __init__(self, debug=False):
+    def __init__(self, ts=False):
         """Creates a new instance of DigitGetter"""
 
-        self.__debug = debug
+        self.__debug = not ts
 
-        if debug:
+        if self.__debug:
 
             from .OkraHandler import OkraHandler            
             
