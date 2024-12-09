@@ -20,6 +20,18 @@ if (protocol.toLowerCase() === 'https')
     server.listen(port, () => {
         console.log('https server listening on port ' + port)
     })
+
+    const express = require('express')
+
+    let http = express()
+
+    // Redirect http to https
+    http.get('*', (req, res) => {
+        res.redirect(301, 'https://' + req.headers.host + req.url)
+    })
+
+    // Listen on port 80
+    http.listen(80)
 }
 else
 {
