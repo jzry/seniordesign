@@ -97,6 +97,10 @@ if (devMode === 'production') {
   app.get('/*', (req, res) => {
     res.sendFile(path.join(__dirname, '../frontend/build', 'index.html'));
   })
+
+  // Github-hook update mechanism
+  const updater = require('./update')
+  app.use(updater)
 }
 
 // Use cookie parser
