@@ -8,7 +8,7 @@ if (protocol.toLowerCase() === 'https')
 {
     const https = require('https')
     const fs = require('fs')
-    
+
     const config = {
         key: fs.readFileSync(process.env.KEY_FILE),
         cert: fs.readFileSync(process.env.CERT_FILE),
@@ -16,9 +16,15 @@ if (protocol.toLowerCase() === 'https')
 
     // Create the https server with the certificate and key
     const server = https.createServer(config, app)
-    
+
     server.listen(port, () => {
-        console.log('https server listening on port ' + port)
+        let timestamp = new Date()
+        console.log(`${timestamp}\t| Server listening on port ${port}`)
+    })
+    .on('error', (err) => {
+        let timestamp = new Date()
+        console.log(`${timestamp}\t| Server failed to start (port ${port})`)
+        console.error(err)
     })
 
     const express = require('express')
@@ -37,7 +43,13 @@ else
 {
     // 8080 is the port we are using in the meantime, but may be changed later (probably)
     app.listen(port, () => {
-        console.log('server listening on port ' + port)
+        let timestamp = new Date()
+        console.log(`${timestamp}\t| Server listening on port ${port}`)
+    })
+    .on('error', (err) => {
+        let timestamp = new Date()
+        console.log(`${timestamp}\t| Server failed to start (port ${port})`)
+        console.error(err)
     })
 }
 

@@ -93,7 +93,7 @@ if (devMode === 'development') {
 
 if (devMode === 'production') {
   app.use(express.static(path.join(__dirname, '../frontend/build')))
-  
+
   app.get('/*', (req, res) => {
     res.sendFile(path.join(__dirname, '../frontend/build', 'index.html'));
   })
@@ -118,11 +118,22 @@ const limiter = rateLimit({
 app.use(limiter)
 
 
+
+function apiHitLogger(req, res, next)
+{
+    let timestamp = new Date()
+
+    console.log(`${timestamp}\t| ${req.ip}\t| ${req.url}`)
+
+    next()
+}
+
+app.use(apiHitLogger)
+
+
 // Retrieve the uploaded image from the handleSubmit function in frontend/src/pages/crt/getPhotos.js
 
 app.post('/ctr', validateImage, async (req, res) => {
-  console.log('CTR Upload endpoint hit');  // Log this to see if request is received
-
   if (!req.files || Object.keys(req.files).length === 0) {
     return res.status(400).send('No files were uploaded.');
   }
@@ -130,7 +141,7 @@ app.post('/ctr', validateImage, async (req, res) => {
   // The name of the input field (i.e. "sampleFile") is used to retrieve the uploaded file
   let sampleFile = req.files.image;
 
-  console.log('File received:', sampleFile.name);  // Log file details
+  //console.log('File received:', sampleFile.name);  // Log file details
 
   // Send the image to the Python code to be processed
   let output = await pyconnect.processCTR(sampleFile)
@@ -142,8 +153,6 @@ app.post('/ctr', validateImage, async (req, res) => {
 });
 
 app.post('/bce', validateImage, async (req, res) => {
-  console.log('BCE Upload endpoint hit');  // Log this to see if request is received
-
   if (!req.files || Object.keys(req.files).length === 0) {
     return res.status(400).send('No files were uploaded.');
   }
@@ -151,7 +160,7 @@ app.post('/bce', validateImage, async (req, res) => {
   // The name of the input field (i.e. "sampleFile") is used to retrieve the uploaded file
   let sampleFile = req.files.image;
 
-  console.log('File received:', sampleFile.name);  // Log file details
+  //console.log('File received:', sampleFile.name);  // Log file details
 
   // Send the image to the Python code to be processed
   let output = await pyconnect.processBCE(sampleFile)
