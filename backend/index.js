@@ -85,7 +85,7 @@ const app = express();
 // Allow cross-origin resource sharing for our react development build
 if (devMode === 'development') {
   const corsOptions = {
-    origin: /^http:\/\/localhost:3000(\/.*)?$/,
+    origin: '*',
     optionsSuccessStatus: 200,
   };
   app.use(cors(corsOptions))
