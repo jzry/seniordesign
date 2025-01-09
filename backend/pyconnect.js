@@ -1,5 +1,7 @@
 const { spawn } = require('child_process');
 
+const pythonCommand = (process.env.PYTHON_CMD) ? process.env.PYTHON_CMD : 'python3'
+
 
 //
 // Send an image to the BCE Python script
@@ -38,7 +40,7 @@ function runPythonProcess(scriptName, image)
 
         // Create the process. Pass the script name and the number of bytes as command line arguments
         //
-        const pythonProcess = spawn('python3', [scriptName, image.size, useTorchServe])
+        const pythonProcess = spawn(pythonCommand, [scriptName, image.size, useTorchServe])
 
         let result = ''
         let errResult = ''
