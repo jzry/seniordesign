@@ -1,49 +1,21 @@
-import sys
-import json
-from contextlib import redirect_stdout, redirect_stderr
-from os import devnull
+from preprocessing.scorefields import BCSegments
+from OCR import okra
+from OCR import violin as v
 
 
-def main():
-
-    ret_val = {}
-
-    if len(sys.argv) == 3:
-
-        # The number of bytes to read from stdin
-        input_length_bytes = int(sys.argv[1])
-
-        # Read the image data from stdin
-        image_buffer = sys.stdin.buffer.read(input_length_bytes)
-
-        # Temporarily redirect stdout and stderr so
-        # random messages aren't sent to Express
-        with open(devnull, 'w') as null_device:
-            with redirect_stdout(null_device):
-                with redirect_stderr(null_device):
-
-                    print('ERROR if you see this message')
-
-                    ret_val = process_BCE(image_buffer, sys.argv[2] == 'torchserve')
-
-    else:
-
-        ret_val['error'] = 'Incorrect number of arguments'
-
-
-    # Return the results as JSON through stdout
-    print(json.dumps(ret_val))
-
-
-
-#
-# Run all the code to process the BCE scoresheet
-#
 def process_BCE(image_buffer, torchserve):
+    """
+    Runs all the image processing code for the BCE type scorecard.
 
-    from preprocessing.scorefields import BCSegments
-    from OCR import okra
-    from OCR import violin as v
+    Parameters:
+        image_buffer (bytes): The raw image data.
+        torchserve (bool): A flag to specify whether TorchServe should be used
+                           or not.
+
+    Returns:
+        dict: A dictionary containing score-field values and confidences for
+              each rider.
+    """
 
     extracted_fields = BCSegments(image_buffer)
 
@@ -72,7 +44,8 @@ def process_BCE(image_buffer, torchserve):
         insert_into_dict(output_dict, rider_key, 'Ride time, this rider',    v.validate_time(dg.image_to_digits(extracted_fields[rider_key]['rider_time'])))
         insert_into_dict(output_dict, rider_key, 'Weight of this rider',  v.validate_weight(dg.image_to_digits(extracted_fields[rider_key]['rider_weight'])))
 
-    return output_dict
+    return { 'data': output_dict, 'status': 0 }
+
 
 #
 # Helper function to insert outputs into the dictionary
@@ -96,7 +69,7 @@ def debug_main():
     with open(full_path, 'rb') as file:
         image_buffer = file.read()
 
-    ret_val = process_BCE(image_buffer)
+    ret_val = process_BCE(image_buffer, False)['data']
 
     for rider_key in ret_val.keys():
 
@@ -114,8 +87,5 @@ def debug_main():
                 print(key, colored(ret_val[rider_key][key]['value'], color='red', attrs=['bold']))
 
 
-# Do It
-main()
-
-# For debugging only
-# debug_main()
+if __name__ == '__main__':
+    debug_main()

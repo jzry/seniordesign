@@ -146,10 +146,7 @@ app.post('/ctr', validateImage, async (req, res) => {
   // Send the image to the Python code to be processed
   let output = await pyconnect.processCTR(sampleFile)
 
-  if (output.error)
-    res.status(500)
-
-  res.json(output)
+  res.status(output.status).json(output.body)
 });
 
 app.post('/bce', validateImage, async (req, res) => {
@@ -165,10 +162,7 @@ app.post('/bce', validateImage, async (req, res) => {
   // Send the image to the Python code to be processed
   let output = await pyconnect.processBCE(sampleFile)
 
-  if (output.error)
-    res.status(500)
-
-  res.json(output)
+  res.status(output.status).json(output.body)
 });
 
 

@@ -1,46 +1,47 @@
 const { spawn } = require('child_process');
 
+
+// The command to run Python
 const pythonCommand = (process.env.PYTHON_CMD) ? process.env.PYTHON_CMD : 'python3'
+
+// A string that determines if TorchServe is used or not
+const torchserveParam = (process.env.TORCHSERVE) ? process.env.TORCHSERVE.toLowerCase() : 'no_torchserve'
+
+// The default error response if something goes wrong
+const defaultErrorResponse = { body: { error: 'An error occured while processing your request' }, status: 500 }
 
 
 //
-// Send an image to the BCE Python script
+// Send a BCE image to the Python script
 //
 // Returns a promise!!! 'await' a JSON object
 //
 exports.processBCE = function (image) {
 
-    return runScript('scanBCE.py', image)
+    return runScript('bce', image)
 }
 
 //
-// Send an image to the CTR Python script
+// Send a CTR image to the Python script
 //
 // Returns a promise!!! 'await' a JSON object
 //
 exports.processCTR = function (image) {
 
-    return runScript('scanCTR.py', image)
+    return runScript('ctr', image)
 }
 
 
 //
 // Handles the creation of the child process in which Python runs
 //
-function runPythonProcess(scriptName, image)
+function runPythonProcess(imageType, image)
 {
     return new Promise((accept, reject) => {
 
-        let useTorchServe = process.env.TORCHSERVE
-        
-        if (!useTorchServe)
-        {
-            useTorchServe = 'no_torchserve'
-        }
-
         // Create the process. Pass the script name and the number of bytes as command line arguments
         //
-        const pythonProcess = spawn(pythonCommand, [scriptName, image.size, useTorchServe])
+        const pythonProcess = spawn(pythonCommand, ['jsconnect.py', image.size, imageType, torchserveParam])
 
         let result = ''
         let errResult = ''
@@ -63,7 +64,7 @@ function runPythonProcess(scriptName, image)
                 console.warn(`(${__filename}) ${err}`)
             })
         }
-        
+
         // Read response data
         //
         pythonProcess.stdout.on('data', (data) => {
@@ -98,28 +99,70 @@ function runPythonProcess(scriptName, image)
 //
 // Calls the process creation function and parses its outputs
 //
-async function runScript(scriptName, image)
+async function runScript(imageType, image)
 {
     try
     {
-        var res = await runPythonProcess(scriptName, image)
+        // Run Python code
+        var output = await runPythonProcess(imageType, image)
     }
     catch (e)
     {
-        console.error(e)
-        return { error: 'The python code has encountered an error' }
+        var output = { error: e.message, status: -1 }
     }
 
     try
     {
-        var ret = JSON.parse(res)
+        // Parse output string as JSON
+        var json = JSON.parse(output)
     }
     catch (e)
     {
-        console.error(`ERROR (${__filename}): ${e.message}\n${res}`)
-        var ret = { error: 'Unable to parse python return value as JSON' }
+        var json = { error: e.message, status: -2 }
     }
 
-    return ret
+    // Reformat the JSON before returning it
+    return processReturnValue(json)
+}
+
+
+//
+// Processes the Python output into a format ready to be returned by the API,
+// and logs any error messages.
+//
+// (Returns) A JSON object of the form:
+//
+//     { "body": <the response body>, "status": <the repsonse status code> }
+//
+function processReturnValue(val)
+{
+    if (typeof val.status === 'undefined' || val.status < 0)
+    {
+        if (val.error)
+        {
+            console.error(val.error)
+        }
+
+        return defaultErrorResponse
+    }
+
+    if (val.status === 0)
+    {
+        if (!val.data)
+        {
+            console.error('"data" field missing from Python response')
+            return defaultErrorResponse
+        }
+
+        return { body: val.data, status: 200 }
+    }
+
+    //if (val.status === 1)
+    //{
+    //    console.warn('')
+    //}
+
+    console.error(`Unrecognized or invalid value for Python return status: ${val.status}`)
+    return defaultErrorResponse
 }
 
