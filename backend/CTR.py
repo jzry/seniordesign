@@ -3,6 +3,29 @@ from OCR import okra
 from OCR import violin as v
 
 
+max_score_per_field = [5, 5, 5, 5, 5, 3, 0, 2, 5, 5, 20, 5, 10, 25, 5, 5, None, None]
+out_field_keys = [
+    'Pulse Before Trot Out',
+    'Pulse After Trot Out',
+    'Mucous Membrane',
+    'Capillary Refill',
+    'Skin Pinch',
+    'Jugular Vein Refill',
+    'Gut Sounds',
+    'Anal Tone',
+    'Muscle Tone',
+    'Unwillingness to trot',
+    'Tendons, Ligaments, Joints, Filings',
+    'Interferences',
+    'Grade 1',
+    'Grade 2',
+    'Back Tenderness',
+    'Tack Area',
+    'Hold on Trail',
+    'Time Penalty'
+]
+
+
 def process_CTR(image_buffer, torchserve):
     """
     Runs all the image processing code for the CTR type scorecard.
@@ -17,68 +40,46 @@ def process_CTR(image_buffer, torchserve):
               score-field.
     """
 
+    # Get the score field segments
     extracted_fields = CTRSegments(image_buffer)
 
     # Prepare the OCR
     dg = okra.DigitGetter(ts=torchserve)
 
-    field_keys = extracted_fields.keys()
-
     output_dict = {}
 
-    max_score_per_field = [5, 5, 5, 5, 5, 3, 0, 2, 5, 5, 20, 5, 10, 25, 5, 5, None, None]
-    out_field_keys = [
-        'Pulse Before Trot Out',
-        'Pulse After Trot Out',
-        'Mucous Membrane',
-        'Capillary Refill',
-        'Skin Pinch',
-        'Jugular Vein Refill',
-        'Gut Sounds',
-        'Anal Tone',
-        'Muscle Tone',
-        'Unwillingness to trot',
-        'Tendons, Ligaments, Joints, Filings',
-        'Interferences',
-        'Grade 1',
-        'Grade 2',
-        'Back Tenderness',
-        'Tack Area',
-        'Hold on Trail',
-        'Time Penalty'
-    ]
-
-    for i, key in enumerate(field_keys):
+    for field_num, key in enumerate(extracted_fields.keys()):
 
         if key == 'gut_sounds':
             continue
 
-        #
-        # Dictionary   <--   OCR validation   <--   OCR   <--   Image Segments
-        #
-
         raw_ouput = dg.image_to_digits(extracted_fields[key])
 
-        num, conf = v.validate_score(raw_ouput, max_score_per_field[i])
+        num, conf = v.validate_score(raw_ouput, max_score_per_field[field_num])
 
-        output_dict[out_field_keys[i]] = {'value': num, 'confidence': conf}
+        output_dict[out_field_keys[field_num]] = {'value': num, 'confidence': conf}
 
-    return { 'data': output_dict, 'status': 0 }
+    return output_dict
 
 
-def debug_main():
+def _debug_main():
 
+    import sys
     from termcolor import colored
-    from pathlib import Path
 
-    filename = 'CTR-1.jpg'
+    if len(sys.argv) != 2:
+        print('\n  Usage: python BCE.py <Path to image>\n')
+        return
 
-    full_path = Path(__file__).parent.parent / 'Python' / 'Preprocessing_Package' / 'preprocessing' / 'ctr' / filename
+    try:
+        with open(sys.argv[1], 'rb') as file:
+            image_buffer = file.read()
 
-    with open(full_path, 'rb') as file:
-        image_buffer = file.read()
+    except FileNotFoundError:
+        print(f'\n  Cannot open "{sys.argv[1]}"\n')
+        return
 
-    ret_val = process_CTR(image_buffer, False)['data']
+    ret_val = process_CTR(image_buffer, False)
 
     for key in ret_val.keys():
 
@@ -87,14 +88,17 @@ def debug_main():
 
         if ret_val[key]['confidence'] >= 90.0:
             print(key, colored(ret_val[key]['value'], color='green', attrs=['bold']))
+
         elif ret_val[key]['confidence'] >= 80.0:
             print(key, colored(ret_val[key]['value'], color='yellow', attrs=['bold']))
+
         elif ret_val[key]['value'] == '':
             print(colored(key, color='red', attrs=['bold']))
+
         else:
             print(key, colored(ret_val[key]['value'], color='red', attrs=['bold']))
 
 
 if __name__ == '__main__':
-    debug_main()
+    _debug_main()
 

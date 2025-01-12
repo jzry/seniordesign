@@ -3,6 +3,20 @@ from OCR import okra
 from OCR import violin as v
 
 
+# A key map to convert the score-field key
+# names to the ones used by the frontend.
+key_map = {
+    'Rider#':        'Rider number',
+    'recovery':      'Recovery',
+    'hydration':     'Hydration',
+    'lesions':       'Lesions',
+    'soundness':     'Soundness',
+    'qual_movement': 'Qual Mvmt',
+    'rider_time':    'Ride time, this rider',
+    'rider_weight':  'Weight of this rider'
+}
+
+
 def process_BCE(image_buffer, torchserve):
     """
     Runs all the image processing code for the BCE type scorecard.
@@ -13,79 +27,132 @@ def process_BCE(image_buffer, torchserve):
                            or not.
 
     Returns:
-        dict: A dictionary containing score-field values and confidences for
+        dict: An array of dictionary objects containing score-field values and confidences for
               each rider.
     """
 
+    # Get the score field segments
     extracted_fields = BCSegments(image_buffer)
 
     # Prepare the OCR
     dg = okra.DigitGetter(ts=torchserve)
 
     rider_keys = extracted_fields.keys()
-    output_dict = {}
+
+    rider_data = []
 
     for rider_key in rider_keys:
 
-        output_dict[rider_key] = {}
+        scanned_vals = process_rider_fields(extracted_fields[rider_key], dg)
 
+        if (are_blank(scanned_vals)):
+            continue
+
+        rider_data.append(scanned_vals)
+
+    return { 'riderData': rider_data, 'riderCount': len(rider_data) }
+
+
+def process_rider_fields(rider_segments, dg):
+    """
+    Processes all the score-fields for a single rider.
+
+    Parameters:
+        rider_segments (dict): A dictionary containing the image segments
+                        for a single rider's score fields.
+        dg (okra.DigitGetter): An instance of the OCR class.
+
+    Returns:
+        dict: A dictionary containing values and confidences for each
+              score-field associated with the rider.
+    """
+
+    rider_output = {}
+
+    field_keys = rider_segments.keys()
+
+    for key_num, field_key in enumerate(field_keys):
+
+        # Run the OCR
+        raw_out = dg.image_to_digits(rider_segments[field_key])
+
+        # Use the appropriate validation
         #
-        # Dictionary   <--   OCR validation   <--   OCR   <--   Image Segments
-        #
+        if key_num == 0:
+            num, conf = v.validate_rider_number(raw_out)
 
-        insert_into_dict(output_dict, rider_key, 'Rider number',        v.validate_rider_number(dg.image_to_digits(extracted_fields[rider_key]['Rider#'])))
+        elif key_num == 6:
+            num, conf = v.validate_time(raw_out)
 
-        insert_into_dict(output_dict, rider_key, 'Recovery',      v.validate_score(dg.image_to_digits(extracted_fields[rider_key]['recovery']),      10, 1))
-        insert_into_dict(output_dict, rider_key, 'Hydration',     v.validate_score(dg.image_to_digits(extracted_fields[rider_key]['hydration']),     10, 1))
-        insert_into_dict(output_dict, rider_key, 'Lesions',       v.validate_score(dg.image_to_digits(extracted_fields[rider_key]['lesions']),       10, 1))
-        insert_into_dict(output_dict, rider_key, 'Soundness',     v.validate_score(dg.image_to_digits(extracted_fields[rider_key]['soundness']),     10, 1))
-        insert_into_dict(output_dict, rider_key, 'Qual Mvmt', v.validate_score(dg.image_to_digits(extracted_fields[rider_key]['qual_movement']), 10, 1))
+        elif key_num == 7:
+            num, conf = v.validate_weight(raw_out)
 
-        insert_into_dict(output_dict, rider_key, 'Ride time, this rider',    v.validate_time(dg.image_to_digits(extracted_fields[rider_key]['rider_time'])))
-        insert_into_dict(output_dict, rider_key, 'Weight of this rider',  v.validate_weight(dg.image_to_digits(extracted_fields[rider_key]['rider_weight'])))
+        else:
+            num, conf = v.validate_score(raw_out, 10, 1)
 
-    return { 'data': output_dict, 'status': 0 }
+        # Save results
+        rider_output[key_map[field_key]] = {'value': num, 'confidence': conf}
 
-
-#
-# Helper function to insert outputs into the dictionary
-#
-def insert_into_dict(dictionary, rider, field, output):
-
-    num, conf = output
-
-    dictionary[rider][field] = {'value': num, 'confidence': conf}
+    return rider_output
 
 
-def debug_main():
+def are_blank(fields):
+    """ Returns True if the fields are empty and False otherwise"""
 
+    blank_field_count = 0
+    blank_count_threshold = 5
+
+    for key in fields.keys():
+
+        if fields[key]['value'] == '':
+            blank_field_count += 1
+
+        if blank_field_count >= blank_count_threshold:
+            return True
+
+    return False
+
+
+def _debug_main():
+
+    import sys
     from termcolor import colored
-    from pathlib import Path
 
-    filename = 'BC-1.jpg'
+    if len(sys.argv) != 2:
+        print('\n  Usage: python BCE.py <Path to image>\n')
+        return
 
-    full_path = Path(__file__).parent.parent / 'Python' / 'Preprocessing_Package' / 'preprocessing' / 'bc' / filename
+    try:
+        with open(sys.argv[1], 'rb') as file:
+            image_buffer = file.read()
 
-    with open(full_path, 'rb') as file:
-        image_buffer = file.read()
+    except FileNotFoundError:
+        print(f'\n  Cannot open "{sys.argv[1]}"\n')
+        return
 
-    ret_val = process_BCE(image_buffer, False)['data']
+    ret_val = process_BCE(image_buffer, False)
 
-    for rider_key in ret_val.keys():
+    for riderNumber in range(ret_val['riderCount']):
 
-        print(colored(f'----------- {rider_key}', color='blue', attrs=['bold']))
+        print(colored(f'----------- Rider {riderNumber + 1}', color='blue', attrs=['bold']))
 
-        for key in ret_val[rider_key].keys():
+        rider_dict = ret_val['riderData'][riderNumber]
 
-            if ret_val[rider_key][key]['confidence'] >= 90.0:
-                print(key, colored(ret_val[rider_key][key]['value'], color='green', attrs=['bold']))
-            elif ret_val[rider_key][key]['confidence'] >= 80.0:
-                print(key, colored(ret_val[rider_key][key]['value'], color='yellow', attrs=['bold']))
-            elif ret_val[rider_key][key]['value'] == '':
+        for key in rider_dict.keys():
+
+            if rider_dict[key]['confidence'] >= 90.0:
+                print(key, colored(rider_dict[key]['value'], color='green', attrs=['bold']))
+
+            elif rider_dict[key]['confidence'] >= 80.0:
+                print(key, colored(rider_dict[key]['value'], color='yellow', attrs=['bold']))
+
+            elif rider_dict[key]['value'] == '':
                 print(colored(key, color='red', attrs=['bold']))
+
             else:
-                print(key, colored(ret_val[rider_key][key]['value'], color='red', attrs=['bold']))
+                print(key, colored(rider_dict[key]['value'], color='red', attrs=['bold']))
 
 
 if __name__ == '__main__':
-    debug_main()
+    _debug_main()
+
