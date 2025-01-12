@@ -8,7 +8,7 @@ const pythonCommand = (process.env.PYTHON_CMD) ? process.env.PYTHON_CMD : 'pytho
 const torchserveParam = (process.env.TORCHSERVE) ? process.env.TORCHSERVE.toLowerCase() : 'no_torchserve'
 
 // The default error response if something goes wrong
-const defaultErrorResponse = { body: { error: 'An error occured while processing your request' }, status: 500 }
+const defaultErrorResponse = { 'body': { 'error': 'An error occured while processing your request' }, 'status': 500 }
 
 
 //
@@ -108,7 +108,7 @@ async function runScript(imageType, image)
     }
     catch (e)
     {
-        var output = { error: e.message, status: -1 }
+        return processReturnValue({ message: e, status: -1 })
     }
 
     try
@@ -118,7 +118,7 @@ async function runScript(imageType, image)
     }
     catch (e)
     {
-        var json = { error: e.message, status: -2 }
+        var json = { message: e.message, status: -2 }
     }
 
     // Reformat the JSON before returning it
@@ -138,9 +138,9 @@ function processReturnValue(val)
 {
     if (typeof val.status === 'undefined' || val.status < 0)
     {
-        if (val.error)
+        if (val.message)
         {
-            console.error(val.error)
+            console.error(val.message)
         }
 
         return defaultErrorResponse
@@ -148,21 +148,54 @@ function processReturnValue(val)
 
     if (val.status === 0)
     {
+        //
+        // Exit Status 0: Success
+        //
+
         if (!val.data)
         {
             console.error('"data" field missing from Python response')
             return defaultErrorResponse
         }
 
-        return { body: val.data, status: 200 }
+        return { 'body': val.data, 'status': 200 }
     }
 
-    //if (val.status === 1)
-    //{
-    //    console.warn('')
-    //}
+    if (val.status === 1)
+    {
+        //
+        // Exit Status 1: Unsupported or unknown file type
+        //
 
-    console.error(`Unrecognized or invalid value for Python return status: ${val.status}`)
-    return defaultErrorResponse
+        var statusCode = 444
+    }
+    else if (val.status === 2)
+    {
+        //
+        // Exit Status 2: Supported image type not available...
+        //
+
+        var statusCode = 555
+    }
+    else if (val.status === 3)
+    {
+        //
+        // Exit Status 3: Corrupted or unsafe image file
+        //
+
+        var statusCode = 445
+    }
+    else
+    {
+        //
+        // Exit Status ?
+        //
+
+        console.error(`Unrecognized or invalid value for Python return status: ${val.status}`)
+        return defaultErrorResponse
+    }
+
+    console.warn(val.message)
+    return { 'body': { 'error': val.message }, 'status': statusCode }
 }
 

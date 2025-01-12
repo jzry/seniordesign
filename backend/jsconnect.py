@@ -20,16 +20,41 @@ def main():
 
                 print('ERROR if you see this message')
 
-                if scorecard_type == 'ctr':
-                    from CTR import process_CTR
-                    result = process_CTR(image_buffer, torchserve_flag)
-
-                else:
-                    from BCE import process_BCE
-                    result = process_BCE(image_buffer, torchserve_flag)
+                result = run_code(image_buffer, scorecard_type, torchserve_flag)
 
     # Send to parent process
     send(result)
+
+
+def run_code(image_buffer, scorecard_type, torchserve_flag):
+    """
+    Runs the image processing code based on the scorecard type.
+
+    Parameters:
+        image_buffer (bytes): A byte array storing an image.
+        scorecard_type (str): A string with the scorecard type ("ctr" or "bce")
+        torchserve_flag (bool): A flag to specify whether TorchServe should be used or not.
+
+    Returns:
+        dict: A dictionary with result, data, and message fields
+    """
+
+    try:
+        if scorecard_type == 'ctr':
+            from CTR import process_CTR
+            data = process_CTR(image_buffer, torchserve_flag)
+
+        else:
+            from BCE import process_BCE
+            data = process_BCE(image_buffer, torchserve_flag)
+
+    except TypeError as e:
+        return { 'status': 1, 'data': {}, 'message': e.message }
+
+    except NotImplementedError as e:
+        return { 'status': 2, 'data': {}, 'message': e.message }
+
+    return { 'status': 0, 'data': data, 'message': 'Success' }
 
 
 def receive():
@@ -76,7 +101,7 @@ def receive():
         return image_buffer, card_type, torchserve_flag
 
     else:
-        raise ValueError(f'Expected 3 command line arguments; Received {sys.argv - 1}')
+        raise ValueError(f'Expected 3 command line arguments; Received {len(sys.argv) - 1}')
 
 
 def send(data):
