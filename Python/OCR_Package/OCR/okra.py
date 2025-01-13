@@ -4,6 +4,8 @@ from enum import Enum
 import requests
 import json
 
+from .exceptions import *
+
 try:
     import matplotlib.pyplot as plt
     MATPLOTLIB_ENABLED = True
@@ -27,6 +29,9 @@ class DigitGetter:
                                     will appear in the output (default=True).
         find_minus_signs (bool): Determines whether or not minus signs will
                                  appear in the output (default=False).
+        blank_threshold (int): The max difference between the lightest and
+                               darkest pixels in an image for it to be
+                               considered a blank segment (default=120).
     """
 
     def __init__(self, ts=False):
@@ -36,13 +41,13 @@ class DigitGetter:
 
         if self.__debug:
 
-            from .OkraHandler import OkraHandler            
-            
+            from .OkraHandler import OkraHandler
+
             self.__model_handle = OkraHandler()
             self.__model_handle.initialize()
 
         # Set default attributes
-        
+
         self.debug_images = False
         self.column_skip = 2
         self.fraction_padding = 0.2
@@ -70,7 +75,7 @@ class DigitGetter:
         # will be a large difference between the
         # brightest pixel and the darkest pixel
         if (img.max() - img.min() <= self.blank_threshold):
-            raise Exception
+            raise OkraBlankSegmentException
 
         # Apply a slight blur
         img = cv2.bilateralFilter(img, 5, self.blank_threshold, 20)
@@ -102,7 +107,8 @@ class DigitGetter:
 
         try:
             img = self.__preprocess_image(img)
-        except:
+
+        except OkraBlankSegmentException:
             return (None, None)
 
         return self.__digit_from_image(img)
@@ -121,7 +127,7 @@ class DigitGetter:
         """
 
         self.__show_debug_image(img, 'Digit')
-        
+
         req = {"data": img.tobytes(), "x": img.shape[1], "y": img.shape[0]}
 
         if self.__debug:
@@ -135,8 +141,7 @@ class DigitGetter:
             body = res.json()
 
             if res.status_code != 200:
-                print(body)
-                raise Exception('Torchserve error')
+                raise OkraModelError('Torchserve error', body)
 
         return (body['Digit'], body['Confidence'])
 
@@ -155,7 +160,8 @@ class DigitGetter:
 
         try:
             img = self.__preprocess_image(img)
-        except:
+
+        except OkraBlankSegmentException:
             return ([], [])
 
         # The return values
