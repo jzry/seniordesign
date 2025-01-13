@@ -2,7 +2,7 @@ try:
     from ts.torch_handler.base_handler import BaseHandler
 
 except ImportError:
-    
+
     # If were not using TorchServe,
     # we don't really need to inherit
     # from the actual torchserve handler.
@@ -40,7 +40,7 @@ class OkraHandler(BaseHandler):
 
             properties = context.system_properties
             model_dir = properties.get('model_dir')
-        
+
         #
         # Init and load the model
         #
@@ -54,9 +54,9 @@ class OkraHandler(BaseHandler):
         self.model.to(device)
         self.model.load_state_dict(state_dict)
         self.model.eval()
-        
+
         self.initialized = True
-        
+
 
     def __inference(self, image):
         """Runs the model with the image"""
@@ -65,7 +65,7 @@ class OkraHandler(BaseHandler):
             logits = self.model(image)
 
         return logits
-    
+
 
     def __prepare_image(self, data):
         """Extracts the image data and prepares it for the classifier"""
@@ -89,7 +89,7 @@ class OkraHandler(BaseHandler):
         im = im.reshape((1, 1, 28, 28))
 
         return im
-    
+
 
     def __process_output(self, ouptut):
         """Converts logits into a prediction and confidence"""
@@ -115,4 +115,3 @@ class OkraHandler(BaseHandler):
         prediction = self.__process_output(out)
 
         return [json.dumps(prediction) + '\n']
-    
