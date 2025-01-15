@@ -13,9 +13,9 @@ from OCR.OkraClassifier import OkraClassifier
 ###### Hyperparameters ######
 
 batch_size = 500    # If this is too big, your GPU will run out of memory
-epochs = 5
+epochs = 20
 
-lr = 0.001
+lr = 0.0025
 weight_decay = 5e-3
 
 # SGD only
@@ -35,8 +35,8 @@ output_best_weights_filename = 'okra_best.resnet.weights'
 
 # Transformations to be applied to the training images
 train_transform = transforms.Compose([
-    transforms.ToTensor(),
-    transforms.RandomRotation(5)
+    transforms.RandomRotation(5),
+    transforms.ToTensor()
 ])
 
 # Transformations to be applied to the testing images
@@ -111,10 +111,8 @@ def prepare_data():
         emnist = load_dataset('ernestchu/emnist-digits')
         train = emnist['train']
         test = emnist['test']
-        train.set_transform(apply_train_transforms)
-        test.set_transform(apply_test_transforms)
-        train.set_format(type='torch', columns=['image', 'label'])
-        test.set_format(type='torch', columns=['image', 'label'])
+        train.set_transform(apply_train_transforms, columns=['image', 'label'])
+        test.set_transform(apply_test_transforms, columns=['image', 'label'])
 
     else:
 
@@ -214,9 +212,8 @@ def train_one_epoch(model, data, optimizer, criterion):
     total_loss = 0
 
     for batch in data:
-
         if use_extended_MNIST:
-            x_batch = batch['image'].float()
+            x_batch = batch['image']
             y_batch = batch['label']
 
         else:
@@ -228,8 +225,6 @@ def train_one_epoch(model, data, optimizer, criterion):
         # Send data to GPU
         x_batch = x_batch.to(device)
         y_batch = y_batch.to(device)
-
-        #x_batch = x_batch.view(x_batch.shape[0], -1)
 
         # Inference
         pred = model(x_batch)
@@ -263,9 +258,8 @@ def test(model, data, criterion):
 
     with torch.no_grad():
         for batch in data:
-
             if use_extended_MNIST:
-                x_batch = batch['image'].float()
+                x_batch = batch['image']
                 y_batch = batch['label']
 
             else:
