@@ -63,9 +63,11 @@ function BCEExtractedValues({ extractedDataList, onGoBackToUpload, heaviestRider
     }
   };
 
+  // adding in spinner here?
   if (showResults) {
     return <BCEResults extractedDataList={extractedDataList} fastestRiderTime={fastestRiderTime} heaviestRiderWeight={heaviestRiderWeight} />;
-  }
+  } 
+
 
   return (
     <div className="container">
@@ -99,12 +101,14 @@ function BCEExtractedValues({ extractedDataList, onGoBackToUpload, heaviestRider
       {step === 2 && (
         <div className="result-container">
           <p>Would you like to continue editing or calculate your score?</p>
-          <button className="action-button" onClick={handleGoBack}>
-            Go Back
-          </button>
-          <button className="action-button" onClick={handleCalculateScore}>
-            Calculate Score
-          </button>
+          <div className="button-container">
+            <button className="action-button" onClick={handleGoBack}>
+              Go Back
+            </button>
+            <button className="action-button" onClick={handleCalculateScore}>
+              Calculate Score
+            </button>
+          </div>
         </div>
       )}
     </div>
