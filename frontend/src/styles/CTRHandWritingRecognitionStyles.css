@@ -1,61 +1,7 @@
-.bce-container {
-    display: flex;
-    min-width: 50%;
-    max-width: fit-content;
-    text-align: center;
-  }
-  .bce-results-container {
-    padding: 3%;
-    display: inline-block;
-    min-width: max-content;
-    align-items: center;
-    text-align: inline-center;
-  }
-  .action-button {
-    margin: 2%;
-  }
-  .bce-result {
-    display: inline-block;
-    min-width: max-content; 
-    margin: 5%;
-  }
-  div.result-container {
-    display: flex;
-    flex-direction: column;
-    min-width: fit-content;
-    margin-top: 40%;
-  }
-  h4,
-  h2,
-  h3,
-  h1,
-  p {
-    display: flex;
-    text-align: center;
-    min-width: fit-content;
-    justify-self: center;
-    margin: 5%;
-  }
-  p {
-    text-align: center;
-    margin: 0 auto;
-  }
-  div.button-container {
-    display: flex;
-    margin: auto;
-    padding: 1%;
-  }
-  .input-group {
-    display: flex;
-    padding: 2%;
-    min-width: 100%;
-    justify-self: center;
-  }
-
-/* the fillable text boxes*/
+@import "edits.css";
 input[type="number"], input[type="text"] {
-    min-width: 10%;
-    max-width: 30%;
+    width: 150px;
+    max-width: 80%;
     padding: 0.75em;
     border-radius: 0.25em;
 }
@@ -65,37 +11,36 @@ div.input-group, p {
     margin: auto;
     justify-content: space-between;
     align-self: center;
-    min-width: 100%;
-    padding: 2%;
     /* border: solid 2px red; */
 }
-.bce-container {
-    display: flex;
-    margin: auto;
-    max-width: 10%;
-  }
 div.container, 
 div.bce-container {
     display: flex;
     margin: 0 10%;
-    max-width: 30vw;
-    min-height: 100vh;
-    /* max-height: 60%; */
+    /* min-width: fit-content; */
+    max-width: 100%;
+    min-height: fit-content;
     /* justify-content: space-between; */
     justify-items: center;
     align-items: center;
     flex-direction: column;
     padding-top: 7%;
-    padding-bottom: 3%;
 }
-
+div.container {
+    /* border: 2px solid purple; */
+    height: 100vh;
+}
+div.bce-container {
+    /* border: 2px solid cornflowerblue; */
+    height: 100vh;
+}
 /* Just the ending results page */
 .bce-result {
     border: solid 1px black;
     background-color: lightgrey;
     padding: 2%;
     border-radius: 0.10em;
-    min-width: max-content;
+    min-width: fit-content;
     max-width: 100%;
     min-height: fit-content;
 
@@ -104,10 +49,7 @@ div.bce-container {
     flex-direction: column;
     margin: auto;
 }
-h2 {
-    display: flex;
-    min-width: max-content;
-}
+
 label, 
 .data-label {
     font-size: 14px;
@@ -116,11 +58,6 @@ label,
     padding: 0.75em;
     max-width: 50vw;
     overflow-wrap: break-word;
-}
-div.button-container {
-    display: flex;
-    padding: 1%;
-    margin: auto;
 }
 /* same button stylings as for BC and CTR */
 .action-button,
@@ -140,17 +77,3 @@ div.button-container {
     align-self: center;
     justify-self: center;
 }
-
-@media (min-width: 500px) {
-    .bce-container {
-      justify-content: center;
-      align-items: center;
-      width: 30vw;
-      max-height: fit-content;
-    }
-    #root {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-    }
-  }
