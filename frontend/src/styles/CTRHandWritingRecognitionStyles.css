@@ -1,3 +1,4 @@
+@import "edits.css";
 input[type="number"], input[type="text"] {
     width: 150px;
     max-width: 80%;

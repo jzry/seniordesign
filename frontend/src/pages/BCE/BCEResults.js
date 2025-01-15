@@ -47,7 +47,6 @@ function BCEResults({ extractedDataList, fastestRiderTime, heaviestRiderWeight }
             <p>Total Time Score: {totalTimeScore}</p>
             <p>Total Weight Score: {totalWeightScore}</p>
             <h3>Total Score: {totalVeterinaryScore + totalWeightScore + totalTimeScore}</h3>
-            <p>-----------</p>
           </div>
         );
       })}
