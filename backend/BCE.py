@@ -17,14 +17,15 @@ key_map = {
 }
 
 
-def process_BCE(image_buffer, torchserve):
+def run(args, image_buffer):
     """
     Runs all the image processing code for the BCE type scorecard.
 
     Parameters:
+        args (dict): A dictionary containing the arguments:
+                     'torchserve' (bool): A flag to specify whether TorchServe
+                                          should be used or not.
         image_buffer (bytes): The raw image data.
-        torchserve (bool): A flag to specify whether TorchServe should be used
-                           or not.
 
     Returns:
         dict: An array of dictionary objects containing score-field values and confidences for
@@ -35,7 +36,7 @@ def process_BCE(image_buffer, torchserve):
     extracted_fields = BCSegments(image_buffer)
 
     # Prepare the OCR
-    dg = okra.DigitGetter(ts=torchserve)
+    dg = okra.DigitGetter(ts=args['torchserve'])
 
     rider_keys = extracted_fields.keys()
 
@@ -130,7 +131,7 @@ def _debug_main():
         print(f'\n  Cannot open "{sys.argv[1]}"\n')
         return
 
-    ret_val = process_BCE(image_buffer, False)
+    ret_val = run({'torchserve': False}, image_buffer)
 
     for riderNumber in range(ret_val['riderCount']):
 

@@ -9,6 +9,10 @@ const pyconnect = require('./pyconnect')
 
 const devMode = process.env.MODE
 
+// A flag that determines if TorchServe is used or not
+const torchserveFlag = (process.env.TORCHSERVE) ? process.env.TORCHSERVE.toLowerCase() === 'torchserve' : false
+
+
 
 // Request validation middleware for the CTR data from the OCR
 // Because the CTR data is not currently sourced from an api endpoint, this function only simulates the functionality of Express Middleware
@@ -143,8 +147,10 @@ app.post('/ctr', validateImage, async (req, res) => {
 
   //console.log('File received:', sampleFile.name);  // Log file details
 
+  let args = { "torchserve": torchserveFlag }
+
   // Send the image to the Python code to be processed
-  let output = await pyconnect.processCTR(sampleFile)
+  let output = await pyconnect.run('CTR.py', args, sampleFile)
 
   res.status(output.status).json(output.body)
 });
@@ -159,8 +165,10 @@ app.post('/bce', validateImage, async (req, res) => {
 
   //console.log('File received:', sampleFile.name);  // Log file details
 
+  let args = { "torchserve": torchserveFlag }
+
   // Send the image to the Python code to be processed
-  let output = await pyconnect.processBCE(sampleFile)
+  let output = await pyconnect.run('BCE.py', args, sampleFile)
 
   res.status(output.status).json(output.body)
 });

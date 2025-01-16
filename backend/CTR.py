@@ -26,14 +26,15 @@ out_field_keys = [
 ]
 
 
-def process_CTR(image_buffer, torchserve):
+def run(args, image_buffer):
     """
     Runs all the image processing code for the CTR type scorecard.
 
     Parameters:
+        args (dict): A dictionary containing the arguments:
+                     'torchserve' (bool): A flag to specify whether TorchServe
+                                          should be used or not.
         image_buffer (bytes): The raw image data.
-        torchserve (bool): A flag to specify whether TorchServe should be used
-                           or not.
 
     Returns:
         dict: A dictionary containing values and confidences for each
@@ -44,7 +45,7 @@ def process_CTR(image_buffer, torchserve):
     extracted_fields = CTRSegments(image_buffer)
 
     # Prepare the OCR
-    dg = okra.DigitGetter(ts=torchserve)
+    dg = okra.DigitGetter(ts=args['torchserve'])
 
     output_dict = {}
 
@@ -79,7 +80,7 @@ def _debug_main():
         print(f'\n  Cannot open "{sys.argv[1]}"\n')
         return
 
-    ret_val = process_CTR(image_buffer, False)
+    ret_val = run({'torchserve': False}, image_buffer)
 
     for key in ret_val.keys():
 

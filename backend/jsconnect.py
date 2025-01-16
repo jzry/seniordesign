@@ -2,14 +2,14 @@ import sys
 import json
 from contextlib import redirect_stdout, redirect_stderr
 from os import devnull
+import importlib.util
+from pathlib import Path
 
 
 def main():
 
     # Receive from parent process
-    image_buffer, scorecard_type, torchserve_flag = receive()
-
-    result = {}
+    script_name, args, image_buffer = receive()
 
     # Temporarily redirect stdout and stderr so random
     # messages aren't sent to the parent process
@@ -20,36 +20,45 @@ def main():
 
                 print('ERROR if you see this message')
 
-                result = run_code(image_buffer, scorecard_type, torchserve_flag)
+                result = run_code(script_name, args, image_buffer)
 
     # Send to parent process
     send(result)
 
 
-def run_code(image_buffer, scorecard_type, torchserve_flag):
+def run_code(script_name, args, image_buffer):
     """
     Runs the image processing code based on the scorecard type.
 
     Parameters:
+        script_name (str): A string with the name of the Python script to run.
+        args (dict): A dictionary containing arguments for the target Python
+                     script.
         image_buffer (bytes): A byte array storing an image.
-        scorecard_type (str): A string with the scorecard type ("ctr" or "bce")
-        torchserve_flag (bool): A flag to specify whether TorchServe should be used or not.
 
     Returns:
         dict: A dictionary with result, data, and message fields
     """
 
     try:
-        if scorecard_type == 'ctr':
-            from CTR import process_CTR
-            data = process_CTR(image_buffer, torchserve_flag)
+        target = load_module(script_name)
+
+    except FileNotFoundError:
+        return { 'status': -1, 'data': {}, 'message': f'"{script_name}" not found' }
+
+    try:
+        if callable(target.run):
+            data = target.run(args, image_buffer)
 
         else:
-            from BCE import process_BCE
-            data = process_BCE(image_buffer, torchserve_flag)
+            return { 'status': -2, 'data': {}, 'message': f'"{script_name}" does not contain "run" function' }
 
     except TypeError as e:
-        return { 'status': 1, 'data': {}, 'message': e.message }
+        if e.message:
+            return { 'status': 1, 'data': {}, 'message': e.message }
+
+        else:
+            return { 'status': -3, 'data': {}, 'message': '"{script_name[:-3]}.run()" should accept dictionary and "bytes" object' }
 
     except NotImplementedError as e:
         return { 'status': 2, 'data': {}, 'message': e.message }
@@ -61,13 +70,10 @@ def receive():
     """
     Receives image data and parameters from the parent JavaScript process.
 
-    Parameters:
-        None
-
     Returns:
+        str: The name of the Python script to run
+        dict: A dictionary with arguments to pass to the Python script
         bytes: A byte array storing an image.
-        str: A string with the scorecard type ("ctr" or "bce")
-        bool: A flag to specify whether TorchServe should be used or not.
 
     Raises:
         ValueError: Invalid command line arguments.
@@ -75,30 +81,32 @@ def receive():
 
     if len(sys.argv) == 4:
 
+        # The first argument specifies the script name
+        script_name = sys.argv[1]
+
+        if script_name[-3:].lower() != '.py':
+            raise ValueError('Script name should have file extension of ".py"')
+
         try:
-            # The first argument is the number of bytes to read from stdin
-            input_length_bytes = int(sys.argv[1])
+            # The second argument is the number of bytes to read from stdin
+            input_length_bytes = int(sys.argv[2])
 
         except ValueError:
             raise ValueError('Expected first argument to be an integer')
 
-        if input_length_bytes <= 0:
+        if input_length_bytes < 0:
             raise ValueError('Expected first argument to be positive')
 
+        args = json.loads(sys.argv[3])
 
-        # The second argument specifies the type of scorecard
-        card_type = sys.argv[2].lower()
+        if input_length_bytes > 0:
+            # Read the image data from standard input
+            image_buffer = sys.stdin.buffer.read(input_length_bytes)
 
-        if card_type != 'ctr' and card_type != 'bce':
-            raise ValueError(f'Expected second argument to be "ctr" or "bce"; Received "{card_type}"')
+        else:
+            image_buffer = None
 
-        # The third argument specifies whether TorchServe should be used
-        torchserve_flag = sys.argv[3] == 'torchserve'
-
-        # Read the image data from standard input
-        image_buffer = sys.stdin.buffer.read(input_length_bytes)
-
-        return image_buffer, card_type, torchserve_flag
+        return script_name, args, image_buffer
 
     else:
         raise ValueError(f'Expected 3 command line arguments; Received {len(sys.argv) - 1}')
@@ -110,14 +118,23 @@ def send(data):
 
     Parameters:
         data (dict): The response data stored in a dictionary object.
-
-    Returns:
-        None
     """
 
     # Convert the dictionary to a JSON string
     # and return through standard output
     print(json.dumps(data))
+
+
+def load_module(module_name):
+    """Dynamically loads a Python module"""
+
+    path = Path(__file__).parent / module_name
+
+    spec = importlib.util.spec_from_file_location(module_name[:-3], path)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+
+    return module
 
 
 # Run It

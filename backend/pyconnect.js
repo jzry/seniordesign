@@ -4,44 +4,33 @@ const { spawn } = require('child_process');
 // The command to run Python
 const pythonCommand = (process.env.PYTHON_CMD) ? process.env.PYTHON_CMD : 'python3'
 
-// A string that determines if TorchServe is used or not
-const torchserveParam = (process.env.TORCHSERVE) ? process.env.TORCHSERVE.toLowerCase() : 'no_torchserve'
-
 // The default error response if something goes wrong
 const defaultErrorResponse = { 'body': { 'error': 'An error occured while processing your request' }, 'status': 500 }
 
 
 //
-// Send a BCE image to the Python script
+// Call a Python script
 //
 // Returns a promise!!! 'await' a JSON object
 //
-exports.processBCE = function (image) {
-
-    return runScript('bce', image)
-}
-
-//
-// Send a CTR image to the Python script
-//
-// Returns a promise!!! 'await' a JSON object
-//
-exports.processCTR = function (image) {
-
-    return runScript('ctr', image)
+exports.run = function (script, arguments, image)
+{
+    return runScript(script, arguments, image)
 }
 
 
 //
 // Handles the creation of the child process in which Python runs
 //
-function runPythonProcess(imageType, image)
+function runPythonProcess(script, arguments, image)
 {
     return new Promise((accept, reject) => {
 
+        let imageSize = (image) ? image.size : 0
+
         // Create the process. Pass the script name and the number of bytes as command line arguments
         //
-        const pythonProcess = spawn(pythonCommand, ['jsconnect.py', image.size, imageType, torchserveParam])
+        const pythonProcess = spawn(pythonCommand, ['jsconnect.py', script, imageSize, JSON.stringify(arguments)])
 
         let result = ''
         let errResult = ''
@@ -57,12 +46,15 @@ function runPythonProcess(imageType, image)
         //
         if (pythonProcess.stdin)
         {
-            pythonProcess.stdin.write(image.data)
+            if (image)
+            {
+                pythonProcess.stdin.write(image.data)
 
-            pythonProcess.stdin.on('error', (err) => {
+                pythonProcess.stdin.on('error', (err) => {
 
-                console.warn(`(${__filename}) ${err}`)
-            })
+                    console.warn(`(${__filename}) ${err}`)
+                })
+            }
         }
 
         // Read response data
@@ -99,12 +91,12 @@ function runPythonProcess(imageType, image)
 //
 // Calls the process creation function and parses its outputs
 //
-async function runScript(imageType, image)
+async function runScript(script, arguments, image)
 {
     try
     {
         // Run Python code
-        var output = await runPythonProcess(imageType, image)
+        var output = await runPythonProcess(script, arguments, image)
     }
     catch (e)
     {
@@ -160,6 +152,7 @@ function processReturnValue(val)
 
         return { 'body': val.data, 'status': 200 }
     }
+
 
     if (val.status === 1)
     {
