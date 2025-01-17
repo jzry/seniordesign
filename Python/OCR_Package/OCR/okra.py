@@ -398,7 +398,7 @@ class DigitGetter:
         )
 
         # A list to track horizontal movement
-        layers = [0] * img.shape[1]
+        layers = [0] * img.shape[0]
 
         start_direction = 0    # Up
         current_pixel = pixel
