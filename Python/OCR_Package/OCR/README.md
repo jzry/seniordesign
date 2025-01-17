@@ -9,8 +9,8 @@ This is a package to read handwritten digits from scoresheet images
 The **okra** module contains the DigitGetter class which is responsible for OCR.
 
 - (class) `DigitGetter`
-    - (fn) `digit_from_image` -> Extracts a single digit from a square image. (Don't use this one)
-    - (fn) `image_to_digits`  -> Extracts a row of digits from an image. (Use this one)
+    - (fn) `digit_from_image` -> Extracts a single digit from a square image.
+    - (fn) `image_to_digits`  -> Extracts a row of digits from an image. (You will want to use this one)
 
 See *okra.py* for more detailed information.
 
@@ -74,7 +74,7 @@ type(confidence[0]) # <class 'float'>
 ```python
 # All validation functions recieve OCR output and return:
 # 1. A string representing the extracted values.
-# 2. A percentage representing the confidence of the extraction.
+# 2. A float representing the percent confidence of the extraction.
 
 # The score validation has optional max and min values
 output_string, output_confidence = violin.validate_score(ocr_output, max=10, min=1)
@@ -95,7 +95,6 @@ type(output_confidence) # <class 'float'>
 First, the image is processed to prepare it for scanning and classification.
 This includes applying a threshold to convert the image to black and white
 where the handwriting is white and the background is black.
-
 
 ### Scanning and Digit Segmentation
 
@@ -118,7 +117,12 @@ A segment of the image can be taken using the boundary values.
 ### Classification
 
 Digit segments are classified using a convolutional neural network.
-Pytorch was used to implement the classifier for this OCR. Input images are
-resized to 28 by 28 pixels to match the MNIST dataset. The output of the
-classifier is an array containing the probabilities that the digit is a
-zero, one, two, etc...
+Specifically, the ResNet-18 model was used with a slight modification to
+accommodate the format of the input images. Pytorch was used to train and
+run the classifier for this OCR. For training, the MNIST dataset was intially
+chosen, but the much larger [EMNIST](https://huggingface.co/datasets/ernestchu/emnist-digits)
+dataset was used for the final training.
+
+In production, the classifier model will be served using
+[TorchServe](../../../model_server/README.md).
+
