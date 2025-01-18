@@ -5,14 +5,16 @@ import UploadIcon from "../../images/upload.png";
 import CTRExtractedValues from './CTRExtractedValues.js';
 import '../../styles/CTRHandWritingRecognitionStyles.css';
 
-// Handles image upload and submission to the backend
 function GetPhotos() {
   const [imageSrc, setImageSrc] = useState(null); // State to store the captured image
   const [imageFile, setImageFile] = useState(null); // State to store the image file for API
   const [extractedData, setExtractedData] = useState(null); // State to store extracted values from API
+  const [loading, setLoading] = useState(false); // Loading state
+  const [backendError, setBackendError] = useState(null); // Error state
   const fileInputRef = useRef(null); 
   const navigate = useNavigate();
-  const apiUrl = process.env.REACT_APP_API_URL
+  const apiUrl = process.env.REACT_APP_API_URL;
+
   // Handles file selection for uploading an image
   const handleFileChange = (event) => {
     const file = event.target.files[0];
@@ -31,47 +33,56 @@ function GetPhotos() {
   // Submits the uploaded image to the backend
   const handleSubmit = async (event) => {
     event.preventDefault();
+    setLoading(true); // Show loading spinner
+    setBackendError(null); // Reset any previous errors
 
     if (imageFile) {
       const formData = new FormData();
       formData.append('image', imageFile);
 
-      axios.post(apiUrl.concat('/ctr'), formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      })
-      .then(response => {
-        let ctrData = response.data;
-        if (ctrData.error) {
-          console.error("The image was not processed correctly")
-        } else {
-          console.log("Data Retrieved:")
-          console.log(ctrData)
-          setExtractedData(ctrData)
+      try {
+        const response = await axios.post(apiUrl.concat('/ctr'), formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        });
+
+        if (response.data.error) {
+          throw new Error(response.data.error);
         }
-      })
-      .catch(error => {
+
+        console.log("Data Retrieved:", response.data);
+        setExtractedData(response.data);
+      } catch (error) {
         console.error('Error uploading file:', error);
-      })
+        setBackendError(error.message || "An unknown error occurred.");
+      } finally {
+        setLoading(false); // Hide loading spinner
+      }
     } else {
-        console.error("No image to upload.");
+      console.error("No image to upload.");
+      setLoading(false); // Hide loading spinner
     }
   };
-  
+
   const handleGoBack = () => {
     navigate('/'); // Redirect to the home page
   };
-  
+
   return (
     <div className="App">
+      {/* Show loading spinner */}
+      {loading && (
+        <div className="loading-overlay">
+          <div className="spinner"></div>
+        </div>
+      )}
+
       {extractedData ? (
-        // If we have extracted data, show the CTRHandwritingRecognition component
         <CTRExtractedValues extractedData={extractedData} />
       ) : (
         !imageSrc ? (
           <div className="button-container">
-            {/* Hidden file input to trigger the camera */}
             <input
               type="file"
               accept="image/*"
@@ -80,7 +91,6 @@ function GetPhotos() {
               onChange={handleFileChange}
               style={{ display: 'none' }}
             />
-            {/* Upload an image */}
             <div className="icon-button">
               <input
                 type="file"
@@ -99,18 +109,20 @@ function GetPhotos() {
         ) : (
           <div className="image-fullscreen-container">
             <img src={imageSrc} alt="Preview" className="image-fullscreen" />
-            {/* Buttons for retaking or continuing */}
             <div className="action-buttons">
               <button className="scorecard-button" onClick={handleRetakePhoto}>
                 Retake Image
               </button>
-              <button className="scorecard-button" onClick={(event) => {handleSubmit(event)}}>
+              <button className="scorecard-button" onClick={handleSubmit}>
                 Continue
               </button>
             </div>
           </div>
         )
       )}
+
+      {/* Show backend error message */}
+      {backendError && <div className="error-message">{backendError}</div>}
     </div>
   );
 }
