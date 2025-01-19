@@ -72,9 +72,11 @@ function CTRExtractedValues({ extractedData }) {
               />
             </div>
           ))}
-          <button className="submit-button" onClick={handleCalculateScore}>
-            Calculate Score
-          </button>
+          <div className="button-container">
+            <button className="submit-button" onClick={handleCalculateScore}>
+              Calculate Score
+            </button>
+          </div>
         </div>
       )}
 

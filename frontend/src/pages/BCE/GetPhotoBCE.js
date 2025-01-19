@@ -4,7 +4,6 @@ import BCEExtractedValues from './BCEExtractedValues';
 import '../../styles/CTRHandWritingRecognitionStyles.css';
 import axios from 'axios';
 
-// GetPhotoBCE Component: Handles image uploads and sends data to the backend
 function GetPhotoBCE({ numberOfRiders, fastestRiderTime, heaviestRiderWeight }) {
   const [imageSrc1, setImageSrc1] = useState(null);
   const [imageSrc2, setImageSrc2] = useState(null);
@@ -12,13 +11,13 @@ function GetPhotoBCE({ numberOfRiders, fastestRiderTime, heaviestRiderWeight }) 
   const [imageFile2, setImageFile2] = useState(null);
   const [extractedDataList, setExtractedDataList] = useState([]);
   const [currentStep, setCurrentStep] = useState(1);
+  const [loading, setLoading] = useState(false); // Loading state
+  const [backendError, setBackendError] = useState(null); // Error state
   const fileInputRef = useRef(null);
-  const apiUrl = process.env.REACT_APP_API_URL
-
+  const apiUrl = process.env.REACT_APP_API_URL;
 
   const isTwoPhotosRequired = numberOfRiders > 5;
 
-  // Handles file selection for images
   const handleFileChange = (event) => {
     const file = event.target.files[0];
     if (file) {
@@ -33,55 +32,51 @@ function GetPhotoBCE({ numberOfRiders, fastestRiderTime, heaviestRiderWeight }) 
     }
   };
 
-  // Submits selected images to the backend
   const handleSubmit = async (event) => {
-    event.preventDefault()
+    event.preventDefault();
+    setLoading(true);
+    setBackendError(null);
 
-    const formData = new FormData()
+    const formData = new FormData();
 
     if (imageFile1 && !imageFile2) {
-      formData.append('image', imageFile1)
+      formData.append('image', imageFile1);
     } else if (imageFile2) {
       formData.append('image', imageFile2);
-    }
-    else {
-        console.error('No images available to submit')
-        return
+    } else {
+      console.error('No images available to submit');
+      setLoading(false);
+      return;
     }
 
-    axios.post(apiUrl.concat('/bce'), formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    })
-    .then(response => {
+    try {
+      const response = await axios.post(apiUrl.concat('/bce'), formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+
       if (response.data.error) {
-        console.error("The image was not processed correctly")
+        throw new Error(response.data.error);
       }
 
-
-      let bceData = extractedDataList
-
-      response.data.riderData.forEach(rider => {
+      let bceData = [...extractedDataList];
+      response.data.riderData.forEach((rider) => {
         if (bceData.length < numberOfRiders) {
-            bceData.push(rider)
+          bceData.push(rider)
         }
-      })
+      });
 
-      setExtractedDataList(bceData)
-      console.log("Data Retrieved:")
-      console.log(bceData)
+      setExtractedDataList(bceData);
 
       if (!isTwoPhotosRequired && currentStep === 1) {
-        setCurrentStep(3)
+        setCurrentStep(3);
       }
-    })
-    .catch(error => {
-        console.error('Error uploading file:', error);
-    })
+    } catch (error) {
+      setBackendError(error.message || "An unknown error occurred.");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  // Retakes the current photo
   const handleRetakePhoto = () => {
     if (currentStep === 1) {
       setImageSrc1(null);
@@ -92,19 +87,14 @@ function GetPhotoBCE({ numberOfRiders, fastestRiderTime, heaviestRiderWeight }) 
     }
   };
 
-  // Go to the next step or the next photo
-  const handleContinue = async () => {
+  const handleContinue = () => {
     if (isTwoPhotosRequired && currentStep === 1) {
-      // Move to step 2 to capture the second photo for the current group
-      setCurrentStep(2)
-    } else if (currentStep === 2){
-      setCurrentStep(3)
+      setCurrentStep(2);
+    } else if (currentStep === 2) {
+      setCurrentStep(3);
     }
-
-    console.log(currentStep)
   };
 
-  // Returns to the upload step
   const handleGoBackToUpload = () => {
     setCurrentStep(1);
     setImageSrc1(null);
@@ -115,8 +105,12 @@ function GetPhotoBCE({ numberOfRiders, fastestRiderTime, heaviestRiderWeight }) 
 
   return (
     <div className="App">
+      {loading && (
+        <div className="loading-overlay">
+          <div className="spinner"></div>
+        </div>
+      )}
       {currentStep === 3 ? (
-        // If we have extracted data for all riders, show the BCEExtractedValues component for each rider
         <div className="bce-results-container">
           <BCEExtractedValues
             extractedDataList={extractedDataList}
@@ -128,20 +122,11 @@ function GetPhotoBCE({ numberOfRiders, fastestRiderTime, heaviestRiderWeight }) 
         </div>
       ) : (
         <>
-          {/* Display upload section for photos */}
           {((currentStep === 1 && !imageSrc1) || (isTwoPhotosRequired && currentStep === 2 && !imageSrc2)) ? (
             <div className="button-container">
               <h2>
                 {currentStep === 1 ? `Select Scorecard 1` : `Select Scorecard 2`}
               </h2>
-              <input
-                type="file"
-                accept="image/*"
-                capture="environment"
-                ref={fileInputRef}
-                onChange={handleFileChange}
-                style={{ display: 'none' }}
-              />
               <div className="icon-button">
                 <input
                   type="file"
@@ -159,17 +144,17 @@ function GetPhotoBCE({ numberOfRiders, fastestRiderTime, heaviestRiderWeight }) 
           ) : (
             <div className="image-fullscreen-container">
               <img src={currentStep === 1 ? imageSrc1 : imageSrc2} alt="Preview" className="image-fullscreen" />
-              {/* Buttons for retaking or continuing */}
               <div className="action-buttons">
                 <button className="scorecard-button" onClick={handleRetakePhoto}>
                   Retake Image
                 </button>
-                <button className="scorecard-button" onClick={(event) => { handleSubmit(event); handleContinue() }}>
+                <button className="scorecard-button" onClick={(event) => { handleSubmit(event); handleContinue(); }}>
                   {isTwoPhotosRequired && currentStep === 1 ? "Continue to Scorecard 2" : "Continue"}
                 </button>
               </div>
             </div>
           )}
+          {backendError && <div className="error-message">{backendError}</div>}
         </>
       )}
     </div>

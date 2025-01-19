@@ -16,7 +16,36 @@ Parameters:
 Returns:
     extracted_fields (dict): A dictionary containing the score fields from each rider from the BCE scoresheet.
 """
-def BCSegments(image):
+def BCSegments(image, document_contour):
+
+    fileOutPath = "output/"
+    output_filename = "output_extraction.jpg"
+
+    # Compute the width and height of the new image
+    width_a = np.linalg.norm(document_contour[2] - document_contour[3])
+    width_b = np.linalg.norm(document_contour[1] - document_contour[0])
+    max_width = max(int(width_a), int(width_b))
+
+    height_a = np.linalg.norm(document_contour[1] - document_contour[2])
+    height_b = np.linalg.norm(document_contour[0] - document_contour[3])
+    max_height = max(int(height_a), int(height_b))
+
+    # Destination points
+    dst = np.array([
+        [0, 0],
+        [max_width - 1, 0],
+        [max_width - 1, max_height - 1],
+        [0, max_height - 1]
+    ], dtype="float32")
+
+    # Perspective transform
+    M = cv.getPerspectiveTransform(document_contour, dst)
+    warped_img = cv.warpPerspective(image, M, (max_width, max_height))
+
+    # Save the output image
+    if not cv.imwrite(output_filename, warped_img):
+        print(f"Error: Could not save output image: {fileOutPath + output_filename}")
+        return -1
 
     '''Just for the sake of verfiy the output
     -------------------------------------------'''
@@ -30,7 +59,7 @@ def BCSegments(image):
     # imread() when image is file path
     # extracted_image = cv.imread(image)
     # Gives the extracted image that is warped to fit a rectangle.
-    extracted_image = scoresheet.Paper_Extraction(image)
+    extracted_image = scoresheet.Paper_Extraction(warped_img)
 
     # Gives aligned image to the template
     extracted_image = BCAlignImage(extracted_image)
