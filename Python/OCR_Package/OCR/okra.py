@@ -4,6 +4,8 @@ from enum import Enum
 import requests
 import json
 
+from .exceptions import *
+
 try:
     import matplotlib.pyplot as plt
     MATPLOTLIB_ENABLED = True
@@ -27,6 +29,9 @@ class DigitGetter:
                                     will appear in the output (default=True).
         find_minus_signs (bool): Determines whether or not minus signs will
                                  appear in the output (default=False).
+        blank_threshold (int): The max difference between the lightest and
+                               darkest pixels in an image for it to be
+                               considered a blank segment (default=120).
     """
 
     def __init__(self, ts=False):
@@ -36,13 +41,13 @@ class DigitGetter:
 
         if self.__debug:
 
-            from .OkraHandler import OkraHandler            
-            
+            from .OkraHandler import OkraHandler
+
             self.__model_handle = OkraHandler()
             self.__model_handle.initialize()
 
         # Set default attributes
-        
+
         self.debug_images = False
         self.column_skip = 2
         self.fraction_padding = 0.2
@@ -70,7 +75,7 @@ class DigitGetter:
         # will be a large difference between the
         # brightest pixel and the darkest pixel
         if (img.max() - img.min() <= self.blank_threshold):
-            raise Exception
+            raise OkraBlankSegmentException
 
         # Apply a slight blur
         img = cv2.bilateralFilter(img, 5, self.blank_threshold, 20)
@@ -102,7 +107,8 @@ class DigitGetter:
 
         try:
             img = self.__preprocess_image(img)
-        except:
+
+        except OkraBlankSegmentException:
             return (None, None)
 
         return self.__digit_from_image(img)
@@ -121,7 +127,7 @@ class DigitGetter:
         """
 
         self.__show_debug_image(img, 'Digit')
-        
+
         req = {"data": img.tobytes(), "x": img.shape[1], "y": img.shape[0]}
 
         if self.__debug:
@@ -135,8 +141,7 @@ class DigitGetter:
             body = res.json()
 
             if res.status_code != 200:
-                print(body)
-                raise Exception('Torchserve error')
+                raise OkraModelError('Torchserve error', body)
 
         return (body['Digit'], body['Confidence'])
 
@@ -155,7 +160,8 @@ class DigitGetter:
 
         try:
             img = self.__preprocess_image(img)
-        except:
+
+        except OkraBlankSegmentException:
             return ([], [])
 
         # The return values
@@ -279,16 +285,15 @@ class DigitGetter:
                                scan between function calls.
 
         Returns:
-            (numpy.ndarray, SegmentType): A tuple with a slice of img
-                                          containing a single digit and the
-                                          type of segment.
+            numpy.ndarray: A slice of img containing a single character.
+            SegmentType: The type of character in the image segment.
         """
 
         bounds = Boundary(start_pixel[1], start_pixel[0], start_pixel[1], start_pixel[0])
 
         # Find the actual boundary of the digit.
         # 'bounds' will be updated with the correct values.
-        self.__trace_digit(img, bounds, start_pixel)
+        self.__trace_digit(img, bounds, start_pixel, scan_state)
 
         # Update the scan state
         if bounds.bottom < img.shape[0] // 2:
@@ -300,6 +305,7 @@ class DigitGetter:
 
             scan_state['lower'].append(bounds.top)
             scan_state['lower_stop'].append(bounds.right)
+            scan_state['column'] += self.column_skip + 1
 
         else:
             scan_state['column'] = bounds.right + 1
@@ -314,10 +320,10 @@ class DigitGetter:
         if segment_type == SegmentType.DIGIT:
             digit_segment = self.__apply_padding(digit_segment)
 
-        return (digit_segment, segment_type)
+        return digit_segment, segment_type
 
 
-    def __trace_digit(self, img, bounds, pixel):
+    def __trace_digit(self, img, bounds, pixel, scan_state):
         """
         An edge tracing algorithm that finds the smallest box that fits a
         digit.
@@ -326,21 +332,14 @@ class DigitGetter:
             img (numpy.ndarray): An image.
             bounds (Boundary): The object to store the bounds of the digit.
             pixel (int, int): The coordinate of the starting pixel.
+            scan_state (dict): A dictionary object to save the state of the
+                               scan between function calls.
         """
 
         def move(direction):
 
             move_val = directions[direction % len(directions)]
             return (current_pixel[0] + move_val[0], current_pixel[1] + move_val[1])
-
-        def in_bounds(location):
-
-            if location[0] < 0 or location[0] >= img.shape[1]:
-                return False
-            if location[1] < 0 or location[1] >= img.shape[0]:
-                return False
-
-            return True
 
         def is_white(location):
 
@@ -357,6 +356,52 @@ class DigitGetter:
                 bounds.bottom = location[1]
             elif location[1] < bounds.top:
                 bounds.top = location[1]
+
+        def update_layers(layers, direction, pixel):
+
+            # Track horizontal movement in each row of the image
+            direction %= len(directions)
+            if direction == 2 or direction == 6:
+                layers[pixel[1]] += 1
+
+        def adjust_bounds_to_line(layers):
+
+            # The max layer is either the top or bottom of the line.
+            # This will be the center index during the search for the other
+            # side of the line.
+            center_i = np.argmax(layers)
+
+            # The indices specifying the range to search
+            high_search_i = center_i - 5
+            low_search_i = bounds.bottom
+
+            # Find the max layer above the center index
+            high_i = high_search_i + np.argmax(layers[high_search_i:center_i])
+
+            # If the center index is at the bottom of the boundary, it is
+            # obviously the bottom of the line.
+            if center_i == bounds.bottom:
+                if layers[high_i] < 15:
+                    bounds.top = bounds.bottom - 1
+
+                else:
+                    bounds.top = high_i
+
+                return
+
+            # Find the max layer below the center index
+            low_i = center_i + 1 + np.argmax(layers[(center_i + 1):(low_search_i + 1)])
+
+            # The larger layer is the other side of the line
+            if layers[high_i] > layers[low_i]:
+                # high_i   is the top
+                # center_i is the bottom
+                bounds.top = high_i
+
+            else:
+                # center_i is the top
+                # low_i    is the bottom
+                bounds.top = center_i
 
         def get_start_direction(direction):
 
@@ -376,26 +421,54 @@ class DigitGetter:
         #                                           '      '       '
         directions = [(0, -1), (1, -1), (1, 0), (1, 1), (0, 1), (-1, 1), (-1, 0), (-1, -1)]
 
-        start_direction = 0    # Up
+        # The traversable area within the image
+        img_bounds = Boundary(
+            scan_state['upper'][-1],
+            img.shape[1] - 1,
+            scan_state['lower'][-1] - 1,
+            0
+        )
 
+        # A list to track horizontal movement
+        layers = [0] * img.shape[0]
+
+        start_direction = 0    # Up
         current_pixel = pixel
 
         while True:
-
             for next_direction in range(start_direction, start_direction + len(directions)):
 
                 next_pixel = move(next_direction)
 
-                if in_bounds(next_pixel):
+                if img_bounds.contains(next_pixel):
                     if is_white(next_pixel):
 
                         update_bounds(next_pixel)
+                        update_layers(layers, next_direction, next_pixel)
                         start_direction = get_start_direction(next_direction)
                         current_pixel = next_pixel
                         break
 
             if current_pixel == pixel:
                 break
+
+        #
+        # Before returning, check for the digit-touching-line issue
+        #
+
+        half = img.shape[0] // 2
+        line_threshold = img.shape[1] // 2.5
+
+        # There will be a significant ammount of horizontal movement in the
+        # bottom half of the image if there is a line
+        if max(layers[half:]) >= line_threshold:
+
+            # If the boundary extends above the middle of the image,
+            # there is likely digits touching the line
+            if bounds.top < half:
+
+                print('OCR Line Issue Detected!!!')
+                adjust_bounds_to_line(layers)
 
 
     def __get_segment_type(self, segment_shape, img_shape):
@@ -503,7 +576,6 @@ class DigitGetter:
                     plt.show()
 
                 else:
-
                     print('Warning: matplotlib is not configured')
 
 
@@ -584,6 +656,26 @@ class Boundary:
 
         if self.left >= img.shape[1]:
             self.left = img.shape[1] - 1
+
+
+    def contains(self, point):
+        """
+        Checks if a point lies within the boundary.
+
+        Parameters:
+            point (int, int): An (x, y) coordinate.
+
+        Returns:
+            bool: True if the point is within the boundary and False otherwise.
+        """
+
+        x, y = point
+
+        if self.left <= x and x <= self.right:
+            if self.top <= y and y <= self.bottom:
+                return True
+
+        return False
 
 
 class SegmentType(Enum):
