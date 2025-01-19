@@ -62,9 +62,9 @@ function GetPhotoBCE({ numberOfRiders, fastestRiderTime, heaviestRiderWeight }) 
 
       let bceData = extractedDataList
 
-      Object.keys(response.data).forEach(key => {
+      response.data.riderData.forEach(rider => {
         if (bceData.length < numberOfRiders) {
-            bceData.push(response.data[key])
+            bceData.push(rider)
         }
       })
 
