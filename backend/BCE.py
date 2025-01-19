@@ -33,7 +33,7 @@ def run(args, image_buffer):
     """
 
     # Get the score field segments
-    extracted_fields = BCSegments(image_buffer)
+    extracted_fields = BCSegments(image_buffer, args)
 
     # Prepare the OCR
     dg = okra.DigitGetter(ts=args['torchserve'])
