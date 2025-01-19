@@ -39,13 +39,29 @@ def main():
 #
 # Run all the code to process the BCE scoresheet
 #
-def process_BCE(image_buffer, torchserve):
+
+def get_expected_corners(image_buffer):
+    from preprocessing.scoresheet import Paper_Extraction
+
+    # Perform paper extraction to get corners and warped image
+    expected_corners = Paper_Extraction(image_buffer)
+
+    if expected_corners == -1:
+        return {"error": "Failed to process image"}
+
+    # Extract corner points from the result
+    corner_points = expected_corners.get("corner_points", [])
+    corner_dict = {"corner_points": corner_points}  # Start with corner points in the output
+
+    return corner_dict
+
+def process_BCE(image_buffer, corner_dict, torchserve):
 
     from preprocessing.scorefields import BCSegments
     from OCR import okra
     from OCR import violin as v
 
-    extracted_fields = BCSegments(image_buffer)
+    extracted_fields = BCSegments(image_buffer, corner_dict)
 
     # Prepare the OCR
     dg = okra.DigitGetter(ts=torchserve)
