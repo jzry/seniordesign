@@ -143,6 +143,62 @@ Status Code **555**
 }
 ```
 
+## (POST) `/corners`
+
+### Request
+
+Receives a single image.
+
+- **Headers**
+    - `Content-Type`: `multipart/form-data`
+
+- **Form**
+    - `image`: *\<image data\>*
+
+### Response
+
+Returns a JSON object.
+
+___
+
+Status Code **200**
+
+```javascript
+{
+    "corner_points": [{     // An array of JSON objects
+        "x": int,
+        "y": int
+    }]
+}
+```
+
+___
+
+Status Code **400**
+- Error uploading image
+
+Status Code **429**
+- Rate limit reached
+
+Status Code **444**
+- Unsupported or unknown file type
+
+Status Code **445**
+- Corrupted or unsafe image file
+
+Status Code **500**
+- Internal Server Error
+
+Status Code **555**
+- Supported image type not available...
+
+```javascript
+{
+    "error": string
+}
+```
+
+
 # Supported Image Formats
 
 - \*.jpeg, \*.jpg
