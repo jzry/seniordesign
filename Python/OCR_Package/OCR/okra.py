@@ -364,12 +364,44 @@ class DigitGetter:
             if direction == 2 or direction == 6:
                 layers[pixel[1]] += 1
 
-        def adjust_bounds_to_line(layers, line_threshold):
+        def adjust_bounds_to_line(layers):
 
-            for new_top in range(bounds.top + 1, bounds.bottom):
-                if layers[new_top] >= line_threshold:
-                    bounds.top = new_top
-                    break
+            # The max layer is either the top or bottom of the line.
+            # This will be the center index during the search for the other
+            # side of the line.
+            center_i = np.argmax(layers)
+
+            # The indices specifying the range to search
+            high_search_i = center_i - 5
+            low_search_i = bounds.bottom
+
+            # Find the max layer above the center index
+            high_i = high_search_i + np.argmax(layers[high_search_i:center_i])
+
+            # If the center index is at the bottom of the boundary, it is
+            # obviously the bottom of the line.
+            if center_i == bounds.bottom:
+                if layers[high_i] < 15:
+                    bounds.top = bounds.bottom - 1
+
+                else:
+                    bounds.top = high_i
+
+                return
+
+            # Find the max layer below the center index
+            low_i = center_i + 1 + np.argmax(layers[(center_i + 1):(low_search_i + 1)])
+
+            # The larger layer is the other side of the line
+            if layers[high_i] > layers[low_i]:
+                # high_i   is the top
+                # center_i is the bottom
+                bounds.top = high_i
+
+            else:
+                # center_i is the top
+                # low_i    is the bottom
+                bounds.top = center_i
 
         def get_start_direction(direction):
 
@@ -436,7 +468,7 @@ class DigitGetter:
             if bounds.top < half:
 
                 print('OCR Line Issue Detected!!!')
-                adjust_bounds_to_line(layers, line_threshold)
+                adjust_bounds_to_line(layers)
 
 
     def __get_segment_type(self, segment_shape, img_shape):
