@@ -46,6 +46,9 @@ ___
 Status Code **400**
 - Error uploading image
 
+Status Code **429**
+- Rate limit reached
+
 Status Code **444**
 - Unsupported or unknown file type
 
@@ -118,6 +121,9 @@ ___
 
 Status Code **400**
 - Error uploading image
+
+Status Code **429**
+- Rate limit reached
 
 Status Code **444**
 - Unsupported or unknown file type
