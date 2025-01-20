@@ -25,15 +25,23 @@ def run(args, image_buffer):
         args (dict): A dictionary containing the arguments:
                      'torchserve' (bool): A flag to specify whether TorchServe
                                           should be used or not.
+                     'corner_points' (dict): A dictionary containing the
+                                             coordinates of the page corners
+                                             (optional).
         image_buffer (bytes): The raw image data.
 
     Returns:
-        dict: An array of dictionary objects containing score-field values and confidences for
-              each rider.
+        dict: An array of dictionary objects containing score-field values and
+              confidences for each rider.
     """
 
+    if 'corner_points' not in args.keys():
+        import corners
+        expected_corners = corners.run(None, image_buffer)
+        args['corner_points'] = expected_corners['corner_points']
+
     # Get the score field segments
-    extracted_fields = BCSegments(image_buffer, args)
+    extracted_fields = BCSegments(image_buffer, args['corner_points'])
 
     # Prepare the OCR
     dg = okra.DigitGetter(ts=args['torchserve'])
