@@ -5,6 +5,8 @@ from os import devnull
 import importlib.util
 from pathlib import Path
 
+from Preprocessing.exceptions import *
+
 
 def main():
 
@@ -53,15 +55,17 @@ def run_code(script_name, args, image_buffer):
         else:
             return { 'status': -2, 'data': {}, 'message': f'"{script_name}" does not contain "run" function' }
 
-    except TypeError as e:
-        if e.message:
-            return { 'status': 1, 'data': {}, 'message': e.message }
+    except TypeError:
+        return { 'status': -3, 'data': {}, 'message': '"{script_name[:-3]}.run()" should accept dictionary and "bytes" object' }
 
-        else:
-            return { 'status': -3, 'data': {}, 'message': '"{script_name[:-3]}.run()" should accept dictionary and "bytes" object' }
+    except PreprocessingExtensionError as e:
+        return { 'status': 1, 'data': {}, 'message': e.message }
 
     except NotImplementedError as e:
         return { 'status': 2, 'data': {}, 'message': e.message }
+
+    except PreprocessingImageError as e:
+        return { 'status': 3, 'data': {}, 'message': e.message }
 
     return { 'status': 0, 'data': data, 'message': 'Success' }
 
