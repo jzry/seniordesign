@@ -16,18 +16,18 @@ Parameters:
 Returns:
     extracted_fields (dict): A dictionary containing the score fields from each rider from the BCE scoresheet.
 """
-def BCSegments(image, document_contour):
+def BCSegments(image, corner_dict):
 
     fileOutPath = "output/"
     output_filename = "output_extraction.jpg"
 
     # Compute the width and height of the new image
-    width_a = np.linalg.norm(document_contour[2] - document_contour[3])
-    width_b = np.linalg.norm(document_contour[1] - document_contour[0])
+    width_a = np.linalg.norm(corner_dict[2] - corner_dict[3])
+    width_b = np.linalg.norm(corner_dict[1] - corner_dict[0])
     max_width = max(int(width_a), int(width_b))
 
-    height_a = np.linalg.norm(document_contour[1] - document_contour[2])
-    height_b = np.linalg.norm(document_contour[0] - document_contour[3])
+    height_a = np.linalg.norm(corner_dict[1] - corner_dict[2])
+    height_b = np.linalg.norm(corner_dict[0] - corner_dict[3])
     max_height = max(int(height_a), int(height_b))
 
     # Destination points
@@ -39,7 +39,7 @@ def BCSegments(image, document_contour):
     ], dtype="float32")
 
     # Perspective transform
-    M = cv.getPerspectiveTransform(document_contour, dst)
+    M = cv.getPerspectiveTransform(corner_dict, dst)
     warped_img = cv.warpPerspective(image, M, (max_width, max_height))
 
     # Save the output image
@@ -59,7 +59,7 @@ def BCSegments(image, document_contour):
     # imread() when image is file path
     # extracted_image = cv.imread(image)
     # Gives the extracted image that is warped to fit a rectangle.
-    extracted_image = scoresheet.Paper_Extraction(warped_img)
+    # extracted_image = scoresheet.Paper_Extraction(warped_img)
 
     # Gives aligned image to the template
     extracted_image = BCAlignImage(extracted_image)

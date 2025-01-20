@@ -12,14 +12,14 @@ Returns:
     warped_img (numpy.ndarray): The resulting image of the extracted and
     warped score sheet with sharp borders.
 """
-def Paper_Extraction(BC_scoresheet):
+def Paper_Extraction(image):
 
     # fileOutPath = "output/"
     # output_filename = "output_extraction.jpg"
 
-    original_img = check_extension(BC_scoresheet)
+    original_img = check_extension(image)
     if original_img is None:
-        print(f"Cannot read image file: {BC_scoresheet}")
+        print(f"Cannot read image file: {image}")
         return -1
 
     # Resize image for faster processing, maintaining aspect ratio
@@ -116,6 +116,6 @@ def Paper_Extraction(BC_scoresheet):
     # Prepare corner points for return to Javascript corner adjusting file
     corner_points = [{"x": int(pt[0]), "y": int(pt[1])} for pt in document_contour]
 
-    print(f"Success: Processing complete. Output saved to {fileOutPath + output_filename}!")
+    # print(f"Success: Processing complete. Output saved to {fileOutPath + output_filename}!")
 
     return {"corner_points": corner_points}
