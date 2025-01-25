@@ -1,55 +1,4 @@
-@import "edits.css";
-input[type="number"], input[type="text"] {
-    width: 150px;
-    max-width: 80%;
-    padding: 0.75em;
-    border-radius: 0.25em;
-}
-/* Makes sure the inputs are aligned */
-div.input-group, p {
-    display: flex;
-    margin: auto;
-    justify-content: space-between;
-    align-self: center;
-    /* border: solid 2px red; */
-}
-div.container, 
-div.bce-container {
-    display: flex;
-    margin: 0 10%;
-    /* min-width: fit-content; */
-    max-width: 100%;
-    min-height: fit-content;
-    /* justify-content: space-between; */
-    justify-items: center;
-    align-items: center;
-    flex-direction: column;
-    padding-top: 7%;
-}
-div.container {
-    /* border: 2px solid purple; */
-    height: 100vh;
-}
-div.bce-container {
-    /* border: 2px solid cornflowerblue; */
-    height: 100vh;
-}
-/* Just the ending results page */
-.bce-result {
-    border: solid 1px black;
-    background-color: lightgrey;
-    padding: 2%;
-    border-radius: 0.10em;
-    min-width: fit-content;
-    max-width: 100%;
-    min-height: fit-content;
-
-    justify-items: center;
-    align-self: center;
-    flex-direction: column;
-    margin: auto;
-}
-
+/* Styles the text that accompanies input */
 label, 
 .data-label {
     font-size: 14px;
@@ -59,6 +8,98 @@ label,
     max-width: 50vw;
     overflow-wrap: break-word;
 }
+
+/* Styles the label and input field */
+div.input-group {
+  display: flex;
+  padding: 2%;
+  min-width: 100%;
+  justify-self: center;
+}
+
+/* Styles just the input field */
+input[type="number"], 
+input[type="text"] {
+    width: 150px;
+    min-width: 10%;
+    max-width: 35%;
+    padding: 0.75em;
+    border-radius: 0.3em;
+}
+
+/* Makes sure the inputs are aligned */
+div.input-group, p {
+    display: flex;
+    margin: auto;
+    justify-content: space-between;
+    align-self: center;
+}
+
+/* Wraps everything */
+.bce-container {
+  min-width: 50%;
+  max-width: max-content;
+  text-align: center;
+}
+
+div.container, 
+div.bce-container {
+    display: flex;
+    margin: 0 10%;
+    height: 100vh;
+    min-height: fit-content;
+    max-width: 100vw;
+    justify-items: center;
+    align-items: center;
+    flex-direction: column;
+    padding-top: 5%;
+    padding-bottom: 3%;
+}
+
+/* Just the ending results page */
+.bce-results-container {
+  display: inline-block;
+  min-width: max-content;
+  max-width: max-content;
+  align-items: center;
+  text-align: center;
+  overflow-y: auto;
+  overflow-x: visible;
+}
+
+div.result-container {
+  display: flex;
+  flex-direction: column;
+  min-width: max-content;
+  max-width: 100%;
+  margin-top: 20%;
+}
+
+/* Individual rider scores */
+.bce-result {
+    border: solid 1px black;
+    background-color: lightgrey;
+    padding: 5%;
+    border-radius: 0.10em;
+    
+    min-width: fit-content;
+    max-width: 100%;
+    min-height: fit-content;
+
+    display: inline-block;
+    justify-items: center;
+    align-self: center;
+    flex-direction: column;
+    margin: 10%;
+}
+
+/* For multi-buttons */
+div.button-container {
+  display: flex;
+  margin: auto;
+  padding: 1%;
+}
+
 /* same button stylings as for BC and CTR */
 .action-button,
 .submit-button, 
@@ -70,14 +111,52 @@ label,
     background-color: white;
     font-size: 18px;
     font-weight: bold;
-    text-align: center;
     cursor: pointer;
     transition: background-color 0.3s ease;
     margin: auto;
+    text-align: center;
     align-self: center;
     justify-self: center;
 }
 
+/* Text effects */
+/* p {
+  width: max-content;
+} */
+h4,
+h2,
+h3,
+h1,
+p {
+  display: flex;
+  text-align: center;
+  min-width: fit-content;
+  justify-self: center;
+  margin: 5%;
+}
+
+/* For desktop */
+@media (min-width: 500px) {
+  .bce-container {
+    justify-content: center;
+    align-items: center;
+    width: 30vw;
+    max-height: fit-content;
+  }
+  #root {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+}
+/* For mobile */
+@media (max-width: 480px) {
+  body {
+    margin-bottom: 5%;
+  }
+}
+
+/* Loading icon styling */
 .loading-overlay {
     position: fixed;
     top: 0;
