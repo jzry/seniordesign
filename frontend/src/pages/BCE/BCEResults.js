@@ -34,7 +34,7 @@ function BCEResults({ extractedDataList, fastestRiderTime, heaviestRiderWeight }
   };
 
   return (
-    <div className="container">
+    <div className="result-container">
       {extractedDataList.map((data, index) => {
         const totalVeterinaryScore = calculateVeterinaryScore(data);
         const totalWeightScore = calculateWeightScore(parseInt(data['Weight of this rider'].value, 10));
@@ -50,7 +50,9 @@ function BCEResults({ extractedDataList, fastestRiderTime, heaviestRiderWeight }
           </div>
         );
       })}
-      <button className="action-button" onClick={() => window.location.reload()}>Calculate New Score</button>
+      <div className="button-container">
+        <button className="action-button" onClick={() => window.location.reload()}>Calculate New Score</button>
+      </div>
     </div>
   );
 }
