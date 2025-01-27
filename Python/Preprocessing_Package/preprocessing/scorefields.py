@@ -4,8 +4,8 @@ import cv2 as cv
 import numpy as np
 from . import template
 from . import scoresheet
-# from . import horizontal_remover
 from .lime import BCAlignImage, CTRAlignImage
+from .check_extension import check_extension
 
 """
 Function Brief: Extracts and marks predefined segments (fields) for each rider section on an image.
@@ -21,13 +21,15 @@ def BCSegments(image, corner_dict):
     fileOutPath = "output/"
     output_filename = "output_extraction.jpg"
 
+    corner_points = np.array([[pt['x'], pt['y']] for pt in corner_dict], dtype=np.float32)
+
     # Compute the width and height of the new image
-    width_a = np.linalg.norm(corner_dict[2] - corner_dict[3])
-    width_b = np.linalg.norm(corner_dict[1] - corner_dict[0])
+    width_a = np.linalg.norm(corner_points[2] - corner_points[3])
+    width_b = np.linalg.norm(corner_points[1] - corner_points[0])
     max_width = max(int(width_a), int(width_b))
 
-    height_a = np.linalg.norm(corner_dict[1] - corner_dict[2])
-    height_b = np.linalg.norm(corner_dict[0] - corner_dict[3])
+    height_a = np.linalg.norm(corner_points[1] - corner_points[2])
+    height_b = np.linalg.norm(corner_points[0] - corner_points[3])
     max_height = max(int(height_a), int(height_b))
 
     # Destination points
@@ -38,14 +40,16 @@ def BCSegments(image, corner_dict):
         [0, max_height - 1]
     ], dtype="float32")
 
+    # Decode image
+    decoded_img = check_extension(image)
+
     # Perspective transform
-    M = cv.getPerspectiveTransform(corner_dict, dst)
-    warped_img = cv.warpPerspective(image, M, (max_width, max_height))
+    M = cv.getPerspectiveTransform(corner_points, dst)
+    warped_img = cv.warpPerspective(decoded_img, M, (max_width, max_height))
 
     # Save the output image
     if not cv.imwrite(output_filename, warped_img):
         print(f"Error: Could not save output image: {fileOutPath + output_filename}")
-        return -1
 
     '''Just for the sake of verfiy the output
     -------------------------------------------'''
@@ -62,7 +66,7 @@ def BCSegments(image, corner_dict):
     # extracted_image = scoresheet.Paper_Extraction(warped_img)
 
     # Gives aligned image to the template
-    extracted_image = BCAlignImage(extracted_image)
+    extracted_image = BCAlignImage(warped_img)
 
     horizontal_scalefactor = 1
     vertical_scalefactor = 1
