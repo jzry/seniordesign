@@ -139,7 +139,10 @@ class DigitGetter:
 
         else:
 
-            res = requests.post('http://localhost:6060/predictions/OkraClassifier', data=req)
+            res = requests.post(
+                'http://localhost:6060/predictions/OkraClassifier',
+                data=req
+            )
             body = res.json()
 
             if res.status_code != 200:
@@ -291,7 +294,12 @@ class DigitGetter:
             SegmentType: The type of character in the image segment.
         """
 
-        bounds = Boundary(start_pixel[1], start_pixel[0], start_pixel[1], start_pixel[0])
+        bounds = Boundary(
+            start_pixel[1],
+            start_pixel[0],
+            start_pixel[1],
+            start_pixel[0]
+        )
 
         # Find the actual boundary of the digit.
         # 'bounds' will be updated with the correct values.
@@ -351,7 +359,9 @@ class DigitGetter:
             return SegmentType.DIGIT
 
         # Is this really small?
-        if segment_shape[0] < noise_max_size and segment_shape[1] < noise_max_size:
+        if segment_shape[0] < noise_max_size and \
+           segment_shape[1] < noise_max_size:
+
             return SegmentType.NOISE
 
         # Is this flat and long?
@@ -385,11 +395,11 @@ class DigitGetter:
         dynamic_pad = (dynamic_padding, dynamic_padding)
         fixed_pad = (fixed_padding, fixed_padding)
 
-        # If the y dimension is smaller the x dimension
-        #     then use the dynamic pad on the y dimension (add more rows than columns)
+        # If the y dimension is smaller the x dimension, then use the dynamic
+        # pad on the y dimension (add more rows than columns).
         #
-        # If the x dimension is smaller the y dimension
-        #     then use the dynamic pad on the x dimension (add more columns than rows)
+        # If the x dimension is smaller the y dimension, then use the dynamic
+        # pad on the x dimension (add more columns than rows).
         #
         if (img.shape[0] <= img.shape[1]):
             img = np.pad(img, (dynamic_pad, fixed_pad))
@@ -440,14 +450,14 @@ class DigitTracer:
     def __init__(self):
 
         self.__directions = [
-            (0, -1),            # 0. North
-            (1, -1),            # 1. North-East
-            (1, 0),             # 2. East
-            (1, 1),             # 3. South-East
-            (0, 1),             # 4. South
-            (-1, 1),            # 5. South-West
-            (-1, 0),            # 6. West
-            (-1, -1)            # 7. North-West
+            (0, -1),            # 0 - NORTH
+            (1, -1),            # 1 - NORTHEAST
+            (1, 0),             # 2 - EAST
+            (1, 1),             # 3 - SOUTHEAST
+            (0, 1),             # 4 - SOUTH
+            (-1, 1),            # 5 - SOUTHWEST
+            (-1, 0),            # 6 - WEST
+            (-1, -1)            # 7 - NORTHWEST
         ]
 
         self.__num_directions = len(self.__directions)
@@ -474,14 +484,20 @@ class DigitTracer:
             0
         )
 
-        # A list to track horizontal movement
+        # A list to track horizontal movement during the trace
         layers = [0] * img.shape[0]
 
         start_direction = Direction.NORTH
         current_pixel = pixel
 
         while True:
-            for next_direction in range(start_direction, start_direction + self.__num_directions):
+
+            rotation = range(
+                start_direction,
+                start_direction + self.__num_directions
+            )
+
+            for next_direction in rotation:
 
                 next_pixel = self.__move(next_direction, current_pixel)
 
@@ -494,6 +510,7 @@ class DigitTracer:
                         current_pixel = next_pixel
                         break
 
+            # Check for complete loop
             if current_pixel == pixel:
                 break
 
@@ -502,17 +519,33 @@ class DigitTracer:
 
 
     def __move(self, direction, current_pixel):
+        """
+        Determines the pixel coordinate after moving.
+
+        Parameters:
+            direction (Direction): The direction relative to the current pixel
+                                   to move.
+            current_pixel (int, int): The pixel from which to move from.
+
+        Returns:
+            (int, int): The coordinate of the pixel moved to.
+        """
 
         move_val = self.__directions[direction % self.__num_directions]
         return (current_pixel[0] + move_val[0], current_pixel[1] + move_val[1])
 
 
     def __is_white(self, location, img):
+        """
+        Returns False if the pixel at the location is black (background).
+        Returns True if the pixel at the location is white (handwriting).
+        """
 
         return img[location[1], location[0]] != 0
 
 
     def __update_bounds(self, bounds, location):
+        """Expands the boundary to contain the latest tracing location"""
 
         if location[0] > bounds.right:
             bounds.right = location[0]
@@ -526,7 +559,7 @@ class DigitTracer:
 
 
     def __update_layers(self, layers, direction, pixel):
-        """Track horizontal movement in each row of the image"""
+        """Tracks horizontal movement in each row of the image"""
 
         direction %= self.__num_directions
 
@@ -535,6 +568,19 @@ class DigitTracer:
 
 
     def __get_start_direction(self, direction):
+        """
+        After each iteration of the tracing algorithm, the start direction for
+        the next iteration must be determined. This direction is chosen based
+        on the direction taken to reach the current pixel.
+
+        Parameters:
+            direction (Direction): The direction taken to reach the current
+                                   pixel.
+
+        Returns:
+            Direction: The starting direction for the next iteration of
+                       tracing.
+        """
 
         direction %= self.__num_directions
 
@@ -553,11 +599,17 @@ class DigitTracer:
 
     def __check_for_line_issue(self, bounds, layers, img_shape):
         """
-        Checks for the number-touching-line issue and compensates for it.
+        Checks for the number-touching-line issue and compensates for it. There
+        are two indicators of this issue:
+            1. The boundary extending from the top half into the bottom half.
+            2. A lot of horizontal movement (as indicated by the layers).
 
-        There are two things to look for:
-          1. The boundary extending from the top half into the bottom half.
-          2. A high amount of horizontal movement (as indicated by the layers).
+        Parameters:
+            bounds (Boundary): The boundary that resulted from tracing. This
+                               boundary will be adjusted if the issue is found.
+            layers (list): The amount of horizontal movement per row that
+                           occured during tracing.
+            img_shape (int, int): The shape of the image segment.
         """
 
         half = img_shape[0] // 2
@@ -581,6 +633,21 @@ class DigitTracer:
 
 
     def __adjust_bounds_to_line(self, bounds, layers, search_top, search_bottom):
+        """
+        Adjusts the boundary to cover only the line so the digits attached to
+        it can be traced in future iterations.
+
+        Parameters:
+            bounds (Boundary): The boundary of the traced line and digits. This
+                               boundary will be adjusted to fit the line.
+            layers (list): The amount of horizontal movement per row that
+                           occured during tracing.
+            search_top (int): The top index to use for the line search. Indices
+                              above this in the segment will be ingnored.
+            search_bottom (int): The bottom index to use for the line search.
+                                 Indices below this in the segment will be
+                                 ingnored.
+        """
 
         search_range = slice(search_top, search_bottom + 1)
 
