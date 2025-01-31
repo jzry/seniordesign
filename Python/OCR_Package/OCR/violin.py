@@ -1,6 +1,8 @@
 #
 # Validation functions for OCR output
 #
+# This file is mess, sorry...
+#
 
 
 def validate_score(raw, max_score, min_score=0):
@@ -22,25 +24,46 @@ def validate_score(raw, max_score, min_score=0):
 
     __remove_excess_decimals(nums, confs)
 
-    if max_score is not None:
+    if len(nums) > 0:
 
         if '.' in nums:
 
             int_part = nums.index('.')
+            fraction_part = int_part + 1
 
-            if int_part > 0:
+            fractional_nums, fractional_confs = __enforce_fractional_score(nums[fraction_part:], confs[fraction_part:])
+
+            if int_part > 0 and max_score is not None:
 
                 if max_score <= 10:
-                    __enforce_one_digit_score(nums[:int_part], confs[:int_part], max_score - 1, min_score)
+                    whole_nums, whole_confs = __enforce_one_digit_score(nums[:int_part], confs[:int_part], max_score - 1, min_score)
                 else:
-                    __enforce_two_digit_score(nums[:int_part], confs[:int_part], max_score - 1, min_score)
+                    whole_nums, whole_confs = __enforce_two_digit_score(nums[:int_part], confs[:int_part], max_score - 1, min_score)
 
-        else:
+                whole_nums.append('.')
+                whole_nums.extend(fractional_nums)
+                nums = whole_nums
+
+                whole_confs.append(confs[int_part])
+                whole_confs.extend(fractional_confs)
+                confs = whole_confs
+
+            else:
+
+                nums = nums[:int_part + 1]
+                nums.extend(fractional_nums)
+
+                confs = confs[:int_part + 1]
+                confs.extend(fractional_confs)
+
+        elif max_score is not None:
 
             if max_score <= 9:
-                __enforce_one_digit_score(nums, confs, max_score, min_score)
+                if not __missed_decimal_point_one_digit(nums, confs, max_score, min_score):
+                    __enforce_one_digit_score(nums, confs, max_score, min_score)
             else:
-                __enforce_two_digit_score(nums, confs, max_score, min_score)
+                if not __missed_decimal_point_two_digit(nums, confs, max_score, min_score):
+                    __enforce_two_digit_score(nums, confs, max_score, min_score)
 
     return (__stringify(nums), __overall_confidence(confs))
 
@@ -203,45 +226,190 @@ def __remove_excess_decimals(nums, confs):
             i += 1
 
 
-def __enforce_one_digit_score(nums, confs, max_val, min_value):
-    """Ensures the input contains at most one digit"""
+def __missed_decimal_point_one_digit(nums, confs, max_val, min_value):
+    """Trys to insert a missing decimal point"""
 
     # This might be a decimal number where the OCR missed the decimal point
     if len(nums) == 2:
-        if nums[0] != '.':
-            if nums[0] < max_val:
 
-                nums.insert(1, '.')
-                confs.insert(1, 90.0)
+        if nums[0] >= max_val:
+            nums[0] = max_val - 1
+            confs[0] = 1 / (max_val - min_value)
 
-                if nums[2] != 5:
-                    nums[2] = 5
+        nums.insert(1, '.')
+        confs.insert(1, 90.0)
+
+        if nums[2] != 5:
+            nums[2] = 5
+            confs[2] = 90.0
+
+    elif len(nums) == 3:
+
+        if nums[0] >= max_val:
+            nums[0] = max_val - 1
+            confs[0] = 100 / (max_val - min_value)
+
+        nums.insert(1, '.')
+        confs.insert(1, 90.0)
+
+        if nums[3] != 5:
+            nums[3] = 5
+            confs[3] -= 5.0
+
+        if nums[2] < 5:
+            if nums[2] != 2:
+                nums[2] = 2
+                confs[2] -= 5.0
+
+        else:
+            if nums[2] != 7:
+                nums[2] = 7
+                confs[2] -= 5.0
+
+    else:
+        return False
+
+    return True
+
+
+def __missed_decimal_point_two_digit(nums, confs, max_value, min_value):
+    """Trys to insert a missing decimal point"""
+
+    # This might be a decimal number where the OCR missed the decimal point
+    if len(nums) == 2:
+        if nums[0] > (max_value // 10):
+
+            nums.insert(1, '.')
+            confs.insert(1, 90.0)
+
+            if nums[2] != 5:
+                nums[2] = 5
+                confs[2] -= 5.0
+
+        else:
+            return False
+
+    elif len(nums) == 3:
+
+        if nums[0] > (max_value // 10):
+
+            nums.insert(1, '.')
+            confs.insert(1, 90.0)
+
+            if nums[3] != 5:
+                nums[3] = 5
+                confs[3] -= 5.0
+
+            if nums[2] < 5:
+                if nums[2] != 2:
+                    nums[2] = 2
                     confs[2] -= 5.0
 
-                return
+            else:
+                if nums[2] != 7:
+                    nums[2] = 7
+                    confs[2] -= 5.0
+
+        else:
+
+            nums.insert(2, '.')
+            confs.insert(2, 90.0)
+
+            if nums[3] != 5:
+                nums[3] = 5
+                confs[3] = 90.0
+
+            if max_value - 1 > 9:
+                whole_nums, whole_confs = __enforce_two_digit_score(nums[:2], confs[:2], max_value - 1, min_value)
+
+            else:
+                whole_nums, whole_confs = __enforce_one_digit_score(nums[:2], confs[:2], max_value - 1, min_value)
+
+            del nums[0]
+            del nums[0]
+
+            del confs[0]
+            del confs[0]
+
+            while len(whole_nums) > 0:
+                nums.insert(0, whole_nums.pop())
+                confs.insert(0, whole_confs.pop())
+
+
+    elif len(nums) == 4:
+
+        fractional_nums, fractional_confs = __enforce_fractional_score(nums[2:], confs[2:])
+        whole_nums, whole_confs = __enforce_two_digit_score(nums[:2], confs[:2], max_value - 1, min_value)
+
+        nums.insert(2, '.')
+        confs.insert(2, 90.0)
+
+        nums[0] = whole_nums[0]
+        nums[1] = whole_nums[1]
+        nums[3] = fractional_nums[0]
+        nums[4] = fractional_nums[1]
+
+        confs[0] = whole_confs[0]
+        confs[1] = whole_confs[1]
+        confs[3] = fractional_confs[0]
+        confs[4] = fractional_confs[1]
+
+    else:
+        return False
+
+    return True
+
+
+def __enforce_fractional_score(nums, confs):
+    """Ensures the score after a decimal point is a reasonable fraction"""
+
+    if len(nums) == 1:
+
+        if nums[0] != 5:
+
+            nums[0] = 5
+            __reduce_confidence(confs, 5.0)
+
+    elif len(nums) == 2:
+
+        if nums[1] != 5:
+
+            nums[1] = 5
+            __reduce_confidence(confs, 5.0)
+
+        if nums[0] < 5:
+
+            if nums[0] != 2:
+
+                nums[0] = 2
+                __reduce_confidence(confs, 5.0)
+
+        else:
+
+            if nums[0] != 7:
+
+                nums[0] = 7
+                __reduce_confidence(confs, 5.0)
+
+    else:
+        __prune_to_length(nums, confs, 2)
+
+    return nums, confs
+
+
+def __enforce_one_digit_score(nums, confs, max_value, min_value):
+    """Ensures the input contains at most one digit"""
 
     __prune_to_length(nums, confs, 1)
 
     if len(nums) == 1:
-        nums[0], confs[0] = __force_into_range(nums[0], confs[0], max_val, min_value)
+        nums[0], confs[0] = __force_into_range(nums[0], confs[0], max_value, min_value)
+
+    return nums, confs
 
 
-def __enforce_two_digit_score(nums, confs, max_val, min_value):
+def __enforce_two_digit_score(nums, confs, max_value, min_value):
     """Ensures the input contains at most two digits"""
-
-    # This might be a decimal number where the OCR missed the decimal point
-    if len(nums) == 2:
-        if nums[0] != '.':
-            if nums[0] > (max_val // 10):
-
-                nums.insert(1, '.')
-                confs.insert(1, 90.0)
-
-                if nums[2] != 5:
-                    nums[2] = 5
-                    confs[2] -= 5.0
-
-                return
 
     if len(nums) == 1:
         nums[0], confs[0] = __force_into_range(nums[0], confs[0], 9, min_value)
@@ -252,14 +420,15 @@ def __enforce_two_digit_score(nums, confs, max_val, min_value):
 
         if len(nums) == 2:
 
-            ones = max_val % 10
-            tens = max_val // 10
+            ones = max_value % 10
+            tens = max_value // 10
 
             nums[0], confs[0] = __force_into_range(nums[0], confs[0], tens, 1)
 
             if nums[0] == tens:
                 nums[1], confs[1] = __force_into_range(nums[1], confs[1], ones)
 
+    return nums, confs
 
 
 def __prune_to_length(nums, confs, length):
