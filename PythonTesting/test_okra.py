@@ -50,14 +50,64 @@ class DigitGetterTestCase(unittest.TestCase):
             [1, 0, 1, 0, 1]
         ], np.uint8)
 
+        scan_state = {
+            'upper': [0],
+            'lower': [img.shape[0]]
+        }
+
         boundary = okra.Boundary(2, 2, 2, 2)
 
-        self.dg._DigitGetter__trace_digit(img, boundary, (2, 2))
+        self.dg._DigitGetter__digit_tracer.trace_digit(img, boundary, (2, 2), scan_state)
 
         self.assertEqual(boundary.top, 1, 'Top boundary incorrect')
         self.assertEqual(boundary.bottom, 4, 'Bottom boundary incorrect')
         self.assertEqual(boundary.left, 1, 'Left boundary incorrect')
         self.assertEqual(boundary.right, 4, 'Right boundary incorrect')
+
+
+    def test_trace_digit_with_lines(self):
+
+        img = np.array([
+            [0, 1, 1, 1, 1, 1, 1, 1, 1, 0],
+            [0, 0, 0, 0, 1, 1, 0, 0, 0, 0],
+            [0, 0, 1, 1, 1, 1, 0, 0, 0, 0],
+            [0, 0, 0, 0, 1, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 1, 1, 0, 0, 0, 0],
+            [0, 0, 0, 0, 1, 1, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 1, 0, 0, 0, 0],
+            [0, 0, 0, 0, 1, 1, 1, 1, 0, 0],
+            [0, 0, 0, 0, 1, 1, 0, 0, 0, 0],
+            [0, 1, 1, 1, 1, 1, 1, 1, 1, 0]
+        ], np.uint8)
+
+        # Top line check
+
+        scan_state = {
+            'upper': [0],
+            'lower': [img.shape[0]]
+        }
+
+        boundary = okra.Boundary(2, 2, 2, 2)
+
+        self.dg._DigitGetter__digit_tracer.trace_digit(img, boundary, (2, 2), scan_state)
+
+        self.assertEqual(boundary.top, 0, 'Top line failure; top boundary incorrect')
+        self.assertEqual(boundary.bottom, 1, 'Top line failure; bottom boundary incorrect')
+        self.assertEqual(boundary.left, 1, 'Top line failure; left boundary incorrect')
+        self.assertEqual(boundary.right, 8, 'Top line failure; right boundary incorrect')
+
+        # Bottom line check
+
+        scan_state['upper'][0] = 1
+
+        boundary = okra.Boundary(2, 2, 2, 2)
+
+        self.dg._DigitGetter__digit_tracer.trace_digit(img, boundary, (2, 2), scan_state)
+
+        self.assertEqual(boundary.top, 8, 'Bottom line failure; top boundary incorrect')
+        self.assertEqual(boundary.bottom, 9, 'Bottom line failure; bottom boundary incorrect')
+        self.assertEqual(boundary.left, 1, 'Bottom line failure; left boundary incorrect')
+        self.assertEqual(boundary.right, 8, 'Bottom line failure; right boundary incorrect')
 
 
     def test_get_segment_type(self):
