@@ -290,7 +290,7 @@ def __remove_decimal_points(nums, confs, remove_all):
 
                         del nums[best_decimal]
                         del confs[best_decimal]
-                        best_decimal = i
+                        best_decimal = i - 1
                         penalty += DEFAULT_PENALTY
 
                     else:
@@ -472,12 +472,20 @@ def __force_valid_score(nums, confs, max_score, min_score):
 
                 if nums[0] >= max_score:
 
-                    nums[0] = __get_replacement_digit(nums[0], max_score - 1, min_score)
+                    nums[0] = __get_replacement_digit(
+                        nums[0],
+                        max_score - 1,
+                        min_score
+                    )
                     penalty += DEFAULT_PENALTY
 
             elif max_score <= 10:
 
-                nums[0] = __get_replacement_digit(nums[0], max_score - 1, min_score)
+                nums[0] = __get_replacement_digit(
+                    nums[0],
+                    max_score - 1,
+                    min_score
+                )
                 penalty += DEFAULT_PENALTY
 
             else:
@@ -499,11 +507,20 @@ def __force_valid_score(nums, confs, max_score, min_score):
 
         elif __lt(whole, min_score):
 
-            if max_score <= 10:
-                nums[0] = __get_replacement_digit(nums[0], max_score - 1, min_score)
+            if nums[0] == '.':
+
+                nums.insert(0, min_score)
+                confs.insert(0, DEFAULT_CONFIDENCE)
 
             else:
-                nums[0] = __get_replacement_digit(nums[0], 9, min_score)
+
+                max_digit = 9 if max_score > 10 else max_score - 1
+
+                nums[0] = __get_replacement_digit(
+                    nums[0],
+                    max_digit,
+                    min_score
+                )
 
             penalty += DEFAULT_PENALTY
 
@@ -562,11 +579,13 @@ def __force_valid_score(nums, confs, max_score, min_score):
 
         elif __lt(whole, min_score):
 
-            if max_score < 10:
-                nums[0] = __get_replacement_digit(nums[0], max_score, min_score)
+            max_digit = 9 if max_score >= 10 else max_score
 
-            else:
-                nums[0] = __get_replacement_digit(nums[0], 9, min_score)
+            nums[0] = __get_replacement_digit(
+                nums[0],
+                max_digit,
+                min_score
+            )
 
             penalty += DEFAULT_PENALTY
 
