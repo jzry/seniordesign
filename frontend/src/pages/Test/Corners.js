@@ -142,7 +142,7 @@ function Corners() {
             })
                 .then((response) => {
                     console.log("Here are the new corners:")
-                    setCorners(response.data.corners)
+                    setCorners(response.data.corner_points)
                     setHasCorners(true)
                 })
                 .catch((error) => {
@@ -206,7 +206,7 @@ function Corners() {
                                 type="submit"
                                 value="Upload Image"
                                 className="btn btn-primary"
-                            // onClick={} 
+                            // onClick={}
                             /> */}
                     </div>
                     {/* </form> */}
@@ -254,7 +254,7 @@ function Corners() {
                     </>
                 )} */}
 
-                {/* 
+                {/*
                     <script>
             loadPoints({{points | tojson}})
     */}
