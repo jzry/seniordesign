@@ -2,6 +2,8 @@
 # Validation functions for OCR output
 #
 
+import random
+
 
 # The confidence percentages used for inserted values
 GOOD_CONFIDENCE    = 95.0
@@ -12,6 +14,20 @@ POOR_CONFIDENCE    = 85.0
 SMALL_PENALTY   = 1.0
 DEFAULT_PENALTY = 2.5
 LARGE_PENALTY   = 5.0
+
+
+commonly_confused_digits = [
+    [9, 8, 6, 4],  # 0
+    [9, 7, 4],     # 1
+    [1],           # 2
+    [9, 8, 5],     # 3
+    [9],           # 4
+    [8, 3],        # 5
+    [8],           # 6
+    [1],           # 7
+    [6, 5, 3, 0],  # 8
+    [4, 3],        # 9
+]
 
 
 
@@ -41,6 +57,7 @@ def validate_score(raw, max_score=None, min_score=0):
         if not a_valid_score(nums, max_score, min_score):
 
             penalty += __trim_score_digits(nums, confs, max_score, min_score)
+            __insert_decimal_point(nums, confs, max_score, min_score)
 
             if not a_valid_score(nums, max_score, min_score):
 
@@ -48,6 +65,7 @@ def validate_score(raw, max_score=None, min_score=0):
                     nums, confs, max_score, min_score
                 )
 
+    penalty += __trim_leading_zeros(nums, confs)
 
     return __stringify(nums), __overall_confidence(confs, penalty)
 
@@ -131,6 +149,7 @@ def validate_weight(raw):
 
             penalty += __force_valid_weight(nums, confs)
 
+    penalty += __trim_leading_zeros(nums, confs)
 
     return __stringify(nums), __overall_confidence(confs, penalty)
 
@@ -313,19 +332,24 @@ def __insert_decimal_point(nums, confs, max_score, min_score):
 
                 elif len(nums) == 3:
 
-                    if __lt(nums[:2], max_score):
+                    if __lt(nums[:2], max_score) and \
+                       nums[2] == 5:
 
                         nums.insert(2, '.')
                         confs.insert(2, DEFAULT_CONFIDENCE)
 
-                    else:
+                    elif nums[0] < max_score and \
+                         (nums[1] == 2 or nums[1] == 7) and \
+                         nums[2] == 5:
 
                         nums.insert(1, '.')
                         confs.insert(1, DEFAULT_CONFIDENCE)
 
                 elif len(nums) == 4:
 
-                    if __lt(nums[:2], max_score):
+                    if __lt(nums[:2], max_score) and \
+                       (nums[2] == 2 or nums[2] == 7) and \
+                       nums[3] == 5:
 
                         nums.insert(2, '.')
                         confs.insert(2, DEFAULT_CONFIDENCE)
@@ -353,6 +377,7 @@ def __trim_score_digits(nums, confs, max_score, min_score):
 
             del nums[worst_i]
             del confs[worst_i]
+            penalty += LARGE_PENALTY
 
     if max_score is not None:
 
@@ -362,7 +387,15 @@ def __trim_score_digits(nums, confs, max_score, min_score):
 
             del nums[0]
             del confs[0]
+            penalty += DEFAULT_PENALTY
             end -= 1
+
+        if end == 2:
+            if nums[0] == 0:
+
+                del nums[0]
+                del confs[0]
+                penalty += SMALL_PENALTY
 
     return penalty
 
@@ -371,11 +404,36 @@ def __trim_to_length(nums, confs, length):
 
     penalty = 0.0
 
+    # Trim to length
+    #
     while len(nums) > length:
 
         del nums[0]
         del confs[0]
         penalty += DEFAULT_PENALTY
+
+    penalty += __trim_leading_zeros(nums, confs)
+
+    return penalty
+
+
+def __trim_leading_zeros(nums, confs):
+
+    penalty = 0.0
+
+    # Trim leading zeros
+    #
+    while len(nums) > 1:
+
+        if nums[0] != 0:
+            break
+
+        if nums[1] == '.':
+            break
+
+        del nums[0]
+        del confs[0]
+        penalty += SMALL_PENALTY
 
     return penalty
 
@@ -414,12 +472,12 @@ def __force_valid_score(nums, confs, max_score, min_score):
 
                 if nums[0] >= max_score:
 
-                    nums[0] = max_score - 1
+                    nums[0] = __get_replacement_digit(nums[0], max_score - 1, min_score)
                     penalty += DEFAULT_PENALTY
 
             elif max_score <= 10:
 
-                nums[0] = max_score - 1
+                nums[0] = __get_replacement_digit(nums[0], max_score - 1, min_score)
                 penalty += DEFAULT_PENALTY
 
             else:
@@ -429,18 +487,24 @@ def __force_valid_score(nums, confs, max_score, min_score):
 
                 if nums[0] > max_tens:
 
-                    nums[0] = max_tens
-                    penalty += DEFAULT_PENALTY
+                    del nums[0]
+                    del confs[0]
+                    penalty += LARGE_PENALTY
 
-                if nums[0] == max_tens and \
-                   nums[1] >= max_ones:
+                elif nums[0] == max_tens and \
+                     nums[1] >= max_ones:
 
-                    nums[1] = max_ones - 1
+                    nums[1] = __get_replacement_digit(nums[1], max_ones - 1, 0)
                     penalty += DEFAULT_PENALTY
 
         elif __lt(whole, min_score):
 
-            nums[0] = min_score
+            if max_score <= 10:
+                nums[0] = __get_replacement_digit(nums[0], max_score - 1, min_score)
+
+            else:
+                nums[0] = __get_replacement_digit(nums[0], 9, min_score)
+
             penalty += DEFAULT_PENALTY
 
         if not __eq(fractional, [5, 25, 75]):
@@ -450,7 +514,7 @@ def __force_valid_score(nums, confs, max_score, min_score):
                 if nums[-2] != 2 and \
                    nums[-2] != 7:
 
-                    nums[-2] = 2
+                    nums[-2] = random.choice([2, 7])
                     penalty += DEFAULT_PENALTY
 
             if nums[-1] != 5:
@@ -471,12 +535,12 @@ def __force_valid_score(nums, confs, max_score, min_score):
 
                 if nums[0] > max_score:
 
-                    nums[0] = max_score
+                    nums[0] = __get_replacement_digit(nums[0], max_score, min_score)
                     penalty += DEFAULT_PENALTY
 
             elif max_score < 10:
 
-                nums[0] = max_score
+                nums[0] = __get_replacement_digit(nums[0], max_score, min_score)
                 penalty += DEFAULT_PENALTY
 
             else:
@@ -491,14 +555,19 @@ def __force_valid_score(nums, confs, max_score, min_score):
                     penalty += LARGE_PENALTY
 
                 elif nums[0] == max_tens and \
-                   nums[1] > max_ones:
+                     nums[1] > max_ones:
 
-                    nums[1] = max_ones
+                    nums[1] = __get_replacement_digit(nums[1], max_ones, 0)
                     penalty += DEFAULT_PENALTY
 
         elif __lt(whole, min_score):
 
-            nums[0] = min_score
+            if max_score < 10:
+                nums[0] = __get_replacement_digit(nums[0], max_score, min_score)
+
+            else:
+                nums[0] = __get_replacement_digit(nums[0], 9, min_score)
+
             penalty += DEFAULT_PENALTY
 
     return penalty
@@ -531,7 +600,7 @@ def __force_valid_time(nums, confs):
 
     if nums[-2] > 5:
 
-        nums[-2] = 5
+        nums[-2] = __get_replacement_digit(nums[-2], 5, 0)
         penalty += LARGE_PENALTY
 
     if len(nums) == 4:
@@ -547,7 +616,7 @@ def __force_valid_time(nums, confs):
 
 def __force_valid_weight(nums, confs):
 
-    nums[0] = 1
+    nums[0] = __get_replacement_digit(nums[0], 2, 1)
 
     return LARGE_PENALTY
 
@@ -647,4 +716,20 @@ def __split(number_list):
     else:
 
         return number_list, None
+
+
+
+def __get_replacement_digit(original, high, low):
+
+    potential_replacements = commonly_confused_digits[original]
+
+    for digit in potential_replacements:
+
+        if digit <= high and digit >= low:
+
+            return digit
+
+    digit = int((random.random() * (high - low + 1)) + low)
+
+    return digit
 
