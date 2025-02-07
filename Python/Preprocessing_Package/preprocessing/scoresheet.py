@@ -24,10 +24,10 @@ def Paper_Extraction(image):
 
     # Default corner points
     corner_points = [
-        {"x": 0, "y": 0}, 
-        {"x": original_img.shape[1], "y": 0}, 
-        {"x": original_img.shape[1], "y": original_img.shape[0]}, 
-        {"x": 0, "y": original_img.shape[0]}
+        {"x": 50, "y": 50}, 
+        {"x": original_img.shape[1] - 50, "y": 50}, 
+        {"x": original_img.shape[1] - 50, "y": original_img.shape[0]- 50}, 
+        {"x": 50, "y": original_img.shape[0]- 50}
         ]
 
     # Resize image for faster processing, maintaining aspect ratio
