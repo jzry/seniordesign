@@ -196,10 +196,10 @@ def CTRSegments(image, corner_dict):
 
     # imread() when image is file path
     # extracted_image = cv.imread(image)
-    extracted_image = scoresheet.Paper_Extraction(image)
+    # extracted_image = scoresheet.Paper_Extraction(image)
 
     # Gives aligned image to the template
-    extracted_image = CTRAlignImage(extracted_image)
+    extracted_image = CTRAlignImage(warped_img)
 
 
     horizontal_scalefactor = 1
