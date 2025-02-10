@@ -224,7 +224,7 @@ function Corners() {
                                 type="submit"
                                 value="Upload Image"
                                 className="btn btn-primary"
-                            // onClick={} 
+                            // onClick={}
                             /> */}
                     </div>
                     {/* </form> */}
@@ -276,7 +276,7 @@ function Corners() {
                     </>
                 )} */}
 
-                {/* 
+                {/*
                     <script>
             loadPoints({{points | tojson}})
     */}

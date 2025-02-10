@@ -22,6 +22,14 @@ def Paper_Extraction(image):
         print(f"Cannot read image file: {image}")
         return -1
 
+    # Default corner points
+    corner_points = [
+        {"x": 50, "y": 50}, 
+        {"x": original_img.shape[1] - 50, "y": 50}, 
+        {"x": original_img.shape[1] - 50, "y": original_img.shape[0]- 50}, 
+        {"x": 50, "y": original_img.shape[0]- 50}
+        ]
+
     # Resize image for faster processing, maintaining aspect ratio
     max_dimension = 1000
     scale = min(max_dimension / original_img.shape[1], max_dimension / original_img.shape[0])
@@ -55,10 +63,11 @@ def Paper_Extraction(image):
             if area > 10000:  # Adjust the minimum area threshold as needed
                 document_contour = approx
                 break
-
+    
+    # Return defasult corner points if no contour is found
     if document_contour is None:
-        print("Error: Document contour not found")
-        return -1
+        print("Error: Document contour not found in scoresheet.py")
+        return {"corner_points": corner_points}
 
     # Map the points to the original image size
     inverse_scale = 1.0 / scale
