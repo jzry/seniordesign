@@ -9,6 +9,10 @@ const pyconnect = require('./pyconnect')
 
 const devMode = process.env.MODE
 
+// A flag that determines if TorchServe is used or not
+const torchserveFlag = (process.env.TORCHSERVE) ? process.env.TORCHSERVE.toLowerCase() === 'torchserve' : false
+
+
 
 // Request validation middleware for the CTR data from the OCR
 // Because the CTR data is not currently sourced from an api endpoint, this function only simulates the functionality of Express Middleware
@@ -76,7 +80,7 @@ function validateImage(req, res, next) {
 }
 
 // Cross-Origin Resource Sharing Middleware to only accept data originating from our frontend
-
+ 
 
 
 // The express app
@@ -138,18 +142,20 @@ app.post('/ctr', validateImage, async (req, res) => {
     return res.status(400).send('No files were uploaded.');
   }
 
+  let corners = JSON.parse(req.body.corners);  //  << This is the corners array
+
+
   // The name of the input field (i.e. "sampleFile") is used to retrieve the uploaded file
   let sampleFile = req.files.image;
 
   //console.log('File received:', sampleFile.name);  // Log file details
 
+  let args = { "torchserve": torchserveFlag, "corner_points": corners }
+
   // Send the image to the Python code to be processed
-  let output = await pyconnect.processCTR(sampleFile)
+  let output = await pyconnect.run('CTR.py', args, sampleFile)
 
-  if (output.error)
-    res.status(500)
-
-  res.json(output)
+  res.status(output.status).json(output.body)
 });
 
 app.post('/bce', validateImage, async (req, res) => {
@@ -157,18 +163,34 @@ app.post('/bce', validateImage, async (req, res) => {
     return res.status(400).send('No files were uploaded.');
   }
 
+  let corners = JSON.parse(req.body.corners);  //  << This is the corners array
+
   // The name of the input field (i.e. "sampleFile") is used to retrieve the uploaded file
   let sampleFile = req.files.image;
 
   //console.log('File received:', sampleFile.name);  // Log file details
 
+  let args = { "torchserve": torchserveFlag, "corner_points": corners }
+
   // Send the image to the Python code to be processed
-  let output = await pyconnect.processBCE(sampleFile)
+  let output = await pyconnect.run('BCE.py', args, sampleFile)
 
-  if (output.error)
-    res.status(500)
+  res.status(output.status).json(output.body)
+});
 
-  res.json(output)
+
+app.post('/corners', validateImage, async (req, res) => {
+  if (!req.files || Object.keys(req.files).length === 0) {
+    return res.status(400).send('No files were uploaded.');
+  }
+
+  // The name of the input field (i.e. "imageFile") is used to retrieve the uploaded file
+  let imageFile = req.files.image;
+
+  // Send the image to the Python code to be processed
+  let output = await pyconnect.run('corners.py', null, imageFile)
+
+  res.status(output.status).json(output.body)
 });
 
 
