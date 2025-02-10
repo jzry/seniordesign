@@ -135,6 +135,7 @@ function Corners() {
         if (imageFile) {
             const formData = new FormData();
             formData.append('image', imageFile);
+
             await axios.post(apiUrl.concat('/corners'), formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data',
@@ -142,7 +143,8 @@ function Corners() {
             })
                 .then((response) => {
                     console.log("Here are the new corners:")
-                    setCorners(response.data.corners)
+                    console.log(response.data.corner_points)
+                    setCorners(response.data.corner_points)
                     setHasCorners(true)
                 })
                 .catch((error) => {
@@ -159,21 +161,37 @@ function Corners() {
         }
     }
 
-    async function submitCorners(e) {
+    async function submitCornersCTR(e) {
         e.preventDefault()
-        console.log("API URL:")
-        console.log(apiUrl.concat('/corners'))
-        console.log("Corners:")
-        console.log({ 'corners': corners })
-        // if (corners) {
-            // await axios.post(apiUrl.concat('/corners'), { 'corners': corners })
-                // .then((response) => {
-                    // console.log(response.data.message)
-                // })
-                // .catch((error) => {
-                    // console.error(error)
-                // })
-        // }
+        const formData = new FormData();
+        formData.append('image', imageFile);
+        formData.append("corners", JSON.stringify(corners));
+        console.log(formData)
+        if (corners) {
+            await axios.post(apiUrl.concat('/ctr'), formData)
+                .then((response) => {
+                    console.log(response.data)
+                })
+                .catch((error) => {
+                    console.error(error)
+                })
+        }
+    }
+
+    async function submitCornersBCE(e) {
+        e.preventDefault()
+        const formData = new FormData();
+        formData.append('image', imageFile);
+        formData.append("corners", JSON.stringify(corners));
+        if (corners) {
+            await axios.post(apiUrl.concat('/bce'), formData)
+                .then((response) => {
+                    console.log(response.data)
+                })
+                .catch((error) => {
+                    console.error(error)
+                })
+        }
     }
 
     useEffect(() => {
@@ -184,7 +202,7 @@ function Corners() {
 
     return (
         <>
-            <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous"></link>
+            <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossOrigin="anonymous"></link>
             <div className="container">
                 <br /><br />
 
@@ -214,7 +232,11 @@ function Corners() {
                     <br />
                     {/* if fileupload */}
                     <div className="row">
-                        {(imageFile !== null && hasCorners) && <button className="btn btn-primary" id="sendData" onClick={submitCorners}>Submit Corners and Get Result</button>}
+                        {(imageFile !== null && hasCorners) && (
+                            <div className="btn-group" role="group" aria-label="Basic example">
+                                <button className="btn btn-primary" id="sendData" onClick={submitCornersCTR}>Submit Corners CTR</button>
+                                <button className="btn btn-primary" id="sendData" onClick={submitCornersBCE}>Submit Corners BCE</button>
+                            </div>)}
                         {(imageFile !== null && !hasCorners) && <button className="btn btn-primary" id="sendData" onClick={submitImage}>Submit Image and Extract Corners</button>}
 
 
@@ -261,7 +283,7 @@ function Corners() {
 
                 {/* endif */}
             </div>
-            <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+            <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossOrigin="anonymous"></script>
         </>
     )
 }

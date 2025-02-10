@@ -80,7 +80,7 @@ function validateImage(req, res, next) {
 }
 
 // Cross-Origin Resource Sharing Middleware to only accept data originating from our frontend
-
+ 
 
 
 // The express app
@@ -142,12 +142,15 @@ app.post('/ctr', validateImage, async (req, res) => {
     return res.status(400).send('No files were uploaded.');
   }
 
+  let corners = JSON.parse(req.body.corners);  //  << This is the corners array
+
+
   // The name of the input field (i.e. "sampleFile") is used to retrieve the uploaded file
   let sampleFile = req.files.image;
 
   //console.log('File received:', sampleFile.name);  // Log file details
 
-  let args = { "torchserve": torchserveFlag }
+  let args = { "torchserve": torchserveFlag, "corner_points": corners }
 
   // Send the image to the Python code to be processed
   let output = await pyconnect.run('CTR.py', args, sampleFile)
@@ -160,18 +163,21 @@ app.post('/bce', validateImage, async (req, res) => {
     return res.status(400).send('No files were uploaded.');
   }
 
+  let corners = JSON.parse(req.body.corners);  //  << This is the corners array
+
   // The name of the input field (i.e. "sampleFile") is used to retrieve the uploaded file
   let sampleFile = req.files.image;
 
   //console.log('File received:', sampleFile.name);  // Log file details
 
-  let args = { "torchserve": torchserveFlag }
+  let args = { "torchserve": torchserveFlag, "corner_points": corners }
 
   // Send the image to the Python code to be processed
   let output = await pyconnect.run('BCE.py', args, sampleFile)
 
   res.status(output.status).json(output.body)
 });
+
 
 app.post('/corners', validateImage, async (req, res) => {
   if (!req.files || Object.keys(req.files).length === 0) {
