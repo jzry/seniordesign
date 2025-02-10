@@ -1,7 +1,7 @@
 const app = require('./index')
 
 const port = process.env.PORT
-const protocol = process.env.PROTOCOL
+const protocol = process.env.PROTOCOL ? process.env.PROTOCOL : 'http'
 
 
 if (protocol.toLowerCase() === 'https')
