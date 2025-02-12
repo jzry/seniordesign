@@ -400,10 +400,18 @@ class DigitGetter:
         # Is this tall enough to be a digit?
         if segment_shape[0] >= digit_min_height:
 
-            if segment_shape[1] >= (img_shape[1] * 2) // 3:
+            if segment_shape[0] >= digit_min_height * 1.5:
+                two_digit_factor = 1.1
+                three_digit_factor = 2.1
+
+            else:
+                two_digit_factor = 1.6
+                three_digit_factor = 2.6
+
+            if segment_shape[1] >= three_digit_factor * segment_shape[0]:
                 return SegmentType.DIGIT3
 
-            elif segment_shape[1] >= img_shape[1] // 3:
+            elif segment_shape[1] >= two_digit_factor * segment_shape[0]:
                 return SegmentType.DIGIT2
 
             else:
@@ -417,6 +425,7 @@ class DigitGetter:
 
         # Is this flat and long?
         if segment_shape[1] >= segment_shape[0] * 1.75:
+
             return SegmentType.MINUS
 
         # It's probably a decimal if we reach here
