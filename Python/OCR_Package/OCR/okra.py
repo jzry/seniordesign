@@ -185,14 +185,57 @@ class DigitGetter:
                 break
 
             # Get the slice of the image containing the digit
-            segment, segment_type = self.__segment_digit(img, digit_pixel, scan_state)
+            segment, segment_type = self.__segment_digit(
+                img,
+                digit_pixel,
+                scan_state
+            )
 
             if segment_type == SegmentType.DIGIT:
 
-                # Classify the digit
-                num, conf = self.__digit_from_image(segment)
-                numbers.append(num)
-                confidence.append(conf)
+                self.__process_digit_segment(segment, numbers, confidence)
+
+            elif segment_type == SegmentType.DIGIT2:
+
+                print('OCR Digit Overlap Issue Detected! - Splitting into 2 digits')
+
+                one_half = segment.shape[1] // 2
+
+                self.__process_digit_segment(
+                    segment[:, :one_half],
+                    numbers,
+                    confidence
+                )
+
+                self.__process_digit_segment(
+                    segment[:, one_half:],
+                    numbers,
+                    confidence
+                )
+
+            elif segment_type == SegmentType.DIGIT3:
+
+                print('OCR Digit Overlap Issue Detected! - Splitting into 3 digits')
+
+                one_third = segment.shape[1] // 3
+
+                self.__process_digit_segment(
+                    segment[:, :one_third],
+                    numbers,
+                    confidence
+                )
+
+                self.__process_digit_segment(
+                    segment[:, one_third:one_third * 2],
+                    numbers,
+                    confidence
+                )
+
+                self.__process_digit_segment(
+                    segment[:, one_third * 2:],
+                    numbers,
+                    confidence
+                )
 
             elif segment_type == SegmentType.DECIMAL:
 
@@ -326,10 +369,6 @@ class DigitGetter:
         # Copy the box containing the digit from the image
         digit_segment = bounds.get_slice(img)
 
-        # Only apply padding if this is a digit
-        if segment_type == SegmentType.DIGIT:
-            digit_segment = self.__apply_padding(digit_segment)
-
         return digit_segment, segment_type
 
 
@@ -356,7 +395,15 @@ class DigitGetter:
 
         # Is this tall enough to be a digit?
         if segment_shape[0] >= digit_min_height:
-            return SegmentType.DIGIT
+
+            if segment_shape[1] >= (img_shape[1] * 2) // 3:
+                return SegmentType.DIGIT3
+
+            elif segment_shape[1] >= img_shape[1] // 3:
+                return SegmentType.DIGIT2
+
+            else:
+                return SegmentType.DIGIT
 
         # Is this really small?
         if segment_shape[0] < noise_max_size and \
@@ -407,6 +454,28 @@ class DigitGetter:
             img = np.pad(img, (fixed_pad, dynamic_pad))
 
         return img
+
+
+    def __process_digit_segment(self, digit_segment, numbers, confidence):
+        """
+        Applies padding to a digit segment and sends it to the image
+        classifier.
+
+        Arguments:
+            digit_segment (numpy.ndarray): An image segment containing a digit.
+            numbers (list(int)): The list where the image classifier's result
+                                 will be placed.
+            confidence (list(float)): The list where the image classifier's
+                                      confidence will be placed.
+        """
+
+        # Prepare the segment
+        digit_segment = self.__apply_padding(digit_segment)
+
+        # Classify the digit
+        num, conf = self.__digit_from_image(digit_segment)
+        numbers.append(num)
+        confidence.append(conf)
 
 
     def __get_decimal_confidence(self, segment_shape):
@@ -811,16 +880,20 @@ class SegmentType(IntEnum):
     decimals, and noise.
 
     Values:
-        NOISE = 0   : A few disconnected pixels that should be ignored.
-        DIGIT = 1   : A digit that should be passed to the classifier.
-        MINUS = 2   : A minus symbol that will likely be ignored.
-        DECIMAL = 3 : A decimal point.
+        NOISE   = 0 : A few disconnected pixels that should be ignored.
+        MINUS   = 1 : A minus symbol that will likely be ignored.
+        DECIMAL = 2 : A decimal point.
+        DIGIT   = 3 : A single digit ready for the classifier.
+        DIGIT2  = 4 : Two digits that must be split before being classified.
+        DIGIT3  = 5 : Three digits that must be split before being classified.
     """
 
     NOISE   = 0
-    DIGIT   = 1
-    MINUS   = 2
-    DECIMAL = 3
+    MINUS   = 1
+    DECIMAL = 2
+    DIGIT   = 3
+    DIGIT2  = 4
+    DIGIT3  = 5
 
 
 
