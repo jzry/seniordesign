@@ -139,14 +139,18 @@ class DigitGetter:
 
         else:
 
-            res = requests.post(
-                'http://localhost:6060/predictions/OkraClassifier',
-                data=req
-            )
-            body = res.json()
+            try:
+                res = requests.post(
+                    'http://localhost:6060/predictions/OkraClassifier',
+                    data=req
+                )
+                body = res.json()
 
-            if res.status_code != 200:
-                raise OkraModelError('TorchServe error', body)
+                if res.status_code != 200:
+                    raise OkraModelError(f'TorchServe could not process the request: {body}')
+
+            except requests.exceptions.ConnectionError as e:
+                raise OkraModelError(f'Unable to connect to TorchServe: {e}')
 
         return (body['Digit'], body['Confidence'])
 
