@@ -46,8 +46,8 @@ class DigitGetter:
 
             from .OkraHandler import OkraHandler
 
-            self.__model_handle = OkraHandler()
-            self.__model_handle.initialize()
+            self.__classifier_handle = OkraHandler()
+            self.__classifier_handle.initialize()
 
         self.__tracer = OkraTracer()
 
@@ -111,7 +111,7 @@ class DigitGetter:
                           a percentage.
 
         Raises:
-            OkraModelError: A call to TorchServe did not succeed.
+            OkraModelError: Failed to run a model.
         """
 
         try:
@@ -137,29 +137,7 @@ class DigitGetter:
 
         self.__show_debug_image(img, 'Digit')
 
-        req = {"data": img.tobytes(), "x": img.shape[1], "y": img.shape[0]}
-
-        if self.__debug:
-
-            res = self.__model_handle.handle(req)
-            body = json.loads(res[0])
-
-        else:
-
-            try:
-                res = requests.post(
-                    'http://localhost:6060/predictions/OkraClassifier',
-                    data=req
-                )
-                body = res.json()
-
-                if res.status_code != 200:
-                    raise OkraModelError(
-                        f'TorchServe could not process the request: {body}'
-                    )
-
-            except requests.exceptions.ConnectionError as e:
-                raise OkraModelError(f'Unable to connect to TorchServe: {e}')
+        body = self.__send_to_model('OkraClassifier', img)
 
         return (body['Digit'], body['Confidence'])
 
@@ -176,7 +154,7 @@ class DigitGetter:
                                       a list of confidences as percentages.
 
         Raises:
-            OkraModelError: A call to TorchServe did not succeed.
+            OkraModelError: Failed to run a model.
         """
 
         try:
@@ -488,7 +466,7 @@ class DigitGetter:
         Applies padding to a digit segment and sends it to the image
         classifier.
 
-        Arguments:
+        Parameters:
             digit_segment (numpy.ndarray): An image segment containing a digit.
             numbers (list(int)): The list where the image classifier's result
                                  will be placed.
@@ -522,6 +500,54 @@ class DigitGetter:
         percentage = 100.0 * min(segment_shape) / max(segment_shape)
 
         return percentage
+
+
+    def __send_to_model(self, model_name, img):
+        """
+        Sends an image to a machine learning model to be processed.
+
+        Parameters:
+            model_name (str): The name of the target model.
+            img (numpy.ndarray): The image to send to the model.
+
+        Returns:
+            dict: The model's results.
+
+        Raises:
+            OkraModelError: Failed to run a model.
+        """
+
+        payload = {"data": img.tobytes(), "x": img.shape[1], "y": img.shape[0]}
+
+        if self.__debug:
+
+            if model_name == 'OkraClassifier':
+
+                response = self.__classifier_handle.handle(payload)
+
+            else:
+                raise OkraModelError(f'Unkown model: "{model_name}"')
+
+            body = json.loads(response[0])
+
+        else:
+
+            try:
+                response = requests.post(
+                    f'http://localhost:6060/predictions/{model_name}',
+                    data=payload
+                )
+                body = response.json()
+
+                if response.status_code != 200:
+                    raise OkraModelError(
+                        f'TorchServe could not process the request: {body}'
+                    )
+
+            except requests.exceptions.ConnectionError as e:
+                raise OkraModelError(f'Unable to connect to TorchServe: {e}')
+
+        return body
 
 
     def __show_debug_image(self, img, title):
