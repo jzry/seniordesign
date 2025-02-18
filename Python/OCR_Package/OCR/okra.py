@@ -49,7 +49,7 @@ class DigitGetter:
             self.__model_handle = OkraHandler()
             self.__model_handle.initialize()
 
-        self.__digit_tracer = DigitTracer()
+        self.__tracer = OkraTracer()
 
         # Set default attributes
 
@@ -109,6 +109,9 @@ class DigitGetter:
         Returns:
             (int, float): A tuple with the digit's value and the confidence as
                           a percentage.
+
+        Raises:
+            OkraModelError: A call to TorchServe did not succeed.
         """
 
         try:
@@ -151,7 +154,9 @@ class DigitGetter:
                 body = res.json()
 
                 if res.status_code != 200:
-                    raise OkraModelError(f'TorchServe could not process the request: {body}')
+                    raise OkraModelError(
+                        f'TorchServe could not process the request: {body}'
+                    )
 
             except requests.exceptions.ConnectionError as e:
                 raise OkraModelError(f'Unable to connect to TorchServe: {e}')
@@ -169,6 +174,9 @@ class DigitGetter:
         Returns:
             (list(int), list(float)): A tuple with a list of digit values and
                                       a list of confidences as percentages.
+
+        Raises:
+            OkraModelError: A call to TorchServe did not succeed.
         """
 
         try:
@@ -192,8 +200,8 @@ class DigitGetter:
             if digit_pixel == None:
                 break
 
-            # Get the slice of the image containing the digit
-            segment, segment_type = self.__segment_digit(
+            # Get the slice of the image containing the handwriting
+            segment, segment_type = self.__get_segment(
                 img,
                 digit_pixel,
                 scan_state
@@ -330,9 +338,9 @@ class DigitGetter:
         return None
 
 
-    def __segment_digit(self, img, start_pixel, scan_state):
+    def __get_segment(self, img, start_pixel, scan_state):
         """
-        Segments out a single digit from an image.
+        Segments out a piece of handwriting from an image.
 
         Parameters:
             img (numpy.ndarray): An image.
@@ -341,8 +349,8 @@ class DigitGetter:
                                scan between function calls.
 
         Returns:
-            numpy.ndarray: A slice of img containing a single character.
-            SegmentType: The type of character in the image segment.
+            numpy.ndarray: A slice of img containing handwriting.
+            SegmentType: The type of handwriting in the image segment.
         """
 
         bounds = Boundary(
@@ -354,7 +362,7 @@ class DigitGetter:
 
         # Find the actual boundary of the digit.
         # 'bounds' will be updated with the correct values.
-        self.__digit_tracer.trace_digit(img, bounds, start_pixel, scan_state)
+        self.__tracer.trace(img, bounds, start_pixel, scan_state)
 
         # Update the scan state
         if bounds.bottom < img.shape[0] // 2:
@@ -371,26 +379,30 @@ class DigitGetter:
         else:
             scan_state['column'] = bounds.right + 1
 
-        # Figure out whats in this segment based on its size and shape
-        segment_type = self.__get_segment_type(bounds.shape(), img.shape)
 
         # Copy the box containing the digit from the image
-        digit_segment = bounds.get_slice(img)
+        segment = bounds.get_slice(img)
 
-        return digit_segment, segment_type
+        # Determine what we just segmented out of the image
+        segment_type = self.__get_segment_type(segment, img.shape)
+
+        return segment, segment_type
 
 
-    def __get_segment_type(self, segment_shape, img_shape):
+    def __get_segment_type(self, segment, img_shape):
         """
         Determines the contents of a segment based on its size and shape.
 
         Parameters:
-            segment_shape (int, int): The shape of the segment.
+            segment (numpy.ndarray): The image segment.
             img_shape (int, int): The shape of the original image.
 
         Returns:
             SegmentType: The type of the segment.
         """
+
+        height = segment.shape[0]
+        width = segment.shape[1]
 
         if self.use_width_as_reference:
 
@@ -403,16 +415,16 @@ class DigitGetter:
             noise_max_size = img_shape[0] // 7
 
         # Is this tall enough to be a digit?
-        if segment_shape[0] >= digit_min_height:
+        if height >= digit_min_height:
 
             two_digit_factor = 1.4
             three_digit_factor = 2.0
 
-            if segment_shape[1] >= three_digit_factor * segment_shape[0]:
+            if width >= three_digit_factor * height:
 
                 return SegmentType.DIGIT3
 
-            elif segment_shape[1] >= two_digit_factor * segment_shape[0]:
+            elif width >= two_digit_factor * height:
 
                 return SegmentType.DIGIT2
 
@@ -420,13 +432,13 @@ class DigitGetter:
                 return SegmentType.DIGIT
 
         # Is this really small?
-        if segment_shape[0] < noise_max_size and \
-           segment_shape[1] < noise_max_size:
+        if height < noise_max_size and \
+           width < noise_max_size:
 
             return SegmentType.NOISE
 
         # Is this flat and long?
-        if segment_shape[1] >= segment_shape[0] * 2:
+        if width >= height * 2:
 
             return SegmentType.MINUS
 
@@ -528,8 +540,8 @@ class DigitGetter:
 
 
 
-class DigitTracer:
-    """A class that contains the code for tracing digits"""
+class OkraTracer:
+    """A class that contains the code for tracing handwriting"""
 
     def __init__(self):
 
@@ -547,14 +559,15 @@ class DigitTracer:
         self.__num_directions = len(self.__directions)
 
 
-    def trace_digit(self, img, bounds, pixel, scan_state):
+    def trace(self, img, bounds, pixel, scan_state):
         """
         An edge tracing algorithm that finds the smallest box that fits a
-        digit.
+        piece of handwriting.
 
         Parameters:
             img (numpy.ndarray): An image.
-            bounds (Boundary): The object to store the bounds of the digit.
+            bounds (Boundary): An object to store the bounds of the
+                               handwriting.
             pixel (int, int): The coordinate of the starting pixel.
             scan_state (dict): A dictionary object to save the state of the
                                scan between function calls.
@@ -589,8 +602,14 @@ class DigitTracer:
                     if self.__is_white(next_pixel, img):
 
                         self.__update_bounds(bounds, next_pixel)
-                        self.__update_layers(layers, next_direction, next_pixel)
-                        start_direction = self.__get_start_direction(next_direction)
+                        self.__update_layers(
+                            layers,
+                            next_direction,
+                            next_pixel
+                        )
+                        start_direction = self.__get_start_direction(
+                            next_direction
+                        )
                         current_pixel = next_pixel
                         break
 
@@ -706,14 +725,24 @@ class DigitTracer:
             if max(layers[:half]) >= line_threshold:
 
                 print('OCR Line Issue Detected! - Removing line from above')
-                self.__adjust_bounds_to_line(bounds, layers, bounds.top, half)
+                self.__adjust_bounds_to_line(
+                    bounds,
+                    layers,
+                    bounds.top,
+                    half
+                )
 
 
             # Check second condition (bottom half)
             elif max(layers[half:]) >= line_threshold:
 
                 print('OCR Line Issue Detected! - Removing line from below')
-                self.__adjust_bounds_to_line(bounds, layers, half, bounds.bottom)
+                self.__adjust_bounds_to_line(
+                    bounds,
+                    layers,
+                    half,
+                    bounds.bottom
+                )
 
 
     def __adjust_bounds_to_line(self, bounds, layers, search_top, search_bottom):
