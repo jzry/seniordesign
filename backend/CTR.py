@@ -54,6 +54,7 @@ def run(args, image_buffer):
 
     # Prepare the OCR
     dg = okra.DigitGetter(ts=args['torchserve'])
+    dg.use_width_as_reference = True
 
     output_dict = {}
 
