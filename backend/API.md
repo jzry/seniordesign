@@ -4,13 +4,23 @@
 
 ### Request
 
-Receives a single image.
+Receives an image and four corner coordinates.
 
 - **Headers**
     - `Content-Type`: `multipart/form-data`
 
 - **Form**
     - `image`: *\<image data\>*
+    - `corners`: *\<JSON\>*
+
+        ```javascript
+        [    // An array of four JSON objects
+            {
+                "x": int,
+                "y": int
+            }
+        ]
+        ```
 
 ### Response
 
@@ -31,7 +41,7 @@ Status Code **200**
         "Qual Mvmt": Prediction,
         "Ride time, this rider": Prediction,
         "Weight of this rider": Prediction
-    }]
+    }],
     "riderCount": int   // The length of the array
 }
 
@@ -71,13 +81,23 @@ Status Code **555**
 
 ### Request
 
-Receives a single image.
+Receives an image and four corner coordinates.
 
 - **Headers**
     - `Content-Type`: `multipart/form-data`
 
 - **Form**
     - `image`: *\<image data\>*
+    - `corners`: *\<JSON\>*
+
+        ```javascript
+        [    // An array of four JSON objects
+            {
+                "x": int,
+                "y": int
+            }
+        ]
+        ```
 
 ### Response
 
