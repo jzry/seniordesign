@@ -178,6 +178,16 @@ function processReturnValue(val)
 
         var statusCode = 445
     }
+    else if (val.status === 4)
+    {
+        //
+        // Exit Status 4: TorchServe failures
+        //
+
+        console.error(val.message)
+
+        return defaultErrorResponse
+    }
     else
     {
         //
