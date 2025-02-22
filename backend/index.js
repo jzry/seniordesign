@@ -52,27 +52,38 @@ function validateData(/*req, res, next*/ fakeCTRData) {
 
 // Middleware function to validate the image input by the user
 function validateImage(req, res, next) {
-  const allowedFileTypes = ['image/jpeg', 'image/png'];
-  const maxSize = 5 * 1024 * 1024; // 5 MB limit
+  const allowedFileTypes = [
+    'image/jpeg',
+    'image/png',
+    'image/heic',
+    'image/bmp',
+    'image/tiff',
+    'application/pdf'
+  ];
+  const maxSize = 10; // limit in mebibytes
+  const maxSizeBytes = maxSize * 1024 * 1024;
 
   // Check if file exists
   if (!req.files || !req.files.image) {
-    console.log('No file uploaded.')
-    return res.status(400).send('No file uploaded.');
+    let errorMessage = 'No file uploaded.'
+    console.warn(errorMessage)
+    return res.status(400).json({ "error": errorMessage });
   }
 
   const image = req.files.image;
 
   // Check file size
-  if (image.size > maxSize) {
-    console.log('File size exceeds limit of 5 MB.')
-    return res.status(400).send('File size exceeds limit of 5 MB.');
+  if (image.size > maxSizeBytes) {
+    let errorMessage = `File size exceeds limit of ${maxSize} MiB.`
+    console.warn(errorMessage)
+    return res.status(400).json({ "error": errorMessage });
   }
 
   // Check file type
   if (!allowedFileTypes.includes(image.mimetype)) {
-    console.log('Invalid file type. Only JPEG, PNG allowed.')
-    return res.status(400).send('Invalid file type. Only JPEG, PNG allowed.');
+    let errorMessage = 'File type is not supported.'
+    console.warn(errorMessage)
+    return res.status(400).json({ "error": errorMessage });
   }
 
   // If all checks pass, proceed
@@ -80,7 +91,7 @@ function validateImage(req, res, next) {
 }
 
 // Cross-Origin Resource Sharing Middleware to only accept data originating from our frontend
- 
+
 
 
 // The express app
