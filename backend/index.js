@@ -90,6 +90,37 @@ function validateImage(req, res, next) {
   next();
 }
 
+
+// Middleware function to validate the corner input by the user
+function validateCorners(req, res, next) {
+
+  if (req.body && req.body.corners)
+  {
+    try
+    {
+      if (typeof req.body.corners !== 'string')
+      {
+        throw 'req.body.corners is not a JSON string'
+      }
+
+      var corners = JSON.parse(req.body.corners)
+    }
+    catch (e)
+    {
+      console.error(e)
+      res.status(400).json({'error': 'Corner data is not valid JSON'})
+      return
+    }
+
+    req.corner_points = corners
+  }
+
+  // If all checks pass, proceed
+  next();
+}
+
+
+
 // Cross-Origin Resource Sharing Middleware to only accept data originating from our frontend
 
 
@@ -148,20 +179,20 @@ app.use(apiHitLogger)
 
 // Retrieve the uploaded image from the handleSubmit function in frontend/src/pages/crt/getPhotos.js
 
-app.post('/ctr', validateImage, async (req, res) => {
+app.post('/ctr', validateImage, validateCorners, async (req, res) => {
   if (!req.files || Object.keys(req.files).length === 0) {
     return res.status(400).send('No files were uploaded.');
   }
-
-  let corners = JSON.parse(req.body.corners);  //  << This is the corners array
-
 
   // The name of the input field (i.e. "sampleFile") is used to retrieve the uploaded file
   let sampleFile = req.files.image;
 
   //console.log('File received:', sampleFile.name);  // Log file details
 
-  let args = { "torchserve": torchserveFlag, "corner_points": corners }
+  let args = { "torchserve": torchserveFlag }
+
+  if (req.corner_points)
+    args.corner_points = req.corner_points
 
   // Send the image to the Python code to be processed
   let output = await pyconnect.run('CTR.py', args, sampleFile)
@@ -169,19 +200,20 @@ app.post('/ctr', validateImage, async (req, res) => {
   res.status(output.status).json(output.body)
 });
 
-app.post('/bce', validateImage, async (req, res) => {
+app.post('/bce', validateImage, validateCorners, async (req, res) => {
   if (!req.files || Object.keys(req.files).length === 0) {
     return res.status(400).send('No files were uploaded.');
   }
-
-  let corners = JSON.parse(req.body.corners);  //  << This is the corners array
 
   // The name of the input field (i.e. "sampleFile") is used to retrieve the uploaded file
   let sampleFile = req.files.image;
 
   //console.log('File received:', sampleFile.name);  // Log file details
 
-  let args = { "torchserve": torchserveFlag, "corner_points": corners }
+  let args = { "torchserve": torchserveFlag }
+
+  if (req.corner_points)
+    args.corner_points = req.corner_points
 
   // Send the image to the Python code to be processed
   let output = await pyconnect.run('BCE.py', args, sampleFile)
