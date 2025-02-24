@@ -149,10 +149,10 @@ def _debug_main():
 
         for key in rider_dict.keys():
 
-            if rider_dict[key]['confidence'] >= 90.0:
+            if rider_dict[key]['confidence'] >= 95.0:
                 print(key, colored(rider_dict[key]['value'], color='green', attrs=['bold']))
 
-            elif rider_dict[key]['confidence'] >= 80.0:
+            elif rider_dict[key]['confidence'] >= 85.0:
                 print(key, colored(rider_dict[key]['value'], color='yellow', attrs=['bold']))
 
             elif rider_dict[key]['value'] == '':

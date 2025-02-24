@@ -96,10 +96,10 @@ def _debug_main():
         if key == 'gut_sounds':
             continue
 
-        if ret_val[key]['confidence'] >= 90.0:
+        if ret_val[key]['confidence'] >= 95.0:
             print(key, colored(ret_val[key]['value'], color='green', attrs=['bold']))
 
-        elif ret_val[key]['confidence'] >= 80.0:
+        elif ret_val[key]['confidence'] >= 85.0:
             print(key, colored(ret_val[key]['value'], color='yellow', attrs=['bold']))
 
         elif ret_val[key]['value'] == '':
