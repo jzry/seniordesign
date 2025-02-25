@@ -44,9 +44,9 @@ class DigitGetter:
 
         if self.__debug:
 
-            from .OkraHandler import OkraHandler
+            from .OkraClassifierHandler import OkraClassifierHandler
 
-            self.__classifier_handle = OkraHandler()
+            self.__classifier_handle = OkraClassifierHandler()
             self.__classifier_handle.initialize()
 
         self.__tracer = OkraTracer()

@@ -29,12 +29,12 @@ Navigate to the directory `seniordesign/model_server/` and run the following com
 torch-model-archiver --model-name OkraClassifier \
                      --version 1.0 \
                      --model-file ../Python/OCR_Package/OCR/OkraClassifier.py \
-                     --serialized-file ../Python/OCR_Package/OCR/weights/okra.resnet.weights \
-                     --handler ../Python/OCR_Package/OCR/OkraHandler.py \
+                     --serialized-file ../Python/OCR_Package/OCR/weights/okra-resnet.pt \
+                     --handler ../Python/OCR_Package/OCR/OkraClassiferHandler.py \
                      --export-path model_store/ --force
 ```
 
-This will store the model in the file 
+This will store the model in the file
 `seniordesign/model_server/model_store/OkraClassifier.mar`.
 In this format, the model is ready to be served by TorchServe.
 
@@ -66,6 +66,11 @@ create a file: `/etc/systemd/system/start-torchserve.service`.
 Copy and paste the following lines into the newly created file and
 replace `%USER%` with the name of the user that should run
 torchserve:
+
+> [!NOTE]
+> This assumes the project folder was created in the user's home directory.
+> If the project folder is located elsewhere, make sure to update the paths
+> accordingly.
 
 ```
 [Unit]

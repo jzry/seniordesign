@@ -20,12 +20,12 @@ import json
 from OCR.OkraClassifier import OkraClassifier
 
 
-class OkraHandler(BaseHandler):
+class OkraClassifierHandler(BaseHandler):
     """A custom model handler for OkraClassifier"""
 
     def __init__(self):
 
-        super(OkraHandler, self).__init__()
+        super().__init__()
         self.initialized = False
 
 
@@ -46,7 +46,7 @@ class OkraHandler(BaseHandler):
         #
         device = 'cpu'
         state_dict = torch_load(
-            Path(model_dir) / 'okra.resnet.weights',
+            Path(model_dir) / 'okra-resnet.pt',
             weights_only=True,
             map_location=torch_device(device)
         )
