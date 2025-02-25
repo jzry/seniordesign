@@ -2,6 +2,7 @@ import cv2 as cv
 import numpy as np
 
 from . import template
+from .exceptions import PreprocessingAlignmentError
 
 
 def BCAlignImage(image):
@@ -15,8 +16,17 @@ def BCAlignImage(image):
         numpy.ndarray: The aligned image.
     """
 
-    # Locate the corners of the page inside the margin
-    scanned_corners = __find_corners(image)
+    try:
+
+        # Locate the template corners
+        scanned_corners = __find_corners_BCE(image)
+
+    except PreprocessingAlignmentError:
+
+        print('Warning: preprocessing.lime failed to align the image.')
+
+        # If we can't find the corners, return the original image
+        return image
 
     # Compute the scale between this image and the template image
     x_scale = image.shape[1] / template.BC_WIDTH
@@ -51,12 +61,12 @@ def CTRAlignImage(image):
 
     try:
 
-        # Locate the corners of the page inside the margin
+        # Locate the template corners
         scanned_corners = __find_corners(image)
 
-    except RuntimeError:
+    except PreprocessingAlignmentError:
 
-        print('Warning: lime.py failed to align the image.')
+        print('Warning: preprocessing.lime failed to align the image.')
 
         # If we can't find the corners, return the original image
         return image
@@ -78,17 +88,149 @@ def CTRAlignImage(image):
     M = cv.getPerspectiveTransform(scanned_corners, template_corners)
     image = cv.warpPerspective(image, M, (image.shape[1], image.shape[0]))
 
-    # for c in scanned_corners:
-    #     cv.circle(image, (int(c[0]), int(c[1])), radius=6, color=(0, 0, 255), thickness=-1)
-
-    # resized = cv.resize(image, (0, 0), fx = 0.3, fy = 0.3, interpolation=cv.INTER_AREA)
-
-    # cv.imshow('image', resized)
-    # cv.waitKey(0)
-    # cv.destroyAllWindows()
-
-
     return image
+
+
+def __find_corners_BCE(image):
+    """
+    Locates the template corners of a BCE page. These are the four corners of
+    the box that fits the grid layout of the scoresheet.
+
+    Parameters:
+        image (numpy.ndarray): The image of the page.
+
+    Returns:
+        numpy.ndarray: An array with shape (4, 2) containing the coordinates of
+                       the four corners.
+
+    Raises:
+        PreprocessingAlignmentError: Unable to locate all corners.
+   """
+
+    # Create grayscale version of the image
+    gray_image = cv.cvtColor(image, cv.COLOR_BGR2GRAY)
+
+    # Apply a threshold. We should pick a threshold value to reduce noise on
+    # the page's margin as much as possible. If handwriting quality is reduced,
+    # we don't really care.
+    thresh = image.min() + ((image.max() - image.min()) // 2)
+    _, thresh_image = cv.threshold(gray_image, thresh, 255, cv.THRESH_BINARY)
+
+    line_points = __get_vertical_line_points(thresh_image)
+
+
+    for point in line_points:
+        cv.circle(image, point, radius=10, color=(0, 0, 255), thickness=-1)
+    # Adjust fx and fy to fit your screen
+    resized = cv.resize(image, (0, 0), fx = 0.4, fy = 0.4, interpolation=cv.INTER_AREA)
+    cv.imshow('points', resized)
+    cv.waitKey(0)
+    cv.destroyAllWindows()
+
+    #
+    #
+    # TODO: Use "line_points" to find the template corners
+    #
+    #
+
+    # Place the corner coordinates in a numpy array
+    # scanned_corners = np.float32([
+    #     [TL_X, TL_Y],
+    #     [TR_X, TR_Y],
+    #     [BL_X, BL_Y],
+    #     [BR_X, BR_Y]
+    # ])
+
+    # print(scanned_corners)
+
+    # return scanned_corners
+
+    # For testing, exit to save time
+    import sys
+    sys.exit(0)
+
+
+def __get_vertical_line_points(image):
+    """
+    Finds the coordinates of the four vertical lines in a BCE scoresheet.
+
+    Parameters:
+        image (numpy.ndarray): The thresholded image of the page.
+
+    Returns:
+        numpy.ndarray: An array with shape (4, 2) containing four coordinates
+                       that lie on the four lines.
+
+    Raises:
+        PreprocessingAlignmentError: The line points could not be found.
+    """
+
+    # The index of the middle row
+    middle = image.shape[0] // 2
+
+    # Use 5% margins on the left and right edges to avoid noise
+    margin = int(image.shape[1] * 0.05)
+    columns = slice(margin, -margin)
+
+    # The starting row
+    row = image[middle, columns]
+
+    for next_row_i in range(middle + 1, image.shape[0]):
+
+        row = np.logical_or(row, image[next_row_i, columns])
+        x_points = __get_line_x(row)
+
+        if len(x_points) == 4:
+            # Found them!
+            break
+
+        elif len(x_points) < 4:
+            raise PreprocessingAlignmentError('Failed to find vertical lines!')
+
+    if len(x_points) > 4:
+        raise PreprocessingAlignmentError('Failed to find vertical lines!')
+
+    line_points = np.array([
+        [margin + x_points[0], middle],
+        [margin + x_points[1], middle],
+        [margin + x_points[2], middle],
+        [margin + x_points[3], middle]
+    ])
+
+    return line_points
+
+
+def __get_line_x(img_row):
+    """
+    Returns the x-coordinates of lines in the image row slice.
+
+    Parameters:
+        img_row (numpy.ndarray): A row slice from the image being processed.
+
+    Returns:
+        list: The x-coordinates of the lines.
+    """
+
+    x_points = []
+    line_flag = False
+
+    for i in range(len(img_row)):
+
+        if line_flag:
+
+            # A value of True indicates a background pixel
+            if img_row[i]:
+                line_flag = False
+
+        else:
+
+            # A value of False indicates a line pixel
+            if not img_row[i]:
+                x_points.append(i)
+                line_flag = True
+
+    return x_points
+
 
 
 def __find_corners(image):
@@ -99,11 +241,11 @@ def __find_corners(image):
         image (numpy.ndarray): The image of the page.
 
     Returns:
-        numpy.ndarray: A array with shape (4, 2) containing the coordinates of
+        numpy.ndarray: An array with shape (4, 2) containing the coordinates of
                        the four corners.
 
     Raises:
-        RuntimeError: Unable to locate all corners
+        PreprocessingAlignmentError: Unable to locate all corners.
     """
 
     # Create grayscale version of the image
@@ -172,7 +314,7 @@ def __fit_x(image, col, row_slice, step):
              was found.
 
     Raises:
-        RuntimeError: Unable to locate corner x-coordinate
+        PreprocessingAlignmentError: Unable to locate corner x-coordinate.
     """
 
     while image[row_slice, col].min() == 0:
@@ -180,14 +322,18 @@ def __fit_x(image, col, row_slice, step):
         col += step
 
         if col >= image.shape[1] or col < 0:
-            raise RuntimeError('Unable to find x-coordinate of corner')
+            raise PreprocessingAlignmentError(
+                'Unable to find x-coordinate of corner'
+            )
 
     while image[row_slice, col].min() != 0:
 
         col += step
 
         if col >= image.shape[1] or col < 0:
-            raise RuntimeError('Unable to find x-coordinate of corner')
+            raise PreprocessingAlignmentError(
+                'Unable to find x-coordinate of corner'
+            )
 
     return col
 
@@ -209,7 +355,7 @@ def __fit_y(image, row, col_slice, step):
              was found.
 
     Raises:
-        RuntimeError: Unable to locate corner y-coordinate
+        PreprocessingAlignmentError: Unable to locate corner y-coordinate.
     """
 
     while image[row, col_slice].min() == 0:
@@ -217,13 +363,17 @@ def __fit_y(image, row, col_slice, step):
         row += step
 
         if row >= image.shape[0] or row < 0:
-            raise RuntimeError('Unable to find y-coordinate of corner')
+            raise PreprocessingAlignmentError(
+                'Unable to find y-coordinate of corner'
+            )
 
     while image[row, col_slice].min() != 0:
 
         row += step
 
         if row >= image.shape[0] or row < 0:
-            raise RuntimeError('Unable to find y-coordinate of corner')
+            raise PreprocessingAlignmentError(
+                'Unable to find y-coordinate of corner'
+            )
 
     return row

@@ -8,3 +8,6 @@ class PreprocessingExtensionError(Exception):
 
 class PreprocessingImageError(Exception):
     """An image could not be opened for some reason"""
+
+class PreprocessingAlignmentError(Exception):
+    """An image could not be aligned for some reason"""
