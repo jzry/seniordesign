@@ -1,6 +1,7 @@
 from preprocessing.scorefields import CTRSegments
 from OCR import okra
 from OCR import violin as v
+import ImagePackager
 
 
 max_score_per_field = [5, 5, 5, 5, 5, 3, 0, 2, 5, 5, 20, 5, 10, 25, 5, 5, None, None]
@@ -64,10 +65,16 @@ def run(args, image_buffer):
             continue
 
         raw_ouput = dg.image_to_digits(extracted_fields[key])
-
         num, conf = v.validate_score(raw_ouput, max_score_per_field[field_num])
 
-        output_dict[out_field_keys[field_num]] = {'value': num, 'confidence': conf}
+        encoded_image = ImagePackager.encode_base64(extracted_fields[key])
+
+        # Save results
+        output_dict[out_field_keys[field_num]] = {
+            'value': num,
+            'confidence': conf,
+            'image': encoded_image
+        }
 
     return output_dict
 
