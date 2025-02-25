@@ -45,9 +45,13 @@ class DigitGetter:
         if self.__debug:
 
             from .OkraClassifierHandler import OkraClassifierHandler
+            from .OkraDigitCounterHandler import OkraDigitCounterHandler
 
             self.__classifier_handle = OkraClassifierHandler()
+            self.__digit_counter_handle = OkraDigitCounterHandler()
+
             self.__classifier_handle.initialize()
+            self.__digit_counter_handle.initialize()
 
         self.__tracer = OkraTracer()
 
@@ -395,19 +399,17 @@ class DigitGetter:
         # Is this tall enough to be a digit?
         if height >= digit_min_height:
 
-            two_digit_factor = 1.4
-            three_digit_factor = 2.0
+            # Check for digit overlap
+            response = self.__send_to_model('OkraDigitCounter', segment)
 
-            if width >= three_digit_factor * height:
+            if response['Count'] == 1:
+                return SegmentType.DIGIT
 
-                return SegmentType.DIGIT3
-
-            elif width >= two_digit_factor * height:
-
+            elif response['Count'] == 2:
                 return SegmentType.DIGIT2
 
             else:
-                return SegmentType.DIGIT
+                return SegmentType.DIGIT3
 
         # Is this really small?
         if height < noise_max_size and \
@@ -524,6 +526,10 @@ class DigitGetter:
             if model_name == 'OkraClassifier':
 
                 response = self.__classifier_handle.handle(payload)
+
+            elif model_name == 'OkraDigitCounter':
+
+                response = self.__digit_counter_handle.handle(payload)
 
             else:
                 raise OkraModelError(f'Unkown model: "{model_name}"')

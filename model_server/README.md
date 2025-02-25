@@ -23,7 +23,7 @@ The required Python packages should have been installed during the
 
 ## Build Model Archive
 
-Navigate to the directory `seniordesign/model_server/` and run the following command:
+Navigate to the directory `seniordesign/model_server/` and run the following commands:
 
 ```
 torch-model-archiver --model-name OkraClassifier \
@@ -34,22 +34,31 @@ torch-model-archiver --model-name OkraClassifier \
                      --export-path model_store/ --force
 ```
 
-This will store the model in the file
-`seniordesign/model_server/model_store/OkraClassifier.mar`.
-In this format, the model is ready to be served by TorchServe.
+```
+torch-model-archiver --model-name OkraDigitCounter \
+                     --version 1.0 \
+                     --model-file ../Python/OCR_Package/OCR/OkraDigitCounter.py \
+                     --serialized-file ../Python/OCR_Package/OCR/weights/okra-counter.pt \
+                     --handler ../Python/OCR_Package/OCR/OkraDigitCounterHandler.py \
+                     --export-path model_store/ --force
+```
+
+This will store the models as `OkraClassifier.mar` and `OkraDigitCounter.mar`
+in the folder `seniordesign/model_server/model_store/`.
+In this format, the models are ready to be served by TorchServe.
 
 ## Run TorchServe
 
 > [!NOTE]
 > This will run TorchServe in the current terminal.
-> See below to run TorchServe as a background process.
+> See next section on how to run TorchServe as a background process.
 
 To start TorchServe:
 
 ```
 torchserve --start --ncs \
            --model-store model_store/ \
-           --models OkraClassifier=OkraClassifier.mar \
+           --models OkraClassifier=OkraClassifier.mar OkraDigitCounter=OkraDigitCounter.mar\
            --ts-config config.properties
 ```
 
@@ -82,7 +91,7 @@ PIDFile=/run/torchserve.pid
 WorkingDirectory=/home/%USER%/seniordesign/model_server
 User=%USER%
 Group=%USER%
-ExecStart=/home/%USER%/seniordesign/python_env/bin/torchserve --start --ncs --model-store model_store/ --models OkraClassifier=OkraClassifier.mar --ts-config config.properties
+ExecStart=/home/%USER%/seniordesign/python_env/bin/torchserve --start --ncs --model-store model_store/ --models OkraClassifier=OkraClassifier.mar OkraDigitCounter=OkraDigitCounter.mar\ --ts-config config.properties
 ExecStop=/home/%USER%/seniordesign/python_env/bin/torchserve --stop
 RemainAfterExit=true
 TimeoutStartSec=infinity
