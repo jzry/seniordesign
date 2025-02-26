@@ -21,9 +21,12 @@ def BCAlignImage(image):
         # Locate the template corners
         scanned_corners = __find_corners_BCE(image)
 
-    except PreprocessingAlignmentError:
+    except PreprocessingAlignmentError as e:
 
-        print('Warning: preprocessing.lime failed to align the image.')
+        print('Warning: preprocessing.lime failed to align the image.', e)
+
+        import sys
+        sys.exit(0)
 
         # If we can't find the corners, return the original image
         return image
@@ -185,10 +188,12 @@ def __get_vertical_line_points(image):
             break
 
         elif len(x_points) < 4:
-            raise PreprocessingAlignmentError('Failed to find vertical lines!')
+            raise PreprocessingAlignmentError('Fewer than 4 points detected')
 
     if len(x_points) > 4:
-        raise PreprocessingAlignmentError('Failed to find vertical lines!')
+        raise PreprocessingAlignmentError('More than 4 points detected')
+
+    __validate_point_spacing(x_points, tolerance=0.05)
 
     line_points = np.array([
         [margin + x_points[0], middle],
@@ -230,6 +235,24 @@ def __get_line_x(img_row):
                 line_flag = True
 
     return x_points
+
+
+def __validate_point_spacing(x_points, tolerance):
+
+    gaps = []
+
+    for i in range(1, len(x_points)):
+        gaps.append(x_points[i] - x_points[i - 1])
+
+    for i in range(1, len(gaps)):
+
+        allowed_difference = gaps[i] * tolerance
+
+        if gaps[i - 1] > gaps[i] + allowed_difference:
+            raise PreprocessingAlignmentError('Point spacing is invalid')
+
+        if gaps[i - 1] < gaps[i] - allowed_difference:
+            raise PreprocessingAlignmentError('Point spacing is invalid')
 
 
 
