@@ -1,1 +1,6 @@
 data
+training results.csv
+okra-counter-best.pt
+okra-counter-final.pt
+okra-resnet-best.pt
+okra-resnet-final.pt

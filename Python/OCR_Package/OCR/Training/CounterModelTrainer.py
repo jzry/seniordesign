@@ -37,8 +37,8 @@ torch.autograd.profiler.profile(enabled=False)
 batch_size = 5
 epochs = 100
 
-lr = 0.0001
-weight_decay = 1e-3
+lr = 0.001
+weight_decay = 5e-3
 
 # SGD only
 momentum = 0.97
@@ -47,7 +47,7 @@ nesterov = False
 #############################
 ########## Options ##########
 
-use_Adam_optimizer = False
+use_Adam_optimizer = True
 load_existing_weights = False
 input_weights_filename = 'okra-counter.pt'
 output_final_weights_filename = 'okra-counter-final.pt'
