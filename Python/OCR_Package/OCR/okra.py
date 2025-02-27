@@ -797,28 +797,28 @@ class OkraTracer:
 
         # If the center index is at the bottom of the boundary, it is
         # obviously the bottom of the line.
-        if center_i == bounds.bottom:
+        if center_i == search_bottom:
 
-            search_range = slice(search_top, bounds.bottom)
+            search_range = slice(search_top, search_bottom)
 
             high_i = search_top + np.argmax(layers[search_range])
 
             if layers[high_i] < 15 or center_i - high_i > 4:
-                bounds.top = bounds.bottom - 1
+                bounds.top = search_bottom - 1
 
             else:
                 bounds.top = high_i
 
         # Likewise, if the center index is at the boundary top, it is the
         # top of the line.
-        elif center_i == bounds.top:
+        elif center_i == search_top:
 
-            search_range = slice(bounds.top + 1, search_bottom + 1)
+            search_range = slice(search_top + 1, search_bottom + 1)
 
-            low_i = bounds.top + 1 + np.argmax(layers[search_range])
+            low_i = search_top + 1 + np.argmax(layers[search_range])
 
             if layers[low_i] < 15 or low_i - center_i > 4:
-                bounds.bottom = bounds.top + 1
+                bounds.bottom = search_top + 1
 
             else:
                 bounds.bottom = low_i
