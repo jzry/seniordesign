@@ -23,10 +23,7 @@ def BCAlignImage(image):
 
     except PreprocessingAlignmentError as e:
 
-        print('Warning: preprocessing.lime failed to align the image.', e)
-
-        import sys
-        sys.exit(0)
+        print('Warning: preprocessing.lime failed to align the image;', e)
 
         # If we can't find the corners, return the original image
         return image
@@ -38,15 +35,21 @@ def BCAlignImage(image):
     # Calculate the the locations of the template corners at the scale of this
     # image
     template_corners = np.float32([
-        [100  * x_scale, 96   * y_scale],
-        [2098 * x_scale, 100  * y_scale],
-        [100  * x_scale, 1587 * y_scale],
-        [2098 * x_scale, 1587 * y_scale]
+        [486  * x_scale, 263  * y_scale],
+        [1716 * x_scale, 263  * y_scale],
+        [486  * x_scale, 1587 * y_scale],
+        [1716 * x_scale, 1587 * y_scale]
     ])
+
+    # demo_image(image, scanned_corners, template_corners, 'Before')
 
     # Apply a perspective transformation to align the image
     M = cv.getPerspectiveTransform(scanned_corners, template_corners)
     image = cv.warpPerspective(image, M, (image.shape[1], image.shape[0]))
+
+    # demo_image(image, scanned_corners, template_corners, 'After')
+    # cv.waitKey(0)
+    # cv.destroyAllWindows()
 
     return image
 
@@ -67,9 +70,9 @@ def CTRAlignImage(image):
         # Locate the template corners
         scanned_corners = __find_corners(image)
 
-    except PreprocessingAlignmentError:
+    except PreprocessingAlignmentError as e:
 
-        print('Warning: preprocessing.lime failed to align the image.')
+        print('Warning: preprocessing.lime failed to align the image;', e)
 
         # If we can't find the corners, return the original image
         return image
@@ -87,73 +90,59 @@ def CTRAlignImage(image):
         [1584 * x_scale, 2749 * y_scale]
     ])
 
+    # demo_image(image, scanned_corners, template_corners, 'Before')
+
     # Apply a perspective transformation to align the image
     M = cv.getPerspectiveTransform(scanned_corners, template_corners)
     image = cv.warpPerspective(image, M, (image.shape[1], image.shape[0]))
+
+    # demo_image(image, scanned_corners, template_corners, 'After')
+    # cv.waitKey(0)
+    # cv.destroyAllWindows()
 
     return image
 
 
 def __find_corners_BCE(image):
     """
-    Locates the template corners of a BCE page. These are the four corners of
-    the box that fits the grid layout of the scoresheet.
+    Locates the template corners of a BCE page. These are the four points that
+    lie on the tips of the outer two vertical lines that seperate the riders.
 
     Parameters:
         image (numpy.ndarray): The image of the page.
 
     Returns:
-        numpy.ndarray: An array with shape (4, 2) containing the coordinates of
-                       the four corners.
+        numpy.ndarray: An array with shape (4, 2) containing the (x, y)
+                       coordinates of the four corners.
 
     Raises:
-        PreprocessingAlignmentError: Unable to locate all corners.
+        PreprocessingAlignmentError: Unable to locate the corners.
    """
 
     # Create grayscale version of the image
     gray_image = cv.cvtColor(image, cv.COLOR_BGR2GRAY)
 
-    # Apply a threshold. We should pick a threshold value to reduce noise on
-    # the page's margin as much as possible. If handwriting quality is reduced,
-    # we don't really care.
+    # Apply a threshold. It's not important if handwriting and text quality is
+    # reduced. Just as long as the four vertical line are clearly visible.
     thresh = image.min() + ((image.max() - image.min()) // 2)
     _, thresh_image = cv.threshold(gray_image, thresh, 255, cv.THRESH_BINARY)
 
-    line_points = __get_vertical_line_points(thresh_image)
+    # Find the four lines
+    line_points = __find_vertical_lines(thresh_image)
 
-
-    for point in line_points:
-        cv.circle(image, point, radius=10, color=(0, 0, 255), thickness=-1)
-    # Adjust fx and fy to fit your screen
-    resized = cv.resize(image, (0, 0), fx = 0.4, fy = 0.4, interpolation=cv.INTER_AREA)
-    cv.imshow('points', resized)
-    cv.waitKey(0)
-    cv.destroyAllWindows()
-
-    #
-    #
-    # TODO: Use "line_points" to find the template corners
-    #
-    #
+    # Trace up and down the outer two lines
+    TL = __follow_line(thresh_image, line_points[0], step=-1)
+    BL = __follow_line(thresh_image, line_points[0], step= 1)
+    TR = __follow_line(thresh_image, line_points[3], step=-1)
+    BR = __follow_line(thresh_image, line_points[3], step= 1)
 
     # Place the corner coordinates in a numpy array
-    # scanned_corners = np.float32([
-    #     [TL_X, TL_Y],
-    #     [TR_X, TR_Y],
-    #     [BL_X, BL_Y],
-    #     [BR_X, BR_Y]
-    # ])
+    scanned_corners = np.float32([TL, TR, BL, BR])
 
-    # print(scanned_corners)
-
-    # return scanned_corners
-
-    # For testing, exit to save time
-    import sys
-    sys.exit(0)
+    return scanned_corners
 
 
-def __get_vertical_line_points(image):
+def __find_vertical_lines(image):
     """
     Finds the coordinates of the four vertical lines in a BCE scoresheet.
 
@@ -161,8 +150,8 @@ def __get_vertical_line_points(image):
         image (numpy.ndarray): The thresholded image of the page.
 
     Returns:
-        numpy.ndarray: An array with shape (4, 2) containing four coordinates
-                       that lie on the four lines.
+        numpy.ndarray: An array with shape (4, 2) containing four (x, y)
+                       coordinates that lie on the four lines.
 
     Raises:
         PreprocessingAlignmentError: The line points could not be found.
@@ -181,7 +170,7 @@ def __get_vertical_line_points(image):
     for next_row_i in range(middle + 1, image.shape[0]):
 
         row = np.logical_or(row, image[next_row_i, columns])
-        x_points = __get_line_x(row)
+        x_points = __get_points_from_row_slice(row)
 
         if len(x_points) == 4:
             # Found them!
@@ -193,6 +182,7 @@ def __get_vertical_line_points(image):
     if len(x_points) > 4:
         raise PreprocessingAlignmentError('More than 4 points detected')
 
+    # If these points lie on the four lines, they will be equally spaced apart
     __validate_point_spacing(x_points, tolerance=0.05)
 
     line_points = np.array([
@@ -205,9 +195,9 @@ def __get_vertical_line_points(image):
     return line_points
 
 
-def __get_line_x(img_row):
+def __get_points_from_row_slice(img_row):
     """
-    Returns the x-coordinates of lines in the image row slice.
+    Returns the x-coordinates of lines passing through an image row slice.
 
     Parameters:
         img_row (numpy.ndarray): A row slice from the image being processed.
@@ -238,6 +228,18 @@ def __get_line_x(img_row):
 
 
 def __validate_point_spacing(x_points, tolerance):
+    """
+    Checks if four points really lie on the four vertical lines of a BCE
+    scoresheet. If they are on the lines, they will be equally spaced apart.
+
+    Parameters:
+        x_points (list(int)): The x-coordinates being validated.
+        tolerance (float): The max percent difference in spacing that will
+                           still be considered equal.
+
+    Raises:
+        PreprocessingAlignmentError: The points are not valid.
+    """
 
     gaps = []
 
@@ -249,11 +251,76 @@ def __validate_point_spacing(x_points, tolerance):
         allowed_difference = gaps[i] * tolerance
 
         if gaps[i - 1] > gaps[i] + allowed_difference:
-            raise PreprocessingAlignmentError('Point spacing is invalid')
+            raise PreprocessingAlignmentError('Point spacing is inconsistent')
 
         if gaps[i - 1] < gaps[i] - allowed_difference:
-            raise PreprocessingAlignmentError('Point spacing is invalid')
+            raise PreprocessingAlignmentError('Point spacing is inconsistent')
 
+
+def __follow_line(image, start_pixel, step):
+    """
+    Finds the (x, y) coordinate of the end of a line.
+
+    Parameters:
+        image (numpy.ndarray): The thresholded image.
+        start_pixel ((int, int)): The location in the image to start. The pixel
+                                  at this location should lie on a line.
+        step (int): The change in the y-coordinate after every iteration. This
+                    should be either +1 or -1.
+
+    Returns:
+        list: The (x, y) coordinate of the line's end point.
+    """
+
+    x, y = start_pixel
+
+    while True:
+
+        next_y = y + step
+
+        if next_y < 0 or next_y >= image.shape[0]:
+            return [x, y]
+
+        slant_left = __is_line(image, x - 1, next_y)
+        straight = __is_line(image, x, next_y)
+        slant_right = __is_line(image, x + 1, next_y)
+
+        if not slant_left and not slant_right and not straight:
+            # This is the end of the line
+            return [x, y]
+
+        if not slant_left and slant_right:
+            x += 1
+
+        if not slant_right and slant_left:
+            x -= 1
+
+        if not straight and slant_right:
+            x += 1
+
+        if not straight and slant_left:
+            x -= 1
+
+        y = next_y
+
+
+def __is_line(image, x, y):
+    """
+    Checks if a pixel in an image is part of a line or not.
+
+    Parameters:
+        image (numpy.ndarray): The thresholded image.
+        x (int): The x-coordinate of the pixel to check.
+        y (int): The y-coordinate of the pixel to check.
+
+    Returns:
+        bool: True if the pixel lies on a line and False otherwise.
+    """
+
+    if x < 0 or x >= image.shape[1]:
+        return False
+
+    return image[y, x] == 0
 
 
 def __find_corners(image):
@@ -400,3 +467,50 @@ def __fit_y(image, row, col_slice, step):
             )
 
     return row
+
+
+def demo_image(image, corners1, corners2, name):
+    """
+    Shows the image alignment for debugging or demonstration.
+
+    Parameters:
+        image (numpy.ndarray): The image to display.
+        corners1 (numpy.ndarry): Four coordinates to draw on the image as red
+                                 circles.
+        corners2 (numpy.ndarry): Four coordinates to draw on the image as green
+                                 circles.
+        name (str): The window name to use.
+    """
+
+    #
+    # If the image displayed is too large or too small, change this scale
+    # factor to the percentage that best works for your screen.
+    #
+    scale_factor = 0.3
+
+    demo_img = image.copy()
+    for point in corners1:
+        cv.circle(
+            demo_img,
+            (int(point[0]), int(point[1])),
+            radius=10,
+            color=(0, 0, 255),
+            thickness=-1
+        )
+    for point in corners2:
+        cv.circle(
+            demo_img,
+            (int(point[0]), int(point[1])),
+            radius=10,
+            color=(0, 255, 0),
+            thickness=-1
+        )
+    resized = cv.resize(
+        demo_img,
+        (0, 0),
+        fx=scale_factor,
+        fy=scale_factor,
+        interpolation=cv.INTER_AREA
+    )
+    cv.imshow(name, resized)
+
