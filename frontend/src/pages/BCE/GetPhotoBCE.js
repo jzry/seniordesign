@@ -48,7 +48,7 @@ function GetPhotoBCE({ numberOfRiders, fastestRiderTime, heaviestRiderWeight }) 
   };
 
   const handleCornersSubmit = (processedData) => {
-    console.log("Raw Processed Data:", processedData);
+    // console.log("Raw Processed Data:", processedData);
 
     // Check if processedData contains the correct structure
     if (processedData && processedData.riderData) {
