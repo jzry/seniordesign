@@ -6,9 +6,9 @@ from pathlib import Path
 from termcolor import colored
 
 
-use_model_weights_in_training_folder = False
-# If False, it will load the "okra-counter.pt" file in the "weights" folder.
-# If True, it will load the "okra-counter.pt" file in the "Training" folder. (This folder)
+test_old_method = True
+test_model_in_training_folder = False
+test_model_in_weights_folder = True
 
 
 # Transformations to be applied to the images
@@ -27,14 +27,21 @@ def main():
     data = TracedDigitsDataset(data_folder)
 
     print()
-    print(colored('Testing with old method...', color='blue', attrs=['bold']))
-    run_test(data, test_model=False)
 
-    print(colored('Testing with ML model...', color='blue', attrs=['bold']))
-    run_test(data, test_model=True)
+    if test_old_method:
+        print(colored('Testing with old method', color='blue', attrs=['bold']))
+        run_test(data, model_to_test='none')
+
+    if test_model_in_training_folder:
+        print(colored('Testing with ML model (Training folder weights)', color='blue', attrs=['bold']))
+        run_test(data, model_to_test='train')
+
+    if test_model_in_weights_folder:
+        print(colored('Testing with ML model (Weights folder weights)', color='blue', attrs=['bold']))
+        run_test(data, model_to_test='current')
 
 
-def run_test(data, test_model):
+def run_test(data, model_to_test):
 
     correct_1 = 0
     correct_2 = 0
@@ -44,18 +51,22 @@ def run_test(data, test_model):
     total_2 = 0
     total_3 = 0
 
-    if test_model:
-        model = prepare_model()
+    if model_to_test == 'train':
+        model = prepare_model(True)
+
+    elif model_to_test == 'current':
+        model = prepare_model(False)
 
     for segment, label in data:
 
         label = int(label) + 1
 
-        if test_model:
-            guess = get_digit_count_model(segment, model)
+        if model_to_test == 'none':
+            guess = get_digit_count(segment)
 
         else:
-            guess = get_digit_count(segment)
+            guess = get_digit_count_model(segment, model)
+
 
         if guess == label:
             if label == 1:
@@ -123,12 +134,12 @@ def get_digit_count_model(img, model):
     return torch.argmax(prediction, dim=1) + 1
 
 
-def prepare_model():
+def prepare_model(use_training_weights):
 
     model = OkraDigitCounter()
     model.to(torch.device('cpu'))
 
-    if use_model_weights_in_training_folder:
+    if use_training_weights:
         weights_file = Path(__file__).parent / 'okra-counter.pt'
     else:
         weights_file = Path(__file__).parent.parent / 'weights' / 'okra-counter.pt'
