@@ -73,7 +73,7 @@ function Corners({ imageSrc, imageFile, onSubmitCorners }) {
         );
 
         context.strokeStyle = "red";
-        context.lineWidth = 4;
+        context.lineWidth = 10;
         context.beginPath();
         context.moveTo(rotatedCorners[0].x, rotatedCorners[0].y);
         for (let i = 1; i < rotatedCorners.length; i++) {
@@ -85,7 +85,7 @@ function Corners({ imageSrc, imageFile, onSubmitCorners }) {
         context.fillStyle = "blue";
         rotatedCorners.forEach((corner) => {
             context.beginPath();
-            context.arc(corner.x, corner.y, 20, 0, 2 * Math.PI);
+            context.arc(corner.x, corner.y, 60, 0, 2 * Math.PI);
             context.fill();
         });
     }
