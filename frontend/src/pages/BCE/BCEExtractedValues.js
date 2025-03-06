@@ -31,8 +31,8 @@ function BCEExtractedValues({ extractedDataList, onGoBackToUpload, heaviestRider
   };
 
   const getBorderColor = (confidence) => {
-    if (confidence > 90.0) return 'green';
-    if (confidence > 80.0) return 'yellow';
+    if (confidence >= 95.0) return 'green';
+    if (confidence >= 85.0) return 'yellow';
     return 'red';
   };
 

@@ -13,19 +13,23 @@ function Corners({ imageSrc, imageFile, onSubmitCorners }) {
 
     function getMousePosition(e) {
         const { left, top } = canvasRef.current.getBoundingClientRect();
+        const isTouch = e.type.includes("touch");
+        const clientX = isTouch ? e.touches[0].clientX : e.clientX;
+        const clientY = isTouch ? e.touches[0].clientY : e.clientY;
+
         return {
-            x: (e.clientX - left) / scale.x,
-            y: (e.clientY - top) / scale.y
+            x: (clientX - left) / scale.x,
+            y: (clientY - top) / scale.y
         };
     }
 
-    function handleMouseDown(e) {
+    function handlePointerDown(e) {
+        e.preventDefault();
         if (!corners) return;
         const { x, y } = getMousePosition(e);
 
-        // 🔥 Fix: Ensure right-side corners can also be detected
         const cornerIndex = corners.findIndex(
-            (corner) => Math.abs(corner.x - x) < 30 && Math.abs(corner.y - y) < 30
+            (corner) => Math.abs(corner.x - x) < 40 && Math.abs(corner.y - y) < 40
         );
 
         if (cornerIndex !== -1) {
@@ -33,38 +37,53 @@ function Corners({ imageSrc, imageFile, onSubmitCorners }) {
         }
     }
 
-    function handleMouseMove(e) {
+    function handlePointerMove(e) {
+        e.preventDefault();
         if (draggingCorner === null || !corners) return;
         const { x, y } = getMousePosition(e);
 
-        // Update only the dragged corner 🔥 Fix ensures all corners can move!
         setCorners((prevCorners) => {
+            if (!prevCorners) return prevCorners;
             const updatedCorners = [...prevCorners];
             updatedCorners[draggingCorner] = { x, y };
             return updatedCorners;
         });
 
-        drawToCanvas();
+        requestAnimationFrame(drawToCanvas);
     }
 
-    function handleMouseUp() {
+    function handlePointerUp(e) {
+        e.preventDefault();
         setDraggingCorner(null);
     }
 
-    function drawQuad(context) {
+    function rotatePoint(point, width, height) {
+        return {
+            x: height - point.y, // Adjust X coordinate for 90-degree rotation
+            y: point.x // Adjust Y coordinate
+        };
+    }
+
+    function drawQuad(context, imgWidth, imgHeight) {
         if (!corners) return;
+
+        // 🔥 Transform corner points for 90-degree rotation
+        const rotatedCorners = corners.map((corner) =>
+            rotatePoint(corner, imgWidth, imgHeight)
+        );
+
         context.strokeStyle = "red";
         context.lineWidth = 4;
         context.beginPath();
-        context.moveTo(corners[0].x, corners[0].y);
-        for (let i = 1; i < corners.length; i++) {
-            context.lineTo(corners[i].x, corners[i].y);
+        context.moveTo(rotatedCorners[0].x, rotatedCorners[0].y);
+        for (let i = 1; i < rotatedCorners.length; i++) {
+            context.lineTo(rotatedCorners[i].x, rotatedCorners[i].y);
         }
         context.closePath();
         context.stroke();
 
         context.fillStyle = "blue";
-        corners.forEach((corner) => {
+        rotatedCorners.forEach((corner) => {
             context.beginPath();
             context.arc(corner.x, corner.y, 20, 0, 2 * Math.PI);
             context.fill();
@@ -78,17 +97,25 @@ function Corners({ imageSrc, imageFile, onSubmitCorners }) {
         if (image) {
             const img = new Image();
             img.onload = () => {
-                const { width, height } = scaleCanvas(img.naturalWidth, img.naturalHeight);
-                canvas.width = img.naturalWidth;
-                canvas.height = img.naturalHeight;
+                context.clearRect(0, 0, canvas.width, canvas.height);
 
-                setScale({ x: width / img.naturalWidth, y: height / img.naturalHeight });
+                canvas.width = img.naturalHeight;
+                canvas.height = img.naturalWidth;
 
-                canvas.style.width = `${width}px`;
-                canvas.style.height = `${height}px`;
+                setScale({
+                    x: img.naturalHeight / img.naturalWidth,
+                    y: img.naturalWidth / img.naturalHeight
+                });
 
-                context.drawImage(img, 0, 0);
-                if (corners !== null) drawQuad(context);
+                context.translate(canvas.width / 2, canvas.height / 2);
+                context.rotate(90 * Math.PI / 180);
+                context.drawImage(img, -img.naturalWidth / 2, -img.naturalHeight / 2);
+
+                context.setTransform(1, 0, 0, 1, 0, 0);
+
+                if (corners) {
+                    drawQuad(context, img.naturalWidth, img.naturalHeight);
+                }
             };
             img.src = image;
         } else {
@@ -96,32 +123,10 @@ function Corners({ imageSrc, imageFile, onSubmitCorners }) {
         }
     }
 
-    function scaleCanvas(imgWidth, imgHeight) {
-        const maxWidth = 800;
-        const maxHeight = 600;
-        let width = imgWidth;
-        let height = imgHeight;
-
-        if (width > maxWidth) {
-            const scaleFactor = maxWidth / width;
-            width = maxWidth;
-            height *= scaleFactor;
-        }
-
-        if (height > maxHeight) {
-            const scaleFactor = maxHeight / height;
-            height = maxHeight;
-            width *= scaleFactor;
-        }
-
-        return { width, height };
-    }
-
     async function submitImage() {
         if (file) {
             const formData = new FormData();
             formData.append("image", file);
-
             try {
                 const response = await axios.post(apiUrl.concat("/corners"), formData, {
                     headers: { "Content-Type": "multipart/form-data" },
@@ -170,12 +175,12 @@ function Corners({ imageSrc, imageFile, onSubmitCorners }) {
 
     useEffect(() => {
         if (file) {
-            submitImage(); // Auto-submit image when component receives it
+            submitImage();
         }
     }, [file]);
 
     useEffect(() => {
-        drawToCanvas();
+        requestAnimationFrame(drawToCanvas);
     }, [image, corners]);
 
     return (
@@ -183,7 +188,7 @@ function Corners({ imageSrc, imageFile, onSubmitCorners }) {
             <link
                 href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
                 rel="stylesheet"
-                integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
+                integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXhW+ALEwIH"
                 crossOrigin="anonymous"
             />
             <div className="container">
@@ -193,11 +198,14 @@ function Corners({ imageSrc, imageFile, onSubmitCorners }) {
                     <div className="col">
                         <canvas
                             className="mt-3"
-                            onMouseDown={handleMouseDown}
-                            onMouseMove={handleMouseMove}
-                            onMouseUp={handleMouseUp}
                             ref={canvasRef}
                             style={{ cursor: "crosshair", maxWidth: "100%" }}
+                            onMouseDown={handlePointerDown}
+                            onMouseMove={handlePointerMove}
+                            onMouseUp={handlePointerUp}
+                            onTouchStart={handlePointerDown}
+                            onTouchMove={handlePointerMove}
+                            onTouchEnd={handlePointerUp}
                         />
                     </div>
                 </div>
