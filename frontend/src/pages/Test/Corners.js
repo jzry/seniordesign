@@ -9,7 +9,8 @@ function Corners() {
     const apiUrl = process.env.REACT_APP_API_URL;
     const [imageFile, setImageFile] = useState(null); // State to store the image file for API
     const [hasCorners, setHasCorners] = useState(false);
-
+    const [imageRes, setImageRes] = useState({x: 0, y: 0})
+    const isRotated = useRef(false);
 
     const [corners, setCorners] = useState(null);
 
@@ -41,7 +42,7 @@ function Corners() {
         const { x, y } = getMousePosition(e);
         console.log("Coordinates: [" + x + ", " + y + "]")
         const cornerIndex = corners.findIndex(
-            (corner) => Math.hypot(corner.x - x, corner.y - y) < 25
+            (corner) => Math.hypot(corner.x - x, corner.y - y) < 50
         );
         console.log(cornerIndex)
         if (cornerIndex !== -1) {
@@ -51,7 +52,7 @@ function Corners() {
 
     function drawQuad(context) {
         context.strokeStyle = "red";
-        context.lineWidth = 10;
+        context.lineWidth = imageRes.x / 150;
         context.beginPath();
         context.moveTo(corners[0].x, corners[0].y);
         for (let i = 1; i < corners.length; i++) {
@@ -61,16 +62,17 @@ function Corners() {
         context.stroke();
 
         context.fillStyle = "blue";
+        console.log(`Scale.x: ${imageRes.x}`)
         corners.forEach((corner) => {
             context.beginPath();
-            context.arc(corner.x, corner.y, 24, 0, 2 * Math.PI)
+            context.arc(corner.x, corner.y, imageRes.x / 50, 0, 2 * Math.PI)
             context.fill();
         });
     };
 
     function scaleCanvas(imgWidth, imgHeight) {
-        const maxWidth = 800;
-        const maxHeight = 600;
+        const maxWidth = window.innerWidth * 0.7;
+        const maxHeight = window.innerHeight * 0.7;
         let width = imgWidth;
         let height = imgHeight;
 
@@ -95,22 +97,48 @@ function Corners() {
 
         if (image) {
             const img = new Image();
+            img.src = image;
             img.onload = () => {
+                setImageRes({x: img.naturalWidth, y: img.naturalHeight})
                 const { width, height } = scaleCanvas(img.naturalWidth, img.naturalHeight)
-                canvas.width = img.naturalWidth;
-                canvas.height = img.naturalHeight;
+                
                 console.log(`Image dimensions: [${img.naturalWidth}, ${img.naturalHeight}]`)
 
-                setScale({ x: width / img.naturalWidth, y: height / img.naturalHeight })
-
-                canvas.style.width = `${width}px`
-                canvas.style.height = `${height}px`
-
-                context.drawImage(img, 0, 0);
-                if (corners !== null)
-                    drawQuad(context)
+                
+                if (width > height) {
+                    isRotated.current = true;
+                    setScale({ x: height / img.naturalHeight, y: width / img.naturalWidth })
+                
+                    canvas.width = img.naturalHeight;
+                    canvas.height = img.naturalWidth;
+    
+                    canvas.style.width = `${height}px`
+                    canvas.style.height = `${width}px`
+    
+                    context.clearRect(0, 0, canvas.width, canvas.height)
+                    context.save();
+                    context.translate(canvas.width / 2, canvas.height / 2);
+                    context.rotate(90 * (Math.PI / 180));
+                    context.drawImage(img, -img.naturalWidth / 2, -img.naturalHeight / 2);
+                    context.restore();
+                    if (corners !== null)
+                        drawQuad(context)
+                } 
+                else {
+                    setScale({ x: width / img.naturalWidth, y: height / img.naturalHeight })
+                
+                    canvas.width = img.naturalWidth;
+                    canvas.height = img.naturalHeight;
+    
+                    canvas.style.width = `${width}px`
+                    canvas.style.height = `${height}px`
+    
+                    context.clearRect(0, 0, canvas.width, canvas.height)    
+                    context.drawImage(img, 0, 0);
+                    if (corners !== null)
+                        drawQuad(context)
+                }
             }
-            img.src = image;
         } else {
             context.clearRect(0, 0, canvas.width, canvas.height);
         }
@@ -144,7 +172,10 @@ function Corners() {
                 .then((response) => {
                     console.log("Here are the new corners:")
                     console.log(response.data.corner_points)
-                    setCorners(response.data.corner_points)
+                    if (isRotated.current)
+                        setCorners(response.data.corner_points.map(({ x, y }) => ({ x: y, y: x})));
+                    else
+                        setCorners(response.data.corner_points);
                     setHasCorners(true)
                 })
                 .catch((error) => {
@@ -165,7 +196,12 @@ function Corners() {
         e.preventDefault()
         const formData = new FormData();
         formData.append('image', imageFile);
-        formData.append("corners", JSON.stringify(corners));
+
+        if (isRotated.current) 
+            formData.append("corners", JSON.stringify(corners.map(({ x, y }) => ({ x: y, y: x}))));
+        else
+            formData.append("corners", JSON.stringify(corners));
+
         console.log(formData)
         if (corners) {
             await axios.post(apiUrl.concat('/ctr'), formData)
@@ -182,7 +218,12 @@ function Corners() {
         e.preventDefault()
         const formData = new FormData();
         formData.append('image', imageFile);
-        formData.append("corners", JSON.stringify(corners));
+
+        if (isRotated.current) 
+            formData.append("corners", JSON.stringify(corners.map(({ x, y }) => ({ x: y, y: x}))));
+        else
+            formData.append("corners", JSON.stringify(corners));
+
         if (corners) {
             await axios.post(apiUrl.concat('/bce'), formData)
                 .then((response) => {
@@ -194,8 +235,15 @@ function Corners() {
         }
     }
 
+    // useEffect(() => {
+    //     window.addEventListener("resize", drawToCanvas);
+    //     return () => window.removeEventListener("resize", drawToCanvas);
+    // }, [image, corners]);
+
     useEffect(() => {
         drawToCanvas();
+        window.addEventListener("resize", drawToCanvas);
+        return () => window.removeEventListener("resize", drawToCanvas);
     }, [image, corners])
 
 
