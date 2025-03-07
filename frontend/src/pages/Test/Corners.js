@@ -2,15 +2,14 @@ import axios from "axios";
 import { useEffect, useRef, useState } from "react";
 
 function Corners() {
-    // const [imageSrc, setImageSrc] = useState(null); // State to store the captured image
-    // const [imageFile, setImageFile] = useState(null); // State to store the image file for API
     const canvasRef = useRef(null)
     const [image, setImage] = useState(null)
     const apiUrl = process.env.REACT_APP_API_URL;
-    const [imageFile, setImageFile] = useState(null); // State to store the image file for API
+    const [imageFile, setImageFile] = useState(null);
     const [hasCorners, setHasCorners] = useState(false);
-    const [imageRes, setImageRes] = useState({x: 0, y: 0})
+    const [imageRes, setImageRes] = useState({ x: 0, y: 0 })
     const isRotated = useRef(false);
+    const originalCorners = useRef(null)
 
     const [corners, setCorners] = useState(null);
 
@@ -40,11 +39,9 @@ function Corners() {
 
     function handleMouseDown(e) {
         const { x, y } = getMousePosition(e);
-        console.log("Coordinates: [" + x + ", " + y + "]")
         const cornerIndex = corners.findIndex(
             (corner) => Math.hypot(corner.x - x, corner.y - y) < 50
         );
-        console.log(cornerIndex)
         if (cornerIndex !== -1) {
             setDraggingCorner(cornerIndex);
         }
@@ -62,7 +59,6 @@ function Corners() {
         context.stroke();
 
         context.fillStyle = "blue";
-        console.log(`Scale.x: ${imageRes.x}`)
         corners.forEach((corner) => {
             context.beginPath();
             context.arc(corner.x, corner.y, imageRes.x / 50, 0, 2 * Math.PI)
@@ -99,41 +95,43 @@ function Corners() {
             const img = new Image();
             img.src = image;
             img.onload = () => {
-                setImageRes({x: img.naturalWidth, y: img.naturalHeight})
+                setImageRes({ x: img.naturalWidth, y: img.naturalHeight })
                 const { width, height } = scaleCanvas(img.naturalWidth, img.naturalHeight)
-                
-                console.log(`Image dimensions: [${img.naturalWidth}, ${img.naturalHeight}]`)
 
-                
                 if (width > height) {
                     isRotated.current = true;
                     setScale({ x: height / img.naturalHeight, y: width / img.naturalWidth })
-                
+
                     canvas.width = img.naturalHeight;
                     canvas.height = img.naturalWidth;
-    
+
                     canvas.style.width = `${height}px`
                     canvas.style.height = `${width}px`
-    
+
                     context.clearRect(0, 0, canvas.width, canvas.height)
                     context.save();
-                    context.translate(canvas.width / 2, canvas.height / 2);
-                    context.rotate(90 * (Math.PI / 180));
-                    context.drawImage(img, -img.naturalWidth / 2, -img.naturalHeight / 2);
+
+                    context.translate(canvas.width, 0);
+                    context.rotate(Math.PI / 2);
+
+
+                    context.drawImage(img, 0, 0);
+
                     context.restore();
+
                     if (corners !== null)
                         drawQuad(context)
-                } 
+                }
                 else {
                     setScale({ x: width / img.naturalWidth, y: height / img.naturalHeight })
-                
+
                     canvas.width = img.naturalWidth;
                     canvas.height = img.naturalHeight;
-    
+
                     canvas.style.width = `${width}px`
                     canvas.style.height = `${height}px`
-    
-                    context.clearRect(0, 0, canvas.width, canvas.height)    
+
+                    context.clearRect(0, 0, canvas.width, canvas.height)
                     context.drawImage(img, 0, 0);
                     if (corners !== null)
                         drawQuad(context)
@@ -149,17 +147,16 @@ function Corners() {
         if (file) {
             const reader = new FileReader();
             reader.onload = () => {
-                setImage(reader.result); // Set the image data URL
+                setImage(reader.result);
             };
             reader.readAsDataURL(file);
-            setImageFile(file); // Store the image file for API submission
+            setImageFile(file);
         }
     };
 
     async function submitImage(e) {
-
-
         e.preventDefault()
+
         if (imageFile) {
             const formData = new FormData();
             formData.append('image', imageFile);
@@ -170,12 +167,25 @@ function Corners() {
                 }
             })
                 .then((response) => {
-                    console.log("Here are the new corners:")
+                    console.log("These are the corner values provided by preprocessing:")
                     console.log(response.data.corner_points)
-                    if (isRotated.current)
-                        setCorners(response.data.corner_points.map(({ x, y }) => ({ x: y, y: x})));
+
+                    if (isRotated.current) {
+                        originalCorners.current = response.data.corner_points;
+                        const corner = [
+                            { x: imageRes.y - response.data.corner_points[0].y, y: response.data.corner_points[0].x },
+                            { x: imageRes.y - response.data.corner_points[1].y, y: response.data.corner_points[1].x },
+                            { x: imageRes.y - response.data.corner_points[2].y, y: response.data.corner_points[2].x },
+                            { x: imageRes.y - response.data.corner_points[3].y, y: response.data.corner_points[3].x }
+                        ]
+                        setCorners(corner)
+                        
+                        console.log("These are the corner values AFTER the rotation has been applied:")
+                        console.log(corner)
+                    }
                     else
                         setCorners(response.data.corner_points);
+
                     setHasCorners(true)
                 })
                 .catch((error) => {
@@ -197,15 +207,27 @@ function Corners() {
         const formData = new FormData();
         formData.append('image', imageFile);
 
-        if (isRotated.current) 
-            formData.append("corners", JSON.stringify(corners.map(({ x, y }) => ({ x: y, y: x}))));
-        else
-            formData.append("corners", JSON.stringify(corners));
-
-        console.log(formData)
         if (corners) {
+            if (isRotated.current) {
+                console.log("These are the corner values BEFORE an inverse rotation is applied:")
+                console.log(corners)
+
+                formData.append("corners", JSON.stringify([
+                    { x: corners[0].y, y: imageRes.y - corners[0].x },
+                    { x: corners[1].y, y: imageRes.y - corners[1].x },
+                    { x: corners[2].y, y: imageRes.y - corners[2].x },
+                    { x: corners[3].y, y: imageRes.y - corners[3].x }
+                ]));
+            }
+            else
+                formData.append("corners", JSON.stringify(corners));
+
+            console.log("These are the corner values that will be submitted to the backend:")
+            console.log(JSON.parse(formData.get("corners")));
+
             await axios.post(apiUrl.concat('/ctr'), formData)
                 .then((response) => {
+                    console.log("Here is the rider data:")
                     console.log(response.data)
                 })
                 .catch((error) => {
@@ -219,14 +241,27 @@ function Corners() {
         const formData = new FormData();
         formData.append('image', imageFile);
 
-        if (isRotated.current) 
-            formData.append("corners", JSON.stringify(corners.map(({ x, y }) => ({ x: y, y: x}))));
-        else
-            formData.append("corners", JSON.stringify(corners));
-
         if (corners) {
+            if (isRotated.current) {
+                console.log("These are the corner values BEFORE an inverse rotation is applied:")
+                console.log(corners)
+
+                formData.append("corners", JSON.stringify([
+                    { x: corners[0].y, y: imageRes.y - corners[0].x },
+                    { x: corners[1].y, y: imageRes.y - corners[1].x },
+                    { x: corners[2].y, y: imageRes.y - corners[2].x },
+                    { x: corners[3].y, y: imageRes.y - corners[3].x }
+                ]));
+            }
+            else
+                formData.append("corners", JSON.stringify(corners));
+
+            console.log("These are the corner values that will be submitted to the backend:")
+            console.log(JSON.parse(formData.get("corners")));
+
             await axios.post(apiUrl.concat('/bce'), formData)
                 .then((response) => {
+                    console.log("Here is the rider data:")
                     console.log(response.data)
                 })
                 .catch((error) => {
@@ -234,11 +269,6 @@ function Corners() {
                 })
         }
     }
-
-    // useEffect(() => {
-    //     window.addEventListener("resize", drawToCanvas);
-    //     return () => window.removeEventListener("resize", drawToCanvas);
-    // }, [image, corners]);
 
     useEffect(() => {
         drawToCanvas();
@@ -259,7 +289,6 @@ function Corners() {
                 </h4>
 
                 <div className="row">
-                    {/* <form> */}
                     <div className="input-group">
                         <input
                             type="file"
@@ -268,17 +297,9 @@ function Corners() {
                             name="image_name"
                             onChange={handleFileChange}
                             required />
-                        {/* <input
-                                type="submit"
-                                value="Upload Image"
-                                className="btn btn-primary"
-                            // onClick={}
-                            /> */}
                     </div>
-                    {/* </form> */}
 
                     <br />
-                    {/* if fileupload */}
                     <div className="row">
                         {(imageFile !== null && hasCorners) && (
                             <div className="btn-group" role="group" aria-label="Basic example">
@@ -290,12 +311,7 @@ function Corners() {
 
                     </div>
 
-                    {/* endif */}
                 </div>
-
-                {/* Creating Canvas */}
-                {/* if fileupload */}
-
                 <div className="row">
                     <div className="col">
                         <canvas
@@ -306,30 +322,8 @@ function Corners() {
                             ref={canvasRef}
                             style={{ cursor: "crosshair", maxWidth: "100%" }} />
                     </div>
-                    {/* <div className="col" id="loader" align="center"> */}
-                    {/* <img src={imageSrc} /> */}
-                    {/* </div> */}
                 </div>
 
-                {/* {fileUpload && (
-                    <>
-                        <div className="row">
-                            <div className="col">
-                                <canvas id="canvas" style={{ "maxWidth": "100%" }} height="auto"></canvas>
-                            </div>
-                            <div className="col" id="loader" align="center">
-                                <img src={imageSrc} />
-                            </div>
-                        </div>
-                    </>
-                )} */}
-
-                {/*
-                    <script>
-            loadPoints({{points | tojson}})
-    */}
-
-                {/* endif */}
             </div>
             <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossOrigin="anonymous"></script>
         </>
