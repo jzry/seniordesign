@@ -40,7 +40,7 @@ class DigitGetterTestCase(unittest.TestCase):
         self.assertIsNone(third_pixel, 'Should return None for no pixels found')
 
 
-    def test_trace_digit(self):
+    def test_tracing(self):
 
         img = np.array([
             [0, 0, 0, 0, 1],
@@ -57,7 +57,7 @@ class DigitGetterTestCase(unittest.TestCase):
 
         boundary = okra.Boundary(2, 2, 2, 2)
 
-        self.dg._DigitGetter__digit_tracer.trace_digit(img, boundary, (2, 2), scan_state)
+        self.dg._DigitGetter__tracer.trace(img, boundary, (2, 2), scan_state)
 
         self.assertEqual(boundary.top, 1, 'Top boundary incorrect')
         self.assertEqual(boundary.bottom, 4, 'Bottom boundary incorrect')
@@ -89,7 +89,7 @@ class DigitGetterTestCase(unittest.TestCase):
 
         boundary = okra.Boundary(2, 2, 2, 2)
 
-        self.dg._DigitGetter__digit_tracer.trace_digit(img, boundary, (2, 2), scan_state)
+        self.dg._DigitGetter__tracer.trace(img, boundary, (2, 2), scan_state)
 
         self.assertEqual(boundary.top, 0, 'Top line failure; top boundary incorrect')
         self.assertEqual(boundary.bottom, 1, 'Top line failure; bottom boundary incorrect')
@@ -102,7 +102,7 @@ class DigitGetterTestCase(unittest.TestCase):
 
         boundary = okra.Boundary(2, 2, 2, 2)
 
-        self.dg._DigitGetter__digit_tracer.trace_digit(img, boundary, (2, 2), scan_state)
+        self.dg._DigitGetter__tracer.trace(img, boundary, (2, 2), scan_state)
 
         self.assertEqual(boundary.top, 8, 'Bottom line failure; top boundary incorrect')
         self.assertEqual(boundary.bottom, 9, 'Bottom line failure; bottom boundary incorrect')
@@ -114,31 +114,31 @@ class DigitGetterTestCase(unittest.TestCase):
 
         img_shape = (46, 156)
 
-        seg_type = self.dg._DigitGetter__get_segment_type((40, 39), img_shape)
+        seg_type = self.dg._DigitGetter__get_segment_type(np.zeros((40, 39)), img_shape)
         self.assertEqual(seg_type, okra.SegmentType.DIGIT, 'Digit segment not indentified correctly')
 
-        seg_type = self.dg._DigitGetter__get_segment_type((46, 35), img_shape)
+        seg_type = self.dg._DigitGetter__get_segment_type(np.zeros((46, 35)), img_shape)
         self.assertEqual(seg_type, okra.SegmentType.DIGIT, 'Digit segment not indentified correctly')
 
-        seg_type = self.dg._DigitGetter__get_segment_type((7, 7), img_shape)
+        seg_type = self.dg._DigitGetter__get_segment_type(np.zeros((7, 7)), img_shape)
         self.assertEqual(seg_type, okra.SegmentType.DECIMAL, 'Decimal segment not indentified correctly')
 
-        seg_type = self.dg._DigitGetter__get_segment_type((11, 8), img_shape)
+        seg_type = self.dg._DigitGetter__get_segment_type(np.zeros((11, 8)), img_shape)
         self.assertEqual(seg_type, okra.SegmentType.DECIMAL, 'Decimal segment not indentified correctly')
 
-        seg_type = self.dg._DigitGetter__get_segment_type((10, 32), img_shape)
+        seg_type = self.dg._DigitGetter__get_segment_type(np.zeros((10, 32)), img_shape)
         self.assertEqual(seg_type, okra.SegmentType.MINUS, 'Minus segment not indentified correctly')
 
-        seg_type = self.dg._DigitGetter__get_segment_type((9, 21), img_shape)
+        seg_type = self.dg._DigitGetter__get_segment_type(np.zeros((9, 21)), img_shape)
         self.assertEqual(seg_type, okra.SegmentType.MINUS, 'Minus segment not indentified correctly')
 
-        seg_type = self.dg._DigitGetter__get_segment_type((1, 5), img_shape)
+        seg_type = self.dg._DigitGetter__get_segment_type(np.zeros((1, 5)), img_shape)
         self.assertEqual(seg_type, okra.SegmentType.NOISE, 'Noise segment not indentified correctly')
 
-        seg_type = self.dg._DigitGetter__get_segment_type((0, 0), img_shape)
+        seg_type = self.dg._DigitGetter__get_segment_type(np.zeros((0, 0)), img_shape)
         self.assertEqual(seg_type, okra.SegmentType.NOISE, 'Noise segment not indentified correctly')
 
-        seg_type = self.dg._DigitGetter__get_segment_type((2, 1), img_shape)
+        seg_type = self.dg._DigitGetter__get_segment_type(np.zeros((2, 1)), img_shape)
         self.assertEqual(seg_type, okra.SegmentType.NOISE, 'Noise segment not indentified correctly')
 
 

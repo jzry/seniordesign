@@ -1,6 +1,7 @@
 from preprocessing.scorefields import BCSegments
 from OCR import okra
 from OCR import violin as v
+import ImagePackager
 
 
 # A key map to convert the score-field key
@@ -99,8 +100,14 @@ def process_rider_fields(rider_segments, dg):
         else:
             num, conf = v.validate_score(raw_out, 10, 1)
 
+        encoded_image = ImagePackager.encode_base64(rider_segments[field_key])
+
         # Save results
-        rider_output[key_map[field_key]] = {'value': num, 'confidence': conf}
+        rider_output[key_map[field_key]] = {
+            'value': num,
+            'confidence': conf,
+            'image': encoded_image
+        }
 
     return rider_output
 
@@ -149,10 +156,10 @@ def _debug_main():
 
         for key in rider_dict.keys():
 
-            if rider_dict[key]['confidence'] >= 90.0:
+            if rider_dict[key]['confidence'] >= 95.0:
                 print(key, colored(rider_dict[key]['value'], color='green', attrs=['bold']))
 
-            elif rider_dict[key]['confidence'] >= 80.0:
+            elif rider_dict[key]['confidence'] >= 85.0:
                 print(key, colored(rider_dict[key]['value'], color='yellow', attrs=['bold']))
 
             elif rider_dict[key]['value'] == '':

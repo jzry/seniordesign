@@ -6,6 +6,7 @@ import importlib.util
 from pathlib import Path
 
 from preprocessing.exceptions import *
+from OCR.exceptions import *
 
 
 def main():
@@ -56,15 +57,37 @@ def run_code(script_name, args, image_buffer):
             return { 'status': -2, 'data': {}, 'message': f'"{script_name}" does not contain "run" function' }
 
     except PreprocessingExtensionError as e:
-        return { 'status': 1, 'data': {}, 'message': e.message }
+        return error_response(1, e)
 
     except NotImplementedError as e:
-        return { 'status': 2, 'data': {}, 'message': e.message }
+        return error_response(2, e)
 
     except PreprocessingImageError as e:
-        return { 'status': 3, 'data': {}, 'message': e.message }
+        return error_response(3, e)
+
+    except OkraModelError as e:
+        return error_response(4, e)
 
     return { 'status': 0, 'data': data, 'message': 'Success' }
+
+
+def error_response(status, err):
+    """
+    Packages error information into a response dictionary.
+
+    Arguments:
+        status (int): A number that indentifies the type of error.
+        err (Exception): The exception that was caught.
+
+    Returns:
+        dict: A response dictionary.
+    """
+
+    return {
+        'status': status,
+        'data': {},
+        'message': str(err)
+    }
 
 
 def receive():
@@ -139,5 +162,6 @@ def load_module(module_name):
 
 
 # Run It
-main()
+if __name__ == '__main__':
+    main()
 

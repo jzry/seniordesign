@@ -16,13 +16,20 @@ div.input-group {
   min-width: 100%;
   justify-self: center;
 }
-
+/* Styles the scorefield segments */
+img {
+  padding: 5px;
+  max-width: 150px;
+  max-height: 50px;
+}
 /* Styles just the input field */
 input[type="number"], 
 input[type="text"] {
     width: 150px;
+    height: 50px;
     min-width: 10%;
     max-width: 35%;
+    max-height: 10%;
     padding: 0.75em;
     border-radius: 0.3em;
 }

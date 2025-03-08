@@ -36,6 +36,11 @@ function BCEExtractedValues({ extractedDataList, onGoBackToUpload, heaviestRider
     return 'red';
   };
 
+  // concatenates the base64 string from the API with the needed info to read as an image
+  const newSrc = (source) => {
+    return "data:image;base64,"+source;
+  }
+
   // Determines the border color based on confidence level
   const handleCalculateScore = () => {
     setShowResults(true); // Show the results after calculation
@@ -63,7 +68,6 @@ function BCEExtractedValues({ extractedDataList, onGoBackToUpload, heaviestRider
     }
   };
 
-  // adding in spinner here?
   if (showResults) {
     return <BCEResults extractedDataList={extractedDataList} fastestRiderTime={fastestRiderTime} heaviestRiderWeight={heaviestRiderWeight} />;
   } 
@@ -85,6 +89,7 @@ function BCEExtractedValues({ extractedDataList, onGoBackToUpload, heaviestRider
                   borderColor: getBorderColor(data[key].confidence),
                 }}
               />
+              <img src={newSrc(data[key].image)} alt="segments"/>
             </div>
           ))}
           <div className="button-container">
