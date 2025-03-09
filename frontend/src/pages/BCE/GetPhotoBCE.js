@@ -19,17 +19,42 @@ function GetPhotoBCE({ numberOfRiders, fastestRiderTime, heaviestRiderWeight }) 
   
   const isTwoPhotosRequired = numberOfRiders > 5;
 
+  const [isRotated1, setIsRotated1] = useState(false);
+  const [isRotated2, setIsRotated2] = useState(false);
+
+
+  // const handleFileChange = (event) => {
+  //   const file = event.target.files[0];
+  //   if (file) {
+  //     const imageUrl = URL.createObjectURL(file);
+  //     if (currentStep === 1) {
+  //       setImageSrc1(imageUrl);
+  //       setImageFile1(file);
+  //     } else {
+  //       setImageSrc2(imageUrl);
+  //       setImageFile2(file);
+  //     }
+  //   }
+  // };
+
   const handleFileChange = (event) => {
     const file = event.target.files[0];
     if (file) {
       const imageUrl = URL.createObjectURL(file);
-      if (currentStep === 1) {
-        setImageSrc1(imageUrl);
-        setImageFile1(file);
-      } else {
-        setImageSrc2(imageUrl);
-        setImageFile2(file);
-      }
+      const img = new Image();
+      img.src = imageUrl;
+      img.onload = () => {
+        const isLandscape = img.width > img.height;
+        if (currentStep === 1) {
+          setImageSrc1(imageUrl);
+          setImageFile1(file);
+          setIsRotated1(isLandscape);
+        } else {
+          setImageSrc2(imageUrl);
+          setImageFile2(file);
+          setIsRotated2(isLandscape);
+        }
+      };
     }
   };
 
@@ -117,17 +142,24 @@ function GetPhotoBCE({ numberOfRiders, fastestRiderTime, heaviestRiderWeight }) 
               </div>
             </div>
           ) : (
+            <>
             <div className="image-fullscreen-container">
-              <img src={currentStep === 1 ? imageSrc1 : imageSrc2} alt="Preview" className="image-fullscreen" />
-              <div className="action-buttons">
-                <button className="scorecard-button" onClick={handleRetakePhoto}>
-                  Retake Image
-                </button>
-                <button className="scorecard-button" onClick={handleContinue}>
-                  {isTwoPhotosRequired && currentStep === 1 ? "Continue to Scorecard 2" : "Continue"}
-                </button>
-              </div>
+              <img
+                src={currentStep === 1 ? imageSrc1 : imageSrc2}
+                alt="Preview"
+                className={`image-fullscreen ${currentStep === 1 ? (isRotated1 ? "rotated" : "") : (isRotated2 ? "rotated" : "")}`}
+              />
             </div>
+
+            <div className="action-buttons">
+              <button className="scorecard-button" onClick={handleRetakePhoto}>
+                Retake Image
+              </button>
+              <button className="scorecard-button" onClick={handleContinue}>
+                {isTwoPhotosRequired && currentStep === 1 ? "Continue to Scorecard 2" : "Continue"}
+              </button>
+            </div>
+            </>
           )}
           {backendError && <div className="error-message">{backendError}</div>}
         </>
