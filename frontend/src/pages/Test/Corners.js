@@ -16,6 +16,10 @@ function Corners({ imageSrc, imageFile, onSubmitCorners }) {
     const [draggingCorner, setDraggingCorner] = useState(null);
     const [scale, setScale] = useState({ x: 1, y: 1 });
 
+    // Loading Icon
+    const [loading, setLoading] = useState(false);
+    const [progress, setProgress] = useState(0);
+
     useEffect(() => {
         if (imageSrc) {
             console.log("Setting image source:", imageSrc);
@@ -62,6 +66,7 @@ function Corners({ imageSrc, imageFile, onSubmitCorners }) {
     
     function handleMouseUp() {
         setDraggingCorner(null);
+        drawToCanvas();  // ✅ Ensure the color updates back to blue
     };
 
     function handleMouseMove(e) {
@@ -76,7 +81,8 @@ function Corners({ imageSrc, imageFile, onSubmitCorners }) {
     function handleMouseDown(e) {
         const { x, y } = getMousePosition(e);
         const cornerIndex = corners.findIndex(
-            (corner) => Math.hypot(corner.x - x, corner.y - y) < 50
+            // (corner) => Math.hypot(corner.x - x, corner.y - y) < 50
+            (corner) => Math.hypot(corner.x - x, corner.y - y) < imageRes.x / 15  // ✅ Larger touch area
         );
         if (cornerIndex !== -1) {
             setDraggingCorner(cornerIndex);
@@ -91,6 +97,7 @@ function Corners({ imageSrc, imageFile, onSubmitCorners }) {
 
     function handleTouchMove(e) {
         e.preventDefault();
+        e.stopPropagation(); // ✅ Prevent event bubbling
         handleMouseMove(e);
     }
 
@@ -111,16 +118,17 @@ function Corners({ imageSrc, imageFile, onSubmitCorners }) {
         context.stroke();
 
         context.fillStyle = "blue";
-        corners.forEach((corner) => {
+        corners.forEach((corner, index) => {
             context.beginPath();
-            context.arc(corner.x, corner.y, imageRes.x / 50, 0, 2 * Math.PI)
+            context.arc(corner.x, corner.y, imageRes.x / 25, 0, 2 * Math.PI)
+            context.fillStyle = draggingCorner === index ? "green" : "blue";  // ✅ Change to green while dragging
             context.fill();
         });
     };
 
     function scaleCanvas(imgWidth, imgHeight) {
-        const maxWidth = window.innerWidth * 0.7;
-        const maxHeight = window.innerHeight * 0.7;
+        const maxWidth = window.innerWidth * 0.95;
+        const maxHeight = window.innerHeight * 0.95;
         let width = imgWidth;
         let height = imgHeight;
 
@@ -264,13 +272,23 @@ function Corners({ imageSrc, imageFile, onSubmitCorners }) {
         } else {
             formData.append("corners", JSON.stringify(corners));
         }
-    
+
+        setLoading(true);
+        setProgress(0); // Start from 0%
+
         console.log("These are the corner values that will be submitted to the backend:");
         console.log(JSON.parse(formData.get("corners")));
     
         try {
-            const response = await axios.post(apiUrl.concat('/bce'), formData);
+            // const response = await axios.post(apiUrl.concat('/bce'), formData);
     
+            const response = await axios.post(apiUrl.concat('/bce'), formData, {
+                onUploadProgress: (progressEvent) => {
+                    const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+                    setProgress(percentCompleted);
+                }
+            });
+
             console.log("Here is the rider data:");
             console.log(response.data);
     
@@ -280,6 +298,8 @@ function Corners({ imageSrc, imageFile, onSubmitCorners }) {
             }
         } catch (error) {
             console.error("Error submitting corners to BCE:", error);
+        } finally {
+            setLoading(false);
         }
     }
     
@@ -291,27 +311,29 @@ function Corners({ imageSrc, imageFile, onSubmitCorners }) {
         return () => window.removeEventListener("resize", drawToCanvas);
     }, [image, corners])
 
+    useEffect(() => {
+        drawToCanvas();
+    }, [draggingCorner, corners]);  // ✅ Redraw when dragging state changes
+    
 
 
     return (
         <>
+            {/* Loading Overlay */}
+            {loading && (
+                <div className="loading-overlay">
+                    <div className="spinner"></div>
+                    <p className="loading-text">Loading... {progress}%</p>
+                </div>
+            )}
+
             <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossOrigin="anonymous"></link>
             <div className="container">
                 <br /><br />
 
-                <h4>
-                    Upload Image
-                </h4>
 
                 <div className="row">
                     <div className="col">
-                        {/* <canvas
-                            className="mt-5"
-                            onMouseDown={handleMouseDown}
-                            onMouseMove={handleMouseMove}
-                            onMouseUp={handleMouseUp}
-                            ref={canvasRef}
-                            style={{ cursor: "crosshair", maxWidth: "100%" }} /> */}
                             <canvas
                                 className="mt-5"
                                 onMouseDown={handleMouseDown}
@@ -321,23 +343,29 @@ function Corners({ imageSrc, imageFile, onSubmitCorners }) {
                                 onTouchMove={handleTouchMove}
                                 onTouchEnd={handleTouchEnd}
                                 ref={canvasRef}
-                                style={{ cursor: "crosshair", maxWidth: "100%" }}
+                                // style={{ cursor: "crosshair", maxWidth: "100%" }}
+                                style={{
+                                    cursor: "crosshair",
+                                    width: "95vw", // 🔹 Ensure it fits well within the screen width
+                                    height: "auto",
+                                    maxWidth: "100%",
+                                    maxHeight: "90vh",
+                                    touchAction: "none",  // 🔹 Prevents page scrolling while dragging
+                                    border: "2px solid black",  // 🔹 Keeps it visible
+                                }}
                             />
                     </div>
                 </div>
 
                 <div className="row">
-                    <br />
-                    <div className="row">
                         {(imageFile !== null && hasCorners) && (
-                            <div className="btn-group" role="group" aria-label="Basic example">
-                                {/* <button className="btn btn-primary" id="sendData" onClick={submitCornersCTR}>Submit Corners CTR</button> */}
-                                <button className="btn btn-primary" id="sendData" onClick={submitCorners}>Submit Corners BCE</button>
-                            </div>)}
+                            <div className="button-container">
+                                <button className="corner-button" id="sendData" onClick={submitCorners}>
+                                    Continue
+                                </button>
+                            </div>
+                        )}
                         {(imageFile !== null && !hasCorners) && <button className="btn btn-primary" id="sendData" onClick={submitImage} style={{ display: "none" }}>Submit Image and Extract Corners</button>}
-
-
-                    </div>
 
                 </div>
 

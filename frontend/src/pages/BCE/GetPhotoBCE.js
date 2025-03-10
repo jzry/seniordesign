@@ -148,6 +148,17 @@ function GetPhotoBCE({ numberOfRiders, fastestRiderTime, heaviestRiderWeight }) 
                 src={currentStep === 1 ? imageSrc1 : imageSrc2}
                 alt="Preview"
                 className={`image-fullscreen ${currentStep === 1 ? (isRotated1 ? "rotated" : "") : (isRotated2 ? "rotated" : "")}`}
+                style={{
+                  width: "95vw",  // 🔹 Fill most of the screen width
+                  height: "auto",  // 🔹 Maintain aspect ratio
+                  maxWidth: "100%",
+                  maxHeight: "80vh", // 🔹 Prevent going out of bounds
+                  objectFit: "contain",
+                  display: "block",
+                  margin: "0 auto 20px auto",  // 🔹 Adds space below the image
+                  borderRadius: "10px",
+                  boxShadow: "0px 4px 8px rgba(0,0,0,0.2)",
+                }}
               />
             </div>
 

@@ -1,12 +1,10 @@
-/* Styles the text that accompanies input */
-label, 
-.data-label {
-    font-size: 14px;
+/* Style for Labels */
+label, .data-label {
+    font-size: 16px;
     font-weight: bold;
     text-align: left;
-    padding: 0.75em;
-    max-width: 50vw;
-    overflow-wrap: break-word;
+    padding: 10px 0;
+    width: 100%;
 }
 
 /* Styles the label and input field */
@@ -22,16 +20,25 @@ img {
   max-width: 150px;
   max-height: 50px;
 }
-/* Styles just the input field */
-input[type="number"], 
-input[type="text"] {
-    width: 150px;
-    height: 50px;
-    min-width: 10%;
-    max-width: 35%;
-    max-height: 10%;
-    padding: 0.75em;
-    border-radius: 0.3em;
+/* Input Fields */
+input[type="number"], input[type="text"] {
+  width: 80%;
+  height: 45px;
+  max-width: 300px;
+  padding: 8px;
+  border-radius: 10px;
+  border: 2px solid black;
+  font-size: 16px;
+  text-align: center;
+  background-color: white;
+  transition: 0.3s ease-in-out;
+  box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+input[type="number"]:focus, input[type="text"]:focus {
+  border-color: black;
+  outline: none;
+  box-shadow: 2px 2px 12px rgba(0, 0, 0, 0.2);
 }
 
 /* Makes sure the inputs are aligned */
@@ -41,6 +48,8 @@ div.input-group, p {
     justify-content: space-between;
     align-self: center;
 }
+
+
 
 /* Wraps everything */
 .bce-container {
@@ -74,12 +83,51 @@ div.bce-container {
   overflow-x: visible;
 }
 
-div.result-container {
+/* div.result-container {
+  font-size: 18px;
+  font-style: bold;
   display: flex;
   flex-direction: column;
   min-width: max-content;
   max-width: 100%;
   margin-top: 20%;
+} */
+
+.result-container {
+  font-size: 20px;
+  font-weight: bold;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 300px;
+  max-width: 80%;
+  margin: 0 auto;
+  padding: 30px;
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+/* Style for buttons */
+.result-container button {
+  width: 220px;
+  padding: 12px;
+  font-size: 16px;
+  font-weight: bold;
+  border: 2px solid black;
+  border-radius: 8px;
+  background: white;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  margin-top: 10px;
+}
+
+.result-container button:hover {
+  background: black;
+  color: white;
+  border-color: black;
 }
 
 /* Individual rider scores */
@@ -201,20 +249,6 @@ p {
     text-align: center;
   }
   
-
-  /* Rotate */
-
-  .image-fullscreen-container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    width: 100%;
-    max-width: 90vw;
-    max-height: 50vh;
-    overflow: hidden;
-  }
-  
   .image-fullscreen {
     max-width: 100%;
     max-height: 100%;
@@ -235,4 +269,126 @@ p {
     gap: 10px;
   }
   
+  .container {
+    touch-action: none; /* Prevents scrolling on touch */
+}
+
+  /* Rotate */
+  .image-fullscreen-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100vw;
+    max-width: 100%;
+    height: 50vh;
+    max-height: 85vh;
+    padding: 0;
+    position: relative; /* Ensures proper layout */
+  }
   
+  /* General Button Styling */
+  button {
+    width: 250px;
+    padding: 15px;
+    font-size: 18px;
+    font-weight: bold;
+    border: 2px solid black;
+    border-radius: 8px;
+    background: white;
+    color: black;  /* 🔹 Ensures text color stays black */
+    text-align: center;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    -webkit-appearance: none; /* 🔹 Fix iOS default styling */
+    -moz-appearance: none;
+    appearance: none;
+  }
+  
+  /* Fix iPhone Blue Text Issue */
+  button:focus,
+  button:active {
+    color: black !important;  /* 🔹 Ensures text remains black */
+    background: white;
+    outline: none;
+    text-decoration: none; /* 🔹 Prevents text underline */
+  }
+  
+  /* Button Hover Effect */
+  button:hover {
+    background: black;
+    color: white;
+    border-color: black;
+  }
+  
+  /* Button Container (Aligning Buttons Properly) */
+  .button-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 15px; /* 🔹 Space between buttons */
+    margin-top: 30px;
+  }
+
+  .corner-button {
+    width: 220px;
+    padding: 12px;
+    font-size: 16px;
+    font-weight: bold;
+    border: 2px solid black;
+    border-radius: 8px;  /* ✅ Add rounded corners */
+    background: white;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    margin-top: 10px;
+    text-align: center;
+    display: block;
+}
+
+.corner-button:hover {
+    background: black;
+    color: white;
+    border-color: black;
+}
+
+
+
+  /* Loading Icon!!! */
+  /* 🔹 Fullscreen dark overlay when loading */
+.loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.8); /* Dark background */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+/* 🔹 Animated loading spinner */
+.spinner {
+  width: 60px;
+  height: 60px;
+  border: 6px solid rgba(255, 255, 255, 0.3);
+  border-top: 6px solid white;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+/* 🔹 Loading text showing percentage */
+.loading-text {
+  color: white;
+  font-size: 20px;
+  font-weight: bold;
+  margin-top: 15px;
+}
+
+/* 🔹 Spinner animation */
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
