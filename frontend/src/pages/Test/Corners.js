@@ -1,11 +1,11 @@
 import axios from "axios";
 import { useEffect, useRef, useState } from "react";
 
-function Corners() {
+function Corners({ imageSrc, imageFile, onSubmitCorners }) {
     const canvasRef = useRef(null)
     const [image, setImage] = useState(null)
     const apiUrl = process.env.REACT_APP_API_URL;
-    const [imageFile, setImageFile] = useState(null);
+    const [file, setImageFile] = useState(imageFile);
     const [hasCorners, setHasCorners] = useState(false);
     const [imageRes, setImageRes] = useState({ x: 0, y: 0 })
     const isRotated = useRef(false);
@@ -16,16 +16,57 @@ function Corners() {
     const [draggingCorner, setDraggingCorner] = useState(null);
     const [scale, setScale] = useState({ x: 1, y: 1 });
 
-    function getMousePosition(e) {
-        const { offsetX, offsetY } = e.nativeEvent;
-        return {
-            x: offsetX / scale.x,
-            y: offsetY / scale.y
-        };
-    };
+    // Loading Icon
+    const [loading, setLoading] = useState(false);
+    const [progress, setProgress] = useState(0);
 
+    useEffect(() => {
+        if (imageSrc) {
+            console.log("Setting image source:", imageSrc);
+            setImage(imageSrc);
+        }
+
+        // Find the button and trigger a click event
+        setTimeout(() => {
+            const submitButton = document.getElementById("sendData");
+            if (submitButton) {
+                submitButton.click();
+            } else {
+                console.warn("Submit Image button not found.");
+            }
+        }, 500); // Slight delay to ensure the button is available
+        
+    }, [imageSrc]);
+    
+    // useEffect(() => {
+    //     if (imageFile) {
+    //         console.log("Image file detected. Automatically extracting corners...");
+    //         submitImage(); //   Automatically extract corners when the component loads
+    //     }
+    // }, [imageFile]);
+    
+    
+    
+
+    function getMousePosition(e) {
+        let x, y;
+        if (e.touches) {
+            // Handling touch events
+            const rect = canvasRef.current.getBoundingClientRect();
+            const touch = e.touches[0] || e.changedTouches[0];
+            x = (touch.clientX - rect.left) / scale.x;
+            y = (touch.clientY - rect.top) / scale.y;
+        } else {
+            // Handling mouse events
+            x = e.nativeEvent.offsetX / scale.x;
+            y = e.nativeEvent.offsetY / scale.y;
+        }
+        return { x, y };
+    }
+    
     function handleMouseUp() {
         setDraggingCorner(null);
+        drawToCanvas();  //   Ensure the color updates back to blue
     };
 
     function handleMouseMove(e) {
@@ -40,11 +81,29 @@ function Corners() {
     function handleMouseDown(e) {
         const { x, y } = getMousePosition(e);
         const cornerIndex = corners.findIndex(
-            (corner) => Math.hypot(corner.x - x, corner.y - y) < 50
+            // (corner) => Math.hypot(corner.x - x, corner.y - y) < 50
+            (corner) => Math.hypot(corner.x - x, corner.y - y) < imageRes.x / 15  //   Larger touch area
         );
         if (cornerIndex !== -1) {
             setDraggingCorner(cornerIndex);
         }
+    }
+
+    //  Touch event handlers for mobile
+    function handleTouchStart(e) {
+        e.preventDefault();
+        handleMouseDown(e);
+    }
+
+    function handleTouchMove(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        handleMouseMove(e);
+    }
+
+    function handleTouchEnd(e) {
+        e.preventDefault();
+        handleMouseUp();
     }
 
     function drawQuad(context) {
@@ -59,16 +118,17 @@ function Corners() {
         context.stroke();
 
         context.fillStyle = "blue";
-        corners.forEach((corner) => {
+        corners.forEach((corner, index) => {
             context.beginPath();
-            context.arc(corner.x, corner.y, imageRes.x / 50, 0, 2 * Math.PI)
+            context.arc(corner.x, corner.y, imageRes.x / 25, 0, 2 * Math.PI)
+            context.fillStyle = draggingCorner === index ? "green" : "blue";  //   Change to green while dragging
             context.fill();
         });
     };
 
     function scaleCanvas(imgWidth, imgHeight) {
-        const maxWidth = window.innerWidth * 0.7;
-        const maxHeight = window.innerHeight * 0.7;
+        const maxWidth = window.innerWidth * 0.95;
+        const maxHeight = window.innerHeight * 0.95;
         let width = imgWidth;
         let height = imgHeight;
 
@@ -142,133 +202,108 @@ function Corners() {
         }
     }
 
-    function handleFileChange(e) {
-        const file = e.target.files[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = () => {
-                setImage(reader.result);
-            };
-            reader.readAsDataURL(file);
-            setImageFile(file);
+    async function submitImage() {
+        if (!imageFile) {
+            console.error("No image file provided!");
+            return;
         }
-    };
+    
+        const formData = new FormData();
+        formData.append("image", imageFile);
+    
+        try {
+            const response = await axios.post(apiUrl.concat("/corners"), formData, {
+                headers: { "Content-Type": "multipart/form-data" },
+            });
+    
+            console.log("These are the corner values provided by preprocessing:");
+            console.log(response.data.corner_points);
+    
+            let processedCorners = response.data.corner_points;
+    
+            if (isRotated.current) {
+                originalCorners.current = processedCorners;
+                processedCorners = [
+                    { x: imageRes.y - processedCorners[0].y, y: processedCorners[0].x },
+                    { x: imageRes.y - processedCorners[1].y, y: processedCorners[1].x },
+                    { x: imageRes.y - processedCorners[2].y, y: processedCorners[2].x },
+                    { x: imageRes.y - processedCorners[3].y, y: processedCorners[3].x }
+                ];
+            }
+    
+            setCorners(processedCorners);
+            setHasCorners(true);
+    
+            // //   Ensure `drawToCanvas()` runs AFTER `setCorners` updates
+            // setTimeout(() => {
+            //     requestAnimationFrame(drawToCanvas);
+            // }, 0);
+            
+        } catch (error) {
+            console.error("Could not extract corners!", error);
+    
+            // Default corners if extraction fails
+            setCorners([
+                { x: 500, y: 500 },
+                { x: 1000, y: 500 },
+                { x: 1000, y: 1000 },
+                { x: 500, y: 1000 }
+            ]);
+            setHasCorners(true);
+        }
+    }
 
-    async function submitImage(e) {
-        e.preventDefault()
+    async function submitCorners() {
+        if (!corners || !imageFile) return;
+    
+        const formData = new FormData();
+        formData.append('image', imageFile);
+    
+        if (isRotated.current) {
+            console.log("These are the corner values BEFORE an inverse rotation is applied:");
+            console.log(corners);
+    
+            formData.append("corners", JSON.stringify([
+                { x: corners[0].y, y: imageRes.y - corners[0].x },
+                { x: corners[1].y, y: imageRes.y - corners[1].x },
+                { x: corners[2].y, y: imageRes.y - corners[2].x },
+                { x: corners[3].y, y: imageRes.y - corners[3].x }
+            ]));
+        } else {
+            formData.append("corners", JSON.stringify(corners));
+        }
 
-        if (imageFile) {
-            const formData = new FormData();
-            formData.append('image', imageFile);
+        setLoading(true);
+        setProgress(0); // Start from 0%
 
-            await axios.post(apiUrl.concat('/corners'), formData, {
-                headers: {
-                    'Content-Type': 'multipart/form-data',
+        console.log("These are the corner values that will be submitted to the backend:");
+        console.log(JSON.parse(formData.get("corners")));
+    
+        try {
+            // const response = await axios.post(apiUrl.concat('/bce'), formData);
+    
+            const response = await axios.post(apiUrl.concat('/bce'), formData, {
+                onUploadProgress: (progressEvent) => {
+                    const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+                    setProgress(percentCompleted);
                 }
-            })
-                .then((response) => {
-                    console.log("These are the corner values provided by preprocessing:")
-                    console.log(response.data.corner_points)
+            });
 
-                    if (isRotated.current) {
-                        originalCorners.current = response.data.corner_points;
-                        const corner = [
-                            { x: imageRes.y - response.data.corner_points[0].y, y: response.data.corner_points[0].x },
-                            { x: imageRes.y - response.data.corner_points[1].y, y: response.data.corner_points[1].x },
-                            { x: imageRes.y - response.data.corner_points[2].y, y: response.data.corner_points[2].x },
-                            { x: imageRes.y - response.data.corner_points[3].y, y: response.data.corner_points[3].x }
-                        ]
-                        setCorners(corner)
-                        
-                        console.log("These are the corner values AFTER the rotation has been applied:")
-                        console.log(corner)
-                    }
-                    else
-                        setCorners(response.data.corner_points);
-
-                    setHasCorners(true)
-                })
-                .catch((error) => {
-                    console.error("Could no extract corners!")
-                    console.error(error)
-                    setCorners([
-                        { x: 500, y: 500 },
-                        { x: 1000, y: 500 },
-                        { x: 1000, y: 1000 },
-                        { x: 500, y: 1000 }
-                    ])
-                    setHasCorners(true)
-                })
-        }
-    }
-
-    async function submitCornersCTR(e) {
-        e.preventDefault()
-        const formData = new FormData();
-        formData.append('image', imageFile);
-
-        if (corners) {
-            if (isRotated.current) {
-                console.log("These are the corner values BEFORE an inverse rotation is applied:")
-                console.log(corners)
-
-                formData.append("corners", JSON.stringify([
-                    { x: corners[0].y, y: imageRes.y - corners[0].x },
-                    { x: corners[1].y, y: imageRes.y - corners[1].x },
-                    { x: corners[2].y, y: imageRes.y - corners[2].x },
-                    { x: corners[3].y, y: imageRes.y - corners[3].x }
-                ]));
+            console.log("Here is the rider data:");
+            console.log(response.data);
+    
+            //   Send API response back to getphotoBCE.js
+            if (onSubmitCorners) {
+                onSubmitCorners(response.data);
             }
-            else
-                formData.append("corners", JSON.stringify(corners));
-
-            console.log("These are the corner values that will be submitted to the backend:")
-            console.log(JSON.parse(formData.get("corners")));
-
-            await axios.post(apiUrl.concat('/ctr'), formData)
-                .then((response) => {
-                    console.log("Here is the rider data:")
-                    console.log(response.data)
-                })
-                .catch((error) => {
-                    console.error(error)
-                })
+        } catch (error) {
+            console.error("Error submitting corners to BCE:", error);
+        } finally {
+            setLoading(false);
         }
     }
+    
 
-    async function submitCornersBCE(e) {
-        e.preventDefault()
-        const formData = new FormData();
-        formData.append('image', imageFile);
-
-        if (corners) {
-            if (isRotated.current) {
-                console.log("These are the corner values BEFORE an inverse rotation is applied:")
-                console.log(corners)
-
-                formData.append("corners", JSON.stringify([
-                    { x: corners[0].y, y: imageRes.y - corners[0].x },
-                    { x: corners[1].y, y: imageRes.y - corners[1].x },
-                    { x: corners[2].y, y: imageRes.y - corners[2].x },
-                    { x: corners[3].y, y: imageRes.y - corners[3].x }
-                ]));
-            }
-            else
-                formData.append("corners", JSON.stringify(corners));
-
-            console.log("These are the corner values that will be submitted to the backend:")
-            console.log(JSON.parse(formData.get("corners")));
-
-            await axios.post(apiUrl.concat('/bce'), formData)
-                .then((response) => {
-                    console.log("Here is the rider data:")
-                    console.log(response.data)
-                })
-                .catch((error) => {
-                    console.error(error)
-                })
-        }
-    }
 
     useEffect(() => {
         drawToCanvas();
@@ -276,52 +311,62 @@ function Corners() {
         return () => window.removeEventListener("resize", drawToCanvas);
     }, [image, corners])
 
+    useEffect(() => {
+        drawToCanvas();
+    }, [draggingCorner, corners]);
+    
 
 
     return (
         <>
+            {/* Loading Overlay */}
+            {loading && (
+                <div className="loading-overlay">
+                    <div className="spinner"></div>
+                    <p className="loading-text">Loading... {progress}%</p>
+                </div>
+            )}
+
             <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossOrigin="anonymous"></link>
             <div className="container">
                 <br /><br />
 
-                <h4>
-                    Upload Image
-                </h4>
 
-                <div className="row">
-                    <div className="input-group">
-                        <input
-                            type="file"
-                            className="form-control"
-                            accept="image/*"
-                            name="image_name"
-                            onChange={handleFileChange}
-                            required />
-                    </div>
-
-                    <br />
-                    <div className="row">
-                        {(imageFile !== null && hasCorners) && (
-                            <div className="btn-group" role="group" aria-label="Basic example">
-                                <button className="btn btn-primary" id="sendData" onClick={submitCornersCTR}>Submit Corners CTR</button>
-                                <button className="btn btn-primary" id="sendData" onClick={submitCornersBCE}>Submit Corners BCE</button>
-                            </div>)}
-                        {(imageFile !== null && !hasCorners) && <button className="btn btn-primary" id="sendData" onClick={submitImage}>Submit Image and Extract Corners</button>}
-
-
-                    </div>
-
-                </div>
                 <div className="row">
                     <div className="col">
-                        <canvas
-                            className="mt-5"
-                            onMouseDown={handleMouseDown}
-                            onMouseMove={handleMouseMove}
-                            onMouseUp={handleMouseUp}
-                            ref={canvasRef}
-                            style={{ cursor: "crosshair", maxWidth: "100%" }} />
+                            <canvas
+                                className="mt-5"
+                                onMouseDown={handleMouseDown}
+                                onMouseMove={handleMouseMove}
+                                onMouseUp={handleMouseUp}
+                                onTouchStart={handleTouchStart}  //   Added touch support
+                                onTouchMove={handleTouchMove}
+                                onTouchEnd={handleTouchEnd}
+                                ref={canvasRef}
+                                // style={{ cursor: "crosshair", maxWidth: "100%" }}
+                                style={{
+                                    cursor: "crosshair",
+                                    width: "95vw", // 🔹 Ensure it fits well within the screen width
+                                    height: "auto",
+                                    maxWidth: "100%",
+                                    maxHeight: "90vh",
+                                    touchAction: "none",  // 🔹 Prevents page scrolling while dragging
+                                    border: "2px solid black",  // 🔹 Keeps it visible
+                                }}
+                            />
                     </div>
+                </div>
+
+                <div className="row">
+                        {(imageFile !== null && hasCorners) && (
+                            <div className="button-container">
+                                <button className="corner-button" id="sendData" onClick={submitCorners}>
+                                    Continue
+                                </button>
+                            </div>
+                        )}
+                        {(imageFile !== null && !hasCorners) && <button className="btn btn-primary" id="sendData" onClick={submitImage} style={{ display: "none" }}>Submit Image and Extract Corners</button>}
+
                 </div>
 
             </div>

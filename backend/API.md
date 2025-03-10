@@ -47,7 +47,8 @@ Status Code **200**
 
 Prediction = {    // A JSON object
     "value": string,
-    "confidence": float    // As a percentage
+    "confidence": float,    // As a percentage
+    "image": string    // A JPEG image encoded as a base64 string
 }
 ```
 
@@ -133,7 +134,8 @@ Status Code **200**
 
 Prediction = {    // A JSON object
     "value": string,
-    "confidence": float    // As a percentage
+    "confidence": float,    // As a percentage
+    "image": string    // A JPEG image encoded as a base64 string
 }
 ```
 
