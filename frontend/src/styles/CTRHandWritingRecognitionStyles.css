@@ -295,11 +295,11 @@ p {
     border: 2px solid black;
     border-radius: 8px;
     background: white;
-    color: black;  /* 🔹 Ensures text color stays black */
+    color: black;  /*   Ensures text color stays black */
     text-align: center;
     transition: all 0.3s ease;
     cursor: pointer;
-    -webkit-appearance: none; /* 🔹 Fix iOS default styling */
+    -webkit-appearance: none; /*   Fix iOS default styling */
     -moz-appearance: none;
     appearance: none;
   }
@@ -307,10 +307,10 @@ p {
   /* Fix iPhone Blue Text Issue */
   button:focus,
   button:active {
-    color: black !important;  /* 🔹 Ensures text remains black */
+    color: black !important;  /*   Ensures text remains black */
     background: white;
     outline: none;
-    text-decoration: none; /* 🔹 Prevents text underline */
+    text-decoration: none; /*   Prevents text underline */
   }
   
   /* Button Hover Effect */
@@ -326,7 +326,7 @@ p {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 15px; /* 🔹 Space between buttons */
+    gap: 15px; /*   Space between buttons */
     margin-top: 30px;
   }
 
@@ -336,7 +336,7 @@ p {
     font-size: 16px;
     font-weight: bold;
     border: 2px solid black;
-    border-radius: 8px;  /* ✅ Add rounded corners */
+    border-radius: 8px;  /*   Add rounded corners */
     background: white;
     transition: all 0.3s ease;
     cursor: pointer;
@@ -354,7 +354,7 @@ p {
 
 
   /* Loading Icon!!! */
-  /* 🔹 Fullscreen dark overlay when loading */
+  /*   Fullscreen dark overlay when loading */
 .loading-overlay {
   position: fixed;
   top: 0;
@@ -369,7 +369,7 @@ p {
   z-index: 1000;
 }
 
-/* 🔹 Animated loading spinner */
+/*   Animated loading spinner */
 .spinner {
   width: 60px;
   height: 60px;
@@ -379,7 +379,7 @@ p {
   animation: spin 1s linear infinite;
 }
 
-/* 🔹 Loading text showing percentage */
+/*   Loading text showing percentage */
 .loading-text {
   color: white;
   font-size: 20px;
@@ -387,7 +387,7 @@ p {
   margin-top: 15px;
 }
 
-/* 🔹 Spinner animation */
+/*   Spinner animation */
 @keyframes spin {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }

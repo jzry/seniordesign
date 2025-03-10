@@ -41,7 +41,7 @@ function Corners({ imageSrc, imageFile, onSubmitCorners }) {
     // useEffect(() => {
     //     if (imageFile) {
     //         console.log("Image file detected. Automatically extracting corners...");
-    //         submitImage(); // ✅ Automatically extract corners when the component loads
+    //         submitImage(); //   Automatically extract corners when the component loads
     //     }
     // }, [imageFile]);
     
@@ -66,7 +66,7 @@ function Corners({ imageSrc, imageFile, onSubmitCorners }) {
     
     function handleMouseUp() {
         setDraggingCorner(null);
-        drawToCanvas();  // ✅ Ensure the color updates back to blue
+        drawToCanvas();  //   Ensure the color updates back to blue
     };
 
     function handleMouseMove(e) {
@@ -82,14 +82,14 @@ function Corners({ imageSrc, imageFile, onSubmitCorners }) {
         const { x, y } = getMousePosition(e);
         const cornerIndex = corners.findIndex(
             // (corner) => Math.hypot(corner.x - x, corner.y - y) < 50
-            (corner) => Math.hypot(corner.x - x, corner.y - y) < imageRes.x / 15  // ✅ Larger touch area
+            (corner) => Math.hypot(corner.x - x, corner.y - y) < imageRes.x / 15  //   Larger touch area
         );
         if (cornerIndex !== -1) {
             setDraggingCorner(cornerIndex);
         }
     }
 
-    // ✅ New: Touch event handlers for mobile
+    //  Touch event handlers for mobile
     function handleTouchStart(e) {
         e.preventDefault();
         handleMouseDown(e);
@@ -97,7 +97,7 @@ function Corners({ imageSrc, imageFile, onSubmitCorners }) {
 
     function handleTouchMove(e) {
         e.preventDefault();
-        e.stopPropagation(); // ✅ Prevent event bubbling
+        e.stopPropagation();
         handleMouseMove(e);
     }
 
@@ -121,7 +121,7 @@ function Corners({ imageSrc, imageFile, onSubmitCorners }) {
         corners.forEach((corner, index) => {
             context.beginPath();
             context.arc(corner.x, corner.y, imageRes.x / 25, 0, 2 * Math.PI)
-            context.fillStyle = draggingCorner === index ? "green" : "blue";  // ✅ Change to green while dragging
+            context.fillStyle = draggingCorner === index ? "green" : "blue";  //   Change to green while dragging
             context.fill();
         });
     };
@@ -234,7 +234,7 @@ function Corners({ imageSrc, imageFile, onSubmitCorners }) {
             setCorners(processedCorners);
             setHasCorners(true);
     
-            // // ✅ Ensure `drawToCanvas()` runs AFTER `setCorners` updates
+            // //   Ensure `drawToCanvas()` runs AFTER `setCorners` updates
             // setTimeout(() => {
             //     requestAnimationFrame(drawToCanvas);
             // }, 0);
@@ -292,7 +292,7 @@ function Corners({ imageSrc, imageFile, onSubmitCorners }) {
             console.log("Here is the rider data:");
             console.log(response.data);
     
-            // ✅ Send API response back to getphotoBCE.js
+            //   Send API response back to getphotoBCE.js
             if (onSubmitCorners) {
                 onSubmitCorners(response.data);
             }
@@ -313,7 +313,7 @@ function Corners({ imageSrc, imageFile, onSubmitCorners }) {
 
     useEffect(() => {
         drawToCanvas();
-    }, [draggingCorner, corners]);  // ✅ Redraw when dragging state changes
+    }, [draggingCorner, corners]);
     
 
 
@@ -339,7 +339,7 @@ function Corners({ imageSrc, imageFile, onSubmitCorners }) {
                                 onMouseDown={handleMouseDown}
                                 onMouseMove={handleMouseMove}
                                 onMouseUp={handleMouseUp}
-                                onTouchStart={handleTouchStart}  // ✅ Added touch support
+                                onTouchStart={handleTouchStart}  //   Added touch support
                                 onTouchMove={handleTouchMove}
                                 onTouchEnd={handleTouchEnd}
                                 ref={canvasRef}
