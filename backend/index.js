@@ -9,6 +9,10 @@ const pyconnect = require('./pyconnect')
 
 const devMode = process.env.MODE
 
+// A flag that determines if TorchServe is used or not
+const torchserveFlag = (process.env.TORCHSERVE) ? process.env.TORCHSERVE.toLowerCase() === 'torchserve' : false
+
+
 
 // Request validation middleware for the CTR data from the OCR
 // Because the CTR data is not currently sourced from an api endpoint, this function only simulates the functionality of Express Middleware
@@ -48,32 +52,74 @@ function validateData(/*req, res, next*/ fakeCTRData) {
 
 // Middleware function to validate the image input by the user
 function validateImage(req, res, next) {
-  const allowedFileTypes = ['image/jpeg', 'image/png'];
-  const maxSize = 5 * 1024 * 1024; // 5 MB limit
+  const allowedFileTypes = [
+    'image/jpeg',
+    'image/png',
+    'image/heic',
+    'image/bmp',
+    'image/tiff',
+    'application/pdf'
+  ];
+  const maxSize = 10; // limit in mebibytes
+  const maxSizeBytes = maxSize * 1024 * 1024;
 
   // Check if file exists
   if (!req.files || !req.files.image) {
-    console.log('No file uploaded.')
-    return res.status(400).send('No file uploaded.');
+    let errorMessage = 'No file uploaded.'
+    console.warn(errorMessage)
+    return res.status(400).json({ "error": errorMessage });
   }
 
   const image = req.files.image;
 
   // Check file size
-  if (image.size > maxSize) {
-    console.log('File size exceeds limit of 5 MB.')
-    return res.status(400).send('File size exceeds limit of 5 MB.');
+  if (image.size > maxSizeBytes) {
+    let errorMessage = `File size exceeds limit of ${maxSize} MiB.`
+    console.warn(errorMessage)
+    return res.status(400).json({ "error": errorMessage });
   }
 
   // Check file type
   if (!allowedFileTypes.includes(image.mimetype)) {
-    console.log('Invalid file type. Only JPEG, PNG allowed.')
-    return res.status(400).send('Invalid file type. Only JPEG, PNG allowed.');
+    let errorMessage = 'File type is not supported.'
+    console.warn(errorMessage)
+    return res.status(400).json({ "error": errorMessage });
   }
 
   // If all checks pass, proceed
   next();
 }
+
+
+// Middleware function to validate the corner input by the user
+function validateCorners(req, res, next) {
+
+  if (req.body && req.body.corners)
+  {
+    try
+    {
+      if (typeof req.body.corners !== 'string')
+      {
+        throw 'req.body.corners is not a JSON string'
+      }
+
+      var corners = JSON.parse(req.body.corners)
+    }
+    catch (e)
+    {
+      console.error(e)
+      res.status(400).json({'error': 'Corner data is not valid JSON'})
+      return
+    }
+
+    req.corner_points = corners
+  }
+
+  // If all checks pass, proceed
+  next();
+}
+
+
 
 // Cross-Origin Resource Sharing Middleware to only accept data originating from our frontend
 
@@ -133,7 +179,7 @@ app.use(apiHitLogger)
 
 // Retrieve the uploaded image from the handleSubmit function in frontend/src/pages/crt/getPhotos.js
 
-app.post('/ctr', validateImage, async (req, res) => {
+app.post('/ctr', validateImage, validateCorners, async (req, res) => {
   if (!req.files || Object.keys(req.files).length === 0) {
     return res.status(400).send('No files were uploaded.');
   }
@@ -143,16 +189,18 @@ app.post('/ctr', validateImage, async (req, res) => {
 
   //console.log('File received:', sampleFile.name);  // Log file details
 
+  let args = { "torchserve": torchserveFlag }
+
+  if (req.corner_points)
+    args.corner_points = req.corner_points
+
   // Send the image to the Python code to be processed
-  let output = await pyconnect.processCTR(sampleFile)
+  let output = await pyconnect.run('CTR.py', args, sampleFile)
 
-  if (output.error)
-    res.status(500)
-
-  res.json(output)
+  res.status(output.status).json(output.body)
 });
 
-app.post('/bce', validateImage, async (req, res) => {
+app.post('/bce', validateImage, validateCorners, async (req, res) => {
   if (!req.files || Object.keys(req.files).length === 0) {
     return res.status(400).send('No files were uploaded.');
   }
@@ -162,13 +210,30 @@ app.post('/bce', validateImage, async (req, res) => {
 
   //console.log('File received:', sampleFile.name);  // Log file details
 
+  let args = { "torchserve": torchserveFlag }
+
+  if (req.corner_points)
+    args.corner_points = req.corner_points
+
   // Send the image to the Python code to be processed
-  let output = await pyconnect.processBCE(sampleFile)
+  let output = await pyconnect.run('BCE.py', args, sampleFile)
 
-  if (output.error)
-    res.status(500)
+  res.status(output.status).json(output.body)
+});
 
-  res.json(output)
+
+app.post('/corners', validateImage, async (req, res) => {
+  if (!req.files || Object.keys(req.files).length === 0) {
+    return res.status(400).send('No files were uploaded.');
+  }
+
+  // The name of the input field (i.e. "imageFile") is used to retrieve the uploaded file
+  let imageFile = req.files.image;
+
+  // Send the image to the Python code to be processed
+  let output = await pyconnect.run('corners.py', null, imageFile)
+
+  res.status(output.status).json(output.body)
 });
 
 

@@ -32,6 +32,9 @@ class DigitGetter:
         blank_threshold (int): The max difference between the lightest and
                                darkest pixels in an image for it to be
                                considered a blank segment (default=120).
+        use_width_as_reference (bool): Use the image width instead of height
+                                       as a reference when identifying
+                                       handwriting segments (default=False).
     """
 
     def __init__(self, ts=False):
@@ -43,10 +46,10 @@ class DigitGetter:
 
             from .OkraHandler import OkraHandler
 
-            self.__model_handle = OkraHandler()
-            self.__model_handle.initialize()
+            self.__classifier_handle = OkraHandler()
+            self.__classifier_handle.initialize()
 
-        self.__digit_tracer = DigitTracer()
+        self.__tracer = OkraTracer()
 
         # Set default attributes
 
@@ -56,6 +59,7 @@ class DigitGetter:
         self.find_decimal_points = True
         self.find_minus_signs = False
         self.blank_threshold = 120
+        self.use_width_as_reference = False
 
 
     def __preprocess_image(self, img):
@@ -105,6 +109,9 @@ class DigitGetter:
         Returns:
             (int, float): A tuple with the digit's value and the confidence as
                           a percentage.
+
+        Raises:
+            OkraModelError: Failed to run a model.
         """
 
         try:
@@ -130,23 +137,7 @@ class DigitGetter:
 
         self.__show_debug_image(img, 'Digit')
 
-        req = {"data": img.tobytes(), "x": img.shape[1], "y": img.shape[0]}
-
-        if self.__debug:
-
-            res = self.__model_handle.handle(req)
-            body = json.loads(res[0])
-
-        else:
-
-            res = requests.post(
-                'http://localhost:6060/predictions/OkraClassifier',
-                data=req
-            )
-            body = res.json()
-
-            if res.status_code != 200:
-                raise OkraModelError('TorchServe error', body)
+        body = self.__send_to_model('OkraClassifier', img)
 
         return (body['Digit'], body['Confidence'])
 
@@ -161,6 +152,9 @@ class DigitGetter:
         Returns:
             (list(int), list(float)): A tuple with a list of digit values and
                                       a list of confidences as percentages.
+
+        Raises:
+            OkraModelError: Failed to run a model.
         """
 
         try:
@@ -184,15 +178,58 @@ class DigitGetter:
             if digit_pixel == None:
                 break
 
-            # Get the slice of the image containing the digit
-            segment, segment_type = self.__segment_digit(img, digit_pixel, scan_state)
+            # Get the slice of the image containing the handwriting
+            segment, segment_type = self.__get_segment(
+                img,
+                digit_pixel,
+                scan_state
+            )
 
             if segment_type == SegmentType.DIGIT:
 
-                # Classify the digit
-                num, conf = self.__digit_from_image(segment)
-                numbers.append(num)
-                confidence.append(conf)
+                self.__process_digit_segment(segment, numbers, confidence)
+
+            elif segment_type == SegmentType.DIGIT2:
+
+                print('OCR Digit Overlap Issue Detected! - Splitting into 2 digits')
+
+                one_half = segment.shape[1] // 2
+
+                self.__process_digit_segment(
+                    segment[:, :one_half],
+                    numbers,
+                    confidence
+                )
+
+                self.__process_digit_segment(
+                    segment[:, one_half:],
+                    numbers,
+                    confidence
+                )
+
+            elif segment_type == SegmentType.DIGIT3:
+
+                print('OCR Digit Overlap Issue Detected! - Splitting into 3 digits')
+
+                one_third = segment.shape[1] // 3
+
+                self.__process_digit_segment(
+                    segment[:, :one_third],
+                    numbers,
+                    confidence
+                )
+
+                self.__process_digit_segment(
+                    segment[:, one_third:one_third * 2],
+                    numbers,
+                    confidence
+                )
+
+                self.__process_digit_segment(
+                    segment[:, one_third * 2:],
+                    numbers,
+                    confidence
+                )
 
             elif segment_type == SegmentType.DECIMAL:
 
@@ -279,9 +316,9 @@ class DigitGetter:
         return None
 
 
-    def __segment_digit(self, img, start_pixel, scan_state):
+    def __get_segment(self, img, start_pixel, scan_state):
         """
-        Segments out a single digit from an image.
+        Segments out a piece of handwriting from an image.
 
         Parameters:
             img (numpy.ndarray): An image.
@@ -290,8 +327,8 @@ class DigitGetter:
                                scan between function calls.
 
         Returns:
-            numpy.ndarray: A slice of img containing a single character.
-            SegmentType: The type of character in the image segment.
+            numpy.ndarray: A slice of img containing handwriting.
+            SegmentType: The type of handwriting in the image segment.
         """
 
         bounds = Boundary(
@@ -303,7 +340,7 @@ class DigitGetter:
 
         # Find the actual boundary of the digit.
         # 'bounds' will be updated with the correct values.
-        self.__digit_tracer.trace_digit(img, bounds, start_pixel, scan_state)
+        self.__tracer.trace(img, bounds, start_pixel, scan_state)
 
         # Update the scan state
         if bounds.bottom < img.shape[0] // 2:
@@ -320,52 +357,67 @@ class DigitGetter:
         else:
             scan_state['column'] = bounds.right + 1
 
-        # Figure out whats in this segment based on its size and shape
-        segment_type = self.__get_segment_type(bounds.shape(), img.shape)
 
         # Copy the box containing the digit from the image
-        digit_segment = bounds.get_slice(img)
+        segment = bounds.get_slice(img)
 
-        # Only apply padding if this is a digit
-        if segment_type == SegmentType.DIGIT:
-            digit_segment = self.__apply_padding(digit_segment)
+        # Determine what we just segmented out of the image
+        segment_type = self.__get_segment_type(segment, img.shape)
 
-        return digit_segment, segment_type
+        return segment, segment_type
 
 
-    def __get_segment_type(self, segment_shape, img_shape):
+    def __get_segment_type(self, segment, img_shape):
         """
         Determines the contents of a segment based on its size and shape.
 
         Parameters:
-            segment_shape (int, int): The shape of the segment.
+            segment (numpy.ndarray): The image segment.
             img_shape (int, int): The shape of the original image.
 
         Returns:
             SegmentType: The type of the segment.
         """
 
-        if img_shape[0] > img_shape[1]:
-            size_criteria = img_shape[0] // 2
+        height = segment.shape[0]
+        width = segment.shape[1]
+
+        if self.use_width_as_reference:
+
+            digit_min_height = img_shape[1] // 5.5
+            noise_max_size = img_shape[1] // 21
 
         else:
-            size_criteria = img_shape[0]
 
-        digit_min_height = size_criteria // 3
-        noise_max_size = size_criteria // 7
+            digit_min_height = img_shape[0] // 3
+            noise_max_size = img_shape[0] // 7
 
         # Is this tall enough to be a digit?
-        if segment_shape[0] >= digit_min_height:
-            return SegmentType.DIGIT
+        if height >= digit_min_height:
+
+            two_digit_factor = 1.4
+            three_digit_factor = 2.0
+
+            if width >= three_digit_factor * height:
+
+                return SegmentType.DIGIT3
+
+            elif width >= two_digit_factor * height:
+
+                return SegmentType.DIGIT2
+
+            else:
+                return SegmentType.DIGIT
 
         # Is this really small?
-        if segment_shape[0] < noise_max_size and \
-           segment_shape[1] < noise_max_size:
+        if height < noise_max_size and \
+           width < noise_max_size:
 
             return SegmentType.NOISE
 
         # Is this flat and long?
-        if segment_shape[1] >= segment_shape[0] * 1.75:
+        if width >= height * 2:
+
             return SegmentType.MINUS
 
         # It's probably a decimal if we reach here
@@ -409,6 +461,28 @@ class DigitGetter:
         return img
 
 
+    def __process_digit_segment(self, digit_segment, numbers, confidence):
+        """
+        Applies padding to a digit segment and sends it to the image
+        classifier.
+
+        Parameters:
+            digit_segment (numpy.ndarray): An image segment containing a digit.
+            numbers (list(int)): The list where the image classifier's result
+                                 will be placed.
+            confidence (list(float)): The list where the image classifier's
+                                      confidence will be placed.
+        """
+
+        # Prepare the segment
+        digit_segment = self.__apply_padding(digit_segment)
+
+        # Classify the digit
+        num, conf = self.__digit_from_image(digit_segment)
+        numbers.append(num)
+        confidence.append(conf)
+
+
     def __get_decimal_confidence(self, segment_shape):
         """
         Computes a confidence value for a decimal based on how round it is.
@@ -428,6 +502,54 @@ class DigitGetter:
         return percentage
 
 
+    def __send_to_model(self, model_name, img):
+        """
+        Sends an image to a machine learning model to be processed.
+
+        Parameters:
+            model_name (str): The name of the target model.
+            img (numpy.ndarray): The image to send to the model.
+
+        Returns:
+            dict: The model's results.
+
+        Raises:
+            OkraModelError: Failed to run a model.
+        """
+
+        payload = {"data": img.tobytes(), "x": img.shape[1], "y": img.shape[0]}
+
+        if self.__debug:
+
+            if model_name == 'OkraClassifier':
+
+                response = self.__classifier_handle.handle(payload)
+
+            else:
+                raise OkraModelError(f'Unkown model: "{model_name}"')
+
+            body = json.loads(response[0])
+
+        else:
+
+            try:
+                response = requests.post(
+                    f'http://localhost:6060/predictions/{model_name}',
+                    data=payload
+                )
+                body = response.json()
+
+                if response.status_code != 200:
+                    raise OkraModelError(
+                        f'TorchServe could not process the request: {body}'
+                    )
+
+            except requests.exceptions.ConnectionError as e:
+                raise OkraModelError(f'Unable to connect to TorchServe: {e}')
+
+        return body
+
+
     def __show_debug_image(self, img, title):
         """Helper function to display a matplotlib plot of an image"""
 
@@ -444,8 +566,8 @@ class DigitGetter:
 
 
 
-class DigitTracer:
-    """A class that contains the code for tracing digits"""
+class OkraTracer:
+    """A class that contains the code for tracing handwriting"""
 
     def __init__(self):
 
@@ -463,14 +585,15 @@ class DigitTracer:
         self.__num_directions = len(self.__directions)
 
 
-    def trace_digit(self, img, bounds, pixel, scan_state):
+    def trace(self, img, bounds, pixel, scan_state):
         """
         An edge tracing algorithm that finds the smallest box that fits a
-        digit.
+        piece of handwriting.
 
         Parameters:
             img (numpy.ndarray): An image.
-            bounds (Boundary): The object to store the bounds of the digit.
+            bounds (Boundary): An object to store the bounds of the
+                               handwriting.
             pixel (int, int): The coordinate of the starting pixel.
             scan_state (dict): A dictionary object to save the state of the
                                scan between function calls.
@@ -505,8 +628,14 @@ class DigitTracer:
                     if self.__is_white(next_pixel, img):
 
                         self.__update_bounds(bounds, next_pixel)
-                        self.__update_layers(layers, next_direction, next_pixel)
-                        start_direction = self.__get_start_direction(next_direction)
+                        self.__update_layers(
+                            layers,
+                            next_direction,
+                            next_pixel
+                        )
+                        start_direction = self.__get_start_direction(
+                            next_direction
+                        )
                         current_pixel = next_pixel
                         break
 
@@ -613,7 +742,7 @@ class DigitTracer:
         """
 
         half = img_shape[0] // 2
-        line_threshold = img_shape[1] // 2.5
+        line_threshold = img_shape[1] // 3
 
         # Check first condition
         if bounds.top < half and bounds.bottom > half:
@@ -622,14 +751,24 @@ class DigitTracer:
             if max(layers[:half]) >= line_threshold:
 
                 print('OCR Line Issue Detected! - Removing line from above')
-                self.__adjust_bounds_to_line(bounds, layers, bounds.top, half)
+                self.__adjust_bounds_to_line(
+                    bounds,
+                    layers,
+                    bounds.top,
+                    half
+                )
 
 
             # Check second condition (bottom half)
             elif max(layers[half:]) >= line_threshold:
 
                 print('OCR Line Issue Detected! - Removing line from below')
-                self.__adjust_bounds_to_line(bounds, layers, half, bounds.bottom)
+                self.__adjust_bounds_to_line(
+                    bounds,
+                    layers,
+                    half,
+                    bounds.bottom
+                )
 
 
     def __adjust_bounds_to_line(self, bounds, layers, search_top, search_bottom):
@@ -658,28 +797,28 @@ class DigitTracer:
 
         # If the center index is at the bottom of the boundary, it is
         # obviously the bottom of the line.
-        if center_i == bounds.bottom:
+        if center_i == search_bottom:
 
-            search_range = slice(search_top, bounds.bottom)
+            search_range = slice(search_top, search_bottom)
 
             high_i = search_top + np.argmax(layers[search_range])
 
             if layers[high_i] < 15 or center_i - high_i > 4:
-                bounds.top = bounds.bottom - 1
+                bounds.top = search_bottom - 1
 
             else:
                 bounds.top = high_i
 
         # Likewise, if the center index is at the boundary top, it is the
         # top of the line.
-        elif center_i == bounds.top:
+        elif center_i == search_top:
 
-            search_range = slice(bounds.top + 1, search_bottom + 1)
+            search_range = slice(search_top + 1, search_bottom + 1)
 
-            low_i = bounds.top + 1 + np.argmax(layers[search_range])
+            low_i = search_top + 1 + np.argmax(layers[search_range])
 
             if layers[low_i] < 15 or low_i - center_i > 4:
-                bounds.bottom = bounds.top + 1
+                bounds.bottom = search_top + 1
 
             else:
                 bounds.bottom = low_i
@@ -811,16 +950,20 @@ class SegmentType(IntEnum):
     decimals, and noise.
 
     Values:
-        NOISE = 0   : A few disconnected pixels that should be ignored.
-        DIGIT = 1   : A digit that should be passed to the classifier.
-        MINUS = 2   : A minus symbol that will likely be ignored.
-        DECIMAL = 3 : A decimal point.
+        NOISE   = 0 : A few disconnected pixels that should be ignored.
+        MINUS   = 1 : A minus symbol that will likely be ignored.
+        DECIMAL = 2 : A decimal point.
+        DIGIT   = 3 : A single digit ready for the classifier.
+        DIGIT2  = 4 : Two digits that must be split before being classified.
+        DIGIT3  = 5 : Three digits that must be split before being classified.
     """
 
     NOISE   = 0
-    DIGIT   = 1
-    MINUS   = 2
-    DECIMAL = 3
+    MINUS   = 1
+    DECIMAL = 2
+    DIGIT   = 3
+    DIGIT2  = 4
+    DIGIT3  = 5
 
 
 

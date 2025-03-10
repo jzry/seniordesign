@@ -1,7 +1,7 @@
 # Core packages from PyPI
-numpy==2.2.2
-filetype==1.2.0
-requests==2.32.3
+numpy~=2.2.2
+filetype~=1.2.0
+requests~=2.32.3
 
 # Install project codebase
 -e OCR_Package

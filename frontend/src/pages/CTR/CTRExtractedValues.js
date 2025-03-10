@@ -32,6 +32,11 @@ function CTRExtractedValues({ extractedData }) {
     return 'red';
   };
 
+  // concatenates the base64 string from the API with the needed info to read as an image
+  const newSrc = (source) => {
+    return "data:image;base64,"+source;
+  }
+
   // Handle score calculation (first click shows options, second calculates total score)
   const handleCalculateScore = () => {
     if (step === 2) {
@@ -70,6 +75,7 @@ function CTRExtractedValues({ extractedData }) {
                   borderColor: getBorderColor(data[key].confidence),
                 }}
               />
+            <img src={newSrc(data[key].image)} alt="segments"/>
             </div>
           ))}
           <div className="button-container">
