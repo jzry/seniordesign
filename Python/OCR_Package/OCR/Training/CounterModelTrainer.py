@@ -1,15 +1,19 @@
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 from torch.utils.data import DataLoader
-import torchvision.transforms as transforms
+from torchvision.transforms import v2
 from torch.utils.data import random_split
 
 from pathlib import Path
 import pandas as pd
 
 from TracedDigitsDataset import TracedDigitsDataset
-from OCR.OkraDigitCounter import OkraDigitCounter, TransposeImage, FlattenImage
+from OCR.OkraDigitCounter import OkraDigitCounter
 
+
+#############################
+####### Device Config #######
 
 CUDA_VISIBLE_DEVICES=1
 
@@ -30,14 +34,13 @@ torch.autograd.set_detect_anomaly(mode=False)
 torch.autograd.profiler.emit_nvtx(enabled=False)
 torch.autograd.profiler.profile(enabled=False)
 
-
 #############################
 ###### Hyperparameters ######
 
-batch_size = 5
-epochs = 100
+batch_size = 1000
+epochs = 20
 
-lr = 0.001
+lr = 0.0005
 weight_decay = 5e-3
 
 # SGD only
@@ -55,11 +58,8 @@ output_best_weights_filename = 'okra-counter-best.pt'
 
 
 # Transformations to be applied to the images
-transform = transforms.Compose([
-    transforms.ConvertImageDtype(torch.float32),
-    transforms.Normalize(0.0, 1.0),
-    FlattenImage(),
-    TransposeImage()
+transform = v2.Compose([
+    v2.ToDtype(torch.float32, scale=True),
 ])
 
 #############################
@@ -94,7 +94,7 @@ def main():
 
 def prepare_data():
 
-    data = TracedDigitsDataset(Path(__file__).parent / 'data' / 'TracedDigits', transform)
+    data = TracedDigitsDataset(Path(__file__).parent / 'data' / 'TracedDigits3', transform)
 
     train, test = random_split(data, [0.9, 0.1])
 
@@ -102,19 +102,16 @@ def prepare_data():
         train,
         shuffle=True,
         batch_size=batch_size,
-        num_workers=1,
-        collate_fn=variable_size_collate
+        num_workers=15
     )
-    test_loader = DataLoader(test, shuffle=False, batch_size=1, num_workers=1)
+    test_loader = DataLoader(
+        test,
+        shuffle=False,
+        batch_size=batch_size,
+        num_workers=15
+    )
 
     return train_loader, test_loader
-
-
-def variable_size_collate(batch):
-    data = [item[0] for item in batch]
-    target = [item[1] for item in batch]
-    target = torch.tensor(target)
-    return [data, target]
 
 
 def prepare_model():
@@ -205,39 +202,26 @@ def train_one_epoch(model, data, optimizer, criterion):
     total_correct = 0
     total_loss = 0
 
-    for x_batch, labels in data:
-
-        y_batch = get_one_hot_vectors(labels)
+    for x_batch, y_batch in data:
 
         # Erase old gradients by setting them to None
         optimizer.zero_grad(set_to_none=True)
 
         # Send data to GPU
+        x_batch = x_batch.to(device)
         y_batch = y_batch.to(device)
-        labels = labels.to(device)
-
-        preds = None
 
         # Inference
-        for x in x_batch:
-            x = x.unsqueeze(dim=0)
-            x = x.to(device)
-            pred = model(x)
-            pred = nn.functional.softmax(pred, dim=1)
-
-            if preds is None:
-                preds = pred
-            else:
-                preds = torch.cat((preds, pred), dim=0)
+        preds = model(x_batch)
+        preds = F.softmax(preds, dim=1)
 
         # Calculate loss and update model parameters
         loss = criterion(preds, y_batch)
         loss.backward()
-        torch.nn.utils.clip_grad_norm_(model.parameters(), 1.25)
         optimizer.step()
 
         # Track statistics
-        correct_pred = torch.argmax(preds, 1) == labels
+        correct_pred = torch.argmax(preds, 1) == y_batch
         total_correct += correct_pred.float().sum().item()
         total_loss += loss.item()
 
@@ -260,24 +244,21 @@ def test(model, data, criterion):
     total_loss = 0
 
     with torch.no_grad():
-        for x_batch, labels in data:
-
-            y_batch = get_one_hot_vectors(labels)
+        for x_batch, y_batch in data:
 
             # Send data to GPU
             x_batch = x_batch.to(device)
             y_batch = y_batch.to(device)
-            labels = labels.to(device)
 
             # Inference
-            pred = model(x_batch)
-            pred = nn.functional.softmax(pred, dim=1)
+            preds = model(x_batch)
+            preds = F.softmax(preds, dim=1)
 
             # Compute loss for this batch
-            total_loss += criterion(pred, y_batch).item()
+            total_loss += criterion(preds, y_batch).item()
 
             # Compute the number of correct predictions
-            correct_pred = torch.argmax(pred, 1) == labels
+            correct_pred = torch.argmax(preds, 1) == y_batch
             total_correct += correct_pred.float().sum().item()
 
     # Divide the loss from each batch by the number of batches
@@ -287,20 +268,6 @@ def test(model, data, criterion):
     accuracy = 100.0 * total_correct / len(data.dataset)
 
     return accuracy, avg_loss
-
-
-def get_one_hot_vectors(labels):
-
-    vectors = []
-
-    for label in labels:
-        v = [0] * 3
-        v[label] = 1
-        vectors.append(v)
-
-    return torch.tensor(vectors, dtype=torch.float32)
-
-
 
 
 if __name__=='__main__':

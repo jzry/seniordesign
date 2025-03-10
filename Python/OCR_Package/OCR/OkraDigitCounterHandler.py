@@ -9,15 +9,15 @@ except ImportError:
     class BaseHandler:
         pass
 
-from torch import load as torch_load, device as torch_device, argmax as torch_argmax, no_grad
+from torch import load as torch_load, device as torch_device, argmax as torch_argmax, no_grad, float32
 from torch.nn.functional import softmax
-from torchvision import transforms
+from torchvision.transforms import v2
 
 import numpy as np
 from pathlib import Path
 import json
 
-from OCR.OkraDigitCounter import OkraDigitCounter, FlattenImage, TransposeImage
+from OCR.OkraDigitCounter import OkraDigitCounter, PadImage
 
 
 class OkraDigitCounterHandler(BaseHandler):
@@ -27,11 +27,11 @@ class OkraDigitCounterHandler(BaseHandler):
 
         super().__init__()
         self.initialized = False
-        self.transform = transforms.Compose([
-            transforms.ToTensor(),
-            transforms.Normalize(0.0, 1.0),
-            FlattenImage(),
-            TransposeImage()
+        self.transform = v2.Compose([
+            v2.ToImage(),
+            v2.ToDtype(float32, scale=True),
+            PadImage(),
+            v2.Resize((32, 32)),
         ])
 
 

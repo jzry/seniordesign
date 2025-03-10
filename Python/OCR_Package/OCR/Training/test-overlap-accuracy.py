@@ -1,6 +1,6 @@
 from TracedDigitsDataset import TracedDigitsDataset
-from OCR.OkraDigitCounter import OkraDigitCounter, TransposeImage, FlattenImage
-import torchvision.transforms as transforms
+from OCR.OkraDigitCounter import OkraDigitCounter, PadImage
+from torchvision.transforms import v2
 import torch
 from pathlib import Path
 from termcolor import colored
@@ -11,12 +11,12 @@ test_model_in_training_folder = False
 test_model_in_weights_folder = True
 
 
+
 # Transformations to be applied to the images
-transform = transforms.Compose([
-    transforms.ConvertImageDtype(torch.float32),
-    transforms.Normalize(0.0, 1.0),
-    FlattenImage(),
-    TransposeImage()
+transform = v2.Compose([
+    PadImage(),
+    v2.Resize((32, 32)),
+    v2.ToDtype(torch.float32, scale=True),
 ])
 
 
@@ -124,6 +124,9 @@ def get_digit_count(img):
 
 
 def get_digit_count_model(img, model):
+
+    if img.shape[-1] < img.shape[-2] * 0.75:
+        return 1
 
     img = transform(img)
     img = img.unsqueeze(dim=0)
