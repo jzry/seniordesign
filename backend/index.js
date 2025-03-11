@@ -13,43 +13,6 @@ const devMode = process.env.MODE
 const torchserveFlag = (process.env.TORCHSERVE) ? process.env.TORCHSERVE.toLowerCase() === 'torchserve' : false
 
 
-
-// Request validation middleware for the CTR data from the OCR
-// Because the CTR data is not currently sourced from an api endpoint, this function only simulates the functionality of Express Middleware
-function validateData(/*req, res, next*/ fakeCTRData) {
-  let req = { body: fakeCTRData }
-  if (typeof req.body !== 'object' || req.body === null) {
-    return res.status(400).json({ error: 'Invalid JSON object in request body.' });
-  }
-
-  for (const key in req.body) {
-    const item = req.body[key];
-
-    // Check if item is an object with "value" and "confidence" keys
-    if (
-      typeof item !== 'object' ||
-      item === null ||
-      !('value' in item) ||
-      !('confidence' in item)
-    ) {
-      return res.status(400).json({ error: `Invalid format for key "${key}". Each value should contain "value" and "confidence" fields.` });
-    }
-
-    // Validate that the request
-    if (!Number.isInteger(item.value)) {
-      return res.status(400).json({ error: `Invalid value for "${key}". "value" must be an integer.` });
-    }
-    if (typeof item.confidence !== 'number' || item.confidence < 0 || item.confidence > 1) {
-      return res.status(400).json({ error: `Invalid confidence for "${key}". "confidence" must be a float between 0 and 1.` });
-    }
-  }
-
-  return
-
-  // If all validations pass, proceed
-  // next();
-}
-
 // Middleware function to validate the image input by the user
 function validateImage(req, res, next) {
   const allowedFileTypes = [
