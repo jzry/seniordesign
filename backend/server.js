@@ -19,11 +19,11 @@ if (protocol.toLowerCase() === 'https')
 
     server.listen(port, () => {
         let timestamp = new Date()
-        console.log(`${timestamp}\t| Server listening on port ${port}`)
+        console.log(`[${timestamp}] Server listening on port ${port}`)
     })
     .on('error', (err) => {
         let timestamp = new Date()
-        console.log(`${timestamp}\t| Server failed to start (port ${port})`)
+        console.log(`[${timestamp}] Server failed to start (port ${port})`)
         console.error(err)
     })
 
@@ -44,11 +44,11 @@ else
     // 8080 is the port we are using in the meantime, but may be changed later (probably)
     app.listen(port, () => {
         let timestamp = new Date()
-        console.log(`${timestamp}\t| Server listening on port ${port}`)
+        console.log(`[${timestamp}] Server listening on port ${port}`)
     })
     .on('error', (err) => {
         let timestamp = new Date()
-        console.log(`${timestamp}\t| Server failed to start (port ${port})`)
+        console.log(`[${timestamp}] Server failed to start (port ${port})`)
         console.error(err)
     })
 }
