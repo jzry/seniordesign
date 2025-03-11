@@ -5,6 +5,7 @@ const cors = require('cors');
 const cookieParser = require('cookie-parser')
 const path = require('path')
 const rateLimit = require('express-rate-limit')
+const morgan = require('morgan')
 const pyconnect = require('./pyconnect')
 
 const devMode = process.env.MODE
@@ -98,14 +99,22 @@ if (devMode === 'development') {
     optionsSuccessStatus: 200,
   };
   app.use(cors(corsOptions))
+
+  // Configure API logging
+  app.use(morgan('[:date] :method :url', { immediate: true}))
 }
-
-if (devMode === 'production') {
+else if (devMode === 'production') {
+  // Serve static frontend
   app.use(express.static(path.join(__dirname, '../frontend/build')))
-
   app.get('/*', (req, res) => {
     res.sendFile(path.join(__dirname, '../frontend/build', 'index.html'));
   })
+
+  // Configure API logging
+  app.use(morgan('[:date] :remote-addr (:status) :method :url (:response-time ms)'))
+}
+else {
+    throw `Error: "${devMode}" is not a valid MODE. See ENV.md`
 }
 
 // Use cookie parser
@@ -125,19 +134,6 @@ const limiter = rateLimit({
 })
 
 app.use(limiter)
-
-
-
-function apiHitLogger(req, res, next)
-{
-    let timestamp = new Date()
-
-    console.log(`${timestamp}\t| ${req.ip}\t| ${req.url}`)
-
-    next()
-}
-
-app.use(apiHitLogger)
 
 
 // Retrieve the uploaded image from the handleSubmit function in frontend/src/pages/crt/getPhotos.js
