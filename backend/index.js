@@ -9,6 +9,7 @@ const morgan = require('morgan')
 const pyconnect = require('./pyconnect')
 
 const devMode = process.env.MODE
+const corsOrigin = (process.env.ORIGIN) ? process.env.ORIGIN : '*'
 
 // A flag that determines if TorchServe is used or not
 const torchserveFlag = (process.env.TORCHSERVE) ? process.env.TORCHSERVE.toLowerCase() === 'torchserve' : false
@@ -29,25 +30,25 @@ function validateImage(req, res, next) {
 
   // Check if file exists
   if (!req.files || !req.files.image) {
-    let errorMessage = 'No file uploaded.'
+    let errorMessage = 'No file uploaded'
     console.warn(errorMessage)
-    return res.status(400).json({ "error": errorMessage });
+    return res.status(400).json({'error': errorMessage});
   }
 
   const image = req.files.image;
 
   // Check file size
   if (image.size > maxSizeBytes) {
-    let errorMessage = `File size exceeds limit of ${maxSize} MiB.`
+    let errorMessage = `File size exceeds limit of ${maxSize} MiB`
     console.warn(errorMessage)
-    return res.status(400).json({ "error": errorMessage });
+    return res.status(400).json({'error': errorMessage});
   }
 
   // Check file type
   if (!allowedFileTypes.includes(image.mimetype)) {
     let errorMessage = 'File type is not supported.'
     console.warn(errorMessage)
-    return res.status(400).json({ "error": errorMessage });
+    return res.status(400).json({'error': errorMessage});
   }
 
   // If all checks pass, proceed
@@ -84,22 +85,11 @@ function validateCorners(req, res, next) {
 }
 
 
-
-// Cross-Origin Resource Sharing Middleware to only accept data originating from our frontend
-
-
-
 // The express app
 const app = express();
 
 // Allow cross-origin resource sharing for our react development build
 if (devMode === 'development') {
-  const corsOptions = {
-    origin: '*',
-    optionsSuccessStatus: 200,
-  };
-  app.use(cors(corsOptions))
-
   // Configure API logging
   app.use(morgan('[:date] :method :url', { immediate: true}))
 }
@@ -114,8 +104,15 @@ else if (devMode === 'production') {
   app.use(morgan('[:date] :remote-addr (:status) :method :url (:response-time ms)'))
 }
 else {
-    throw `Error: "${devMode}" is not a valid MODE. See ENV.md`
+  throw `Error: "${devMode}" is not a valid MODE - see ENV.md`
 }
+
+// Configure CORS requests
+const corsOptions = {
+  origin: corsOrigin,
+  optionsSuccessStatus: 200,
+};
+app.use(cors(corsOptions))
 
 // Use cookie parser
 app.use(cookieParser())
@@ -139,10 +136,6 @@ app.use(limiter)
 // Retrieve the uploaded image from the handleSubmit function in frontend/src/pages/crt/getPhotos.js
 
 app.post('/ctr', validateImage, validateCorners, async (req, res) => {
-  if (!req.files || Object.keys(req.files).length === 0) {
-    return res.status(400).send('No files were uploaded.');
-  }
-
   // The name of the input field (i.e. "sampleFile") is used to retrieve the uploaded file
   let sampleFile = req.files.image;
 
@@ -160,10 +153,6 @@ app.post('/ctr', validateImage, validateCorners, async (req, res) => {
 });
 
 app.post('/bce', validateImage, validateCorners, async (req, res) => {
-  if (!req.files || Object.keys(req.files).length === 0) {
-    return res.status(400).send('No files were uploaded.');
-  }
-
   // The name of the input field (i.e. "sampleFile") is used to retrieve the uploaded file
   let sampleFile = req.files.image;
 
@@ -182,10 +171,6 @@ app.post('/bce', validateImage, validateCorners, async (req, res) => {
 
 
 app.post('/corners', validateImage, async (req, res) => {
-  if (!req.files || Object.keys(req.files).length === 0) {
-    return res.status(400).send('No files were uploaded.');
-  }
-
   // The name of the input field (i.e. "imageFile") is used to retrieve the uploaded file
   let imageFile = req.files.image;
 
