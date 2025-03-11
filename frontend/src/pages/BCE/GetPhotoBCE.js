@@ -71,6 +71,7 @@ function GetPhotoBCE({ numberOfRiders, fastestRiderTime, heaviestRiderWeight }) 
   const handleContinue = () => {
     setShowCorners(true);
   };
+  
 
   const handleCornersSubmit = (processedData) => {
     // console.log("Raw Processed Data:", processedData);
@@ -121,6 +122,7 @@ function GetPhotoBCE({ numberOfRiders, fastestRiderTime, heaviestRiderWeight }) 
           imageSrc={currentStep === 1 ? imageSrc1 : imageSrc2}
           imageFile={currentStep === 1 ? imageFile1 : imageFile2}
           onSubmitCorners={handleCornersSubmit}
+          mode={'bce'}
         />
       ) : (
         <>
