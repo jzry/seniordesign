@@ -16,7 +16,9 @@ BC_TEMPLATE_FIELDS = {
         'lesions': (361, 594, 107, 41),
         'soundness': (361, 664, 107, 49),
         'qual_movement': (361, 711, 107, 41),
-        'rider_time': (307, 971, 116, 44),
+        'rider_time': (307, 971, 116, 42),
+        'fastest_rider': (307, 1013, 116, 40),
+        'heaviest_rider': (307, 1266, 119, 44),
         'rider_weight': (307, 1310, 119, 44)
     },
     "Rider2": {
@@ -26,7 +28,9 @@ BC_TEMPLATE_FIELDS = {
         'lesions': (768, 594, 107, 41),
         'soundness': (768, 664, 107, 49),
         'qual_movement': (768, 711, 107, 41),
-        'rider_time': (714, 971, 116, 44),
+        'rider_time': (714, 971, 116, 42),
+        'fastest_rider': (714, 1013, 116, 40),
+        'heaviest_rider': (714, 1266, 119, 44),
         'rider_weight': (714, 1310, 119, 44)
     },
     "Rider3": {
@@ -36,7 +40,9 @@ BC_TEMPLATE_FIELDS = {
         'lesions': (1181, 594, 107, 41),
         'soundness': (1181, 664, 107, 49),
         'qual_movement': (1181, 711, 107, 41),
-        'rider_time': (1127, 971, 116, 44),
+        'rider_time': (1127, 971, 116, 42),
+        'fastest_rider': (1127, 1013, 116, 40),
+        'heaviest_rider': (1127, 1266, 119, 44),
         'rider_weight': (1127, 1310, 119, 44)
     },
     "Rider4": {
@@ -46,7 +52,9 @@ BC_TEMPLATE_FIELDS = {
         'lesions': (1588, 594, 107, 41),
         'soundness': (1588, 664, 107, 49),
         'qual_movement': (1588, 711, 107, 41),
-        'rider_time': (1534, 971, 116, 44),
+        'rider_time': (1534, 971, 116, 42),
+        'fastest_rider': (1534, 1013, 116, 40),
+        'heaviest_rider': (1534, 1266, 119, 44),
         'rider_weight': (1534, 1310, 119, 44)
     },
     "Rider5": {
@@ -56,7 +64,9 @@ BC_TEMPLATE_FIELDS = {
         'lesions': (2001, 594, 107, 41),
         'soundness': (2001, 664, 107, 49),
         'qual_movement': (2001, 711, 107, 41),
-        'rider_time': (1947, 971, 116, 44),
+        'rider_time': (1947, 971, 116, 42),
+        'fastest_rider': (1947, 1013, 116, 40),
+        'heaviest_rider': (1947, 1266, 119, 44),
         'rider_weight': (1947, 1310, 119, 44)
     },
 }
