@@ -89,7 +89,9 @@ function BCEExtractedValues({ extractedDataList, onGoBackToUpload, heaviestRider
                   borderColor: getBorderColor(data[key].confidence),
                 }}
               />
-              <img src={newSrc(data[key].image)} alt="segments"/>
+              <div className = "crop">
+                <img src={newSrc(data[key].image)} alt="segments"/>
+              </div>
             </div>
           ))}
           <div className="button-container">
