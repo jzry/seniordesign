@@ -124,8 +124,8 @@ app.use(fileUpload())
 
 // Configure API rate limiting
 const limiter = rateLimit({
-  windowMs: 20 * 1000,   // 20 seconds
-  max: 4,                // Limit each IP to 4 requests per 'window'
+  windowMs: 10 * 1000,   // 10 seconds
+  max: 8,                // Limit each IP to 8 requests per 'window'
   standardHeaders: true, // Return rate limit info in the 'RateLimit-*' headers
   legacyHeaders: false,  // Disable the 'X-RateLimit-*' headers
 })

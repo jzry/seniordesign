@@ -5,7 +5,7 @@ import Corners from '../Test/Corners.js';
 import '../../styles/CTRHandWritingRecognitionStyles.css';
 import axios from 'axios';
 
-function GetPhotoBCE({ numberOfRiders, fastestRiderTime, heaviestRiderWeight }) {
+function GetPhotoBCE({ numberOfScorecards, numberOfRiders, fastestRiderTime, heaviestRiderWeight }) {
   const [imageSrc1, setImageSrc1] = useState(null);
   const [imageSrc2, setImageSrc2] = useState(null);
   const [imageFile1, setImageFile1] = useState(null);
@@ -17,7 +17,7 @@ function GetPhotoBCE({ numberOfRiders, fastestRiderTime, heaviestRiderWeight }) 
   const [showCorners, setShowCorners] = useState(false);
   const apiUrl = process.env.REACT_APP_API_URL;
   
-  const isTwoPhotosRequired = numberOfRiders > 5;
+  const isTwoPhotosRequired = (numberOfRiders > 5 || numberOfScorecards > 1);
 
   const [isRotated1, setIsRotated1] = useState(false);
   const [isRotated2, setIsRotated2] = useState(false);
@@ -71,6 +71,7 @@ function GetPhotoBCE({ numberOfRiders, fastestRiderTime, heaviestRiderWeight }) 
   const handleContinue = () => {
     setShowCorners(true);
   };
+  
 
   const handleCornersSubmit = (processedData) => {
     // console.log("Raw Processed Data:", processedData);
@@ -121,6 +122,7 @@ function GetPhotoBCE({ numberOfRiders, fastestRiderTime, heaviestRiderWeight }) 
           imageSrc={currentStep === 1 ? imageSrc1 : imageSrc2}
           imageFile={currentStep === 1 ? imageFile1 : imageFile2}
           onSubmitCorners={handleCornersSubmit}
+          mode={'bce'}
         />
       ) : (
         <>
