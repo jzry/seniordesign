@@ -256,6 +256,7 @@ function Corners({ imageSrc, imageFile, onSubmitCorners, mode }) {
                 { x: 1000, y: 1000 },
                 { x: 500, y: 1000 }
             ]);
+            setCorners(null)
             setHasCorners(true);
         }
     }
@@ -306,6 +307,7 @@ function Corners({ imageSrc, imageFile, onSubmitCorners, mode }) {
         } catch (error) {
             console.error("Error submitting corners to BCE:", error);
         } finally {
+            setHasCorners(false);
             setLoading(false);
         }
     }
@@ -334,9 +336,9 @@ function Corners({ imageSrc, imageFile, onSubmitCorners, mode }) {
             <div className="container">
                 {/* <br /><br /> */}
 
-                {corners ? (
+                {hasCorners ? (
                     <div className="row">
-                        <h2>Adjust Corners If Needed</h2>
+                        <h2 style={{textAlign: "center"}}>Adjust Corners If Needed</h2>
                     </div>
                 ) : (
                     <div className="row">

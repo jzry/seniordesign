@@ -43,6 +43,7 @@ function BCE() {
         {showGetPhotoBCE ? (
           // Render GetPhotoBCE when user clicks continue
           <GetPhotoBCE
+            numberOfScorecards={parseInt(formData.numberOfScorecards, 10)}
             numberOfRiders={parseInt(formData.numberOfRiders, 10)}
             fastestRiderTime={formData.fastestRiderTime}
             heaviestRiderWeight={parseFloat(formData.heaviestRiderWeight)}
