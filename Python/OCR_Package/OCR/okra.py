@@ -189,48 +189,6 @@ class DigitGetter:
 
                 self.__process_digit_segment(segment, numbers, confidence)
 
-            elif segment_type == SegmentType.DIGIT2:
-
-                print('OCR Digit Overlap Issue Detected! - Splitting into 2 digits')
-
-                one_half = segment.shape[1] // 2
-
-                self.__process_digit_segment(
-                    segment[:, :one_half],
-                    numbers,
-                    confidence
-                )
-
-                self.__process_digit_segment(
-                    segment[:, one_half:],
-                    numbers,
-                    confidence
-                )
-
-            elif segment_type == SegmentType.DIGIT3:
-
-                print('OCR Digit Overlap Issue Detected! - Splitting into 3 digits')
-
-                one_third = segment.shape[1] // 3
-
-                self.__process_digit_segment(
-                    segment[:, :one_third],
-                    numbers,
-                    confidence
-                )
-
-                self.__process_digit_segment(
-                    segment[:, one_third:one_third * 2],
-                    numbers,
-                    confidence
-                )
-
-                self.__process_digit_segment(
-                    segment[:, one_third * 2:],
-                    numbers,
-                    confidence
-                )
-
             elif segment_type == SegmentType.DECIMAL:
 
                 if self.find_decimal_points:
@@ -395,19 +353,7 @@ class DigitGetter:
         # Is this tall enough to be a digit?
         if height >= digit_min_height:
 
-            two_digit_factor = 1.4
-            three_digit_factor = 2.0
-
-            if width >= three_digit_factor * height:
-
-                return SegmentType.DIGIT3
-
-            elif width >= two_digit_factor * height:
-
-                return SegmentType.DIGIT2
-
-            else:
-                return SegmentType.DIGIT
+            return SegmentType.DIGIT
 
         # Is this really small?
         if height < noise_max_size and \
@@ -953,17 +899,13 @@ class SegmentType(IntEnum):
         NOISE   = 0 : A few disconnected pixels that should be ignored.
         MINUS   = 1 : A minus symbol that will likely be ignored.
         DECIMAL = 2 : A decimal point.
-        DIGIT   = 3 : A single digit ready for the classifier.
-        DIGIT2  = 4 : Two digits that must be split before being classified.
-        DIGIT3  = 5 : Three digits that must be split before being classified.
+        DIGIT   = 3 : A digit that needs to be classified.
     """
 
     NOISE   = 0
     MINUS   = 1
     DECIMAL = 2
     DIGIT   = 3
-    DIGIT2  = 4
-    DIGIT3  = 5
 
 
 
