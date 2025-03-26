@@ -35,6 +35,10 @@ class DigitGetter:
         use_width_as_reference (bool): Use the image width instead of height
                                        as a reference when identifying
                                        handwriting segments (default=False).
+        scribble_threshold (float): The percentage of pixels in a segment that
+                                    have to be filled-in to be considered a
+                                    scribbled out number that should be ignored
+                                    (default=80.0).
     """
 
     def __init__(self, ts=False):
@@ -60,6 +64,7 @@ class DigitGetter:
         self.find_minus_signs = False
         self.blank_threshold = 120
         self.use_width_as_reference = False
+        self.scribble_threshold = 80.0
 
 
     def __preprocess_image(self, img):
@@ -353,6 +358,16 @@ class DigitGetter:
         # Is this tall enough to be a digit?
         if height >= digit_min_height:
 
+            # This might be a scribbled out digit
+            if height < width * 3:
+
+                # Find the percentage of "filled-in" pixels
+                fill = 100 * np.count_nonzero(segment) / (width * height)
+
+                if fill > self.scribble_threshold:
+                    return SegmentType.NOISE
+
+            # Otherwise, this is just a regular digit
             return SegmentType.DIGIT
 
         # Is this really small?
