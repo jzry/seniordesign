@@ -147,12 +147,16 @@ class DigitGetter:
         return (body['Digit'], body['Confidence'])
 
 
-    def image_to_digits(self, img):
+    def image_to_digits(self, img, expected_digit_count=None):
         """
         Extracts a line of digits from an image.
 
         Parameters:
             img (numpy.ndarray): An image containing some digits.
+            expected_digit_count (int): The number of digits that are expected
+                                        to be in the image. This is to help
+                                        detect overlapping digits. By default,
+                                        this is disabled (Default=None).
 
         Returns:
             (list(int), list(float)): A tuple with a list of digit values and
@@ -160,6 +164,7 @@ class DigitGetter:
 
         Raises:
             OkraModelError: Failed to run a model.
+            TypeError: The expected digit count cannot be zero or negative.
         """
 
         try:
@@ -191,6 +196,26 @@ class DigitGetter:
 
             # Add this segment to the list
             segments.append(segment)
+
+
+        # Check for overlapped digits
+        if expected_digit_count is not None:
+            if expected_digit_count <= 0:
+                raise TypeError(
+                    f'The expected digit count must be a postive integer. \
+                    Received: {expected_digit_count}'
+                )
+
+            is_digit = lambda x: x['type'] == SegmentType.DIGIT
+
+            number_of_digits = len(list(filter(is_digit, segments)))
+
+            while number_of_digits < expected_digit_count:
+
+                if not self.__split_digit(segments):
+                    break
+
+                number_of_digits += 1
 
 
         # The return values
@@ -397,6 +422,67 @@ class DigitGetter:
 
         # It's probably a decimal if we reach here
         return SegmentType.DECIMAL
+
+
+    def __split_digit(self, segments):
+        """
+        Splits the widest digit segment into halves. Assuming that overlapping-
+        digit segments will be wider than normal single digit segments, this
+        will seperate the overlapping digits into their own segments.
+
+        Parameters:
+            segments (list(dict)): All the segments extracted from the image.
+
+        Returns:
+            bool: True if a segment was split and False if no splittable
+                  segments are available.
+        """
+
+        index_of_widest = None
+
+        for i, segment in enumerate(segments):
+
+            if segment['type'] == SegmentType.DIGIT:
+
+                height, width = segment['img'].shape
+
+                if width >= height:
+
+                    if index_of_widest is not None:
+
+                        widest = segments[index_of_widest]['img'].shape[1]
+
+                        if width > widest:
+                            index_of_widest = i
+
+                    else:
+                        index_of_widest = i
+
+
+        if index_of_widest is not None:
+
+            print('OCR Digit-overlap Issue Detected! - Splitting segment')
+
+            segment = segments.pop(index_of_widest)['img']
+
+            half = segment.shape[1] // 2
+
+            left_half = segment[:, :half]
+            right_half = segment[:, half:]
+
+            segments.insert(
+                index_of_widest,
+                {'img': right_half, 'type': SegmentType.DIGIT}
+            )
+
+            segments.insert(
+                index_of_widest,
+                {'img': left_half, 'type': SegmentType.DIGIT}
+            )
+
+            return True
+
+        return False
 
 
     def __apply_padding(self, img):
