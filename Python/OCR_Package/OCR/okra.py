@@ -168,12 +168,11 @@ class DigitGetter:
         except OkraBlankSegmentException:
             return ([], [])
 
-        # The return values
-        numbers = []
-        confidence = []
-
         # A dictionary to save the state of the scan
         scan_state = {}
+
+        # A list to store all the segments extracted from the image
+        segments = []
 
         # Loop until the scan returns 'None'
         while True:
@@ -184,37 +183,51 @@ class DigitGetter:
                 break
 
             # Get the slice of the image containing the handwriting
-            segment, segment_type = self.__get_segment(
+            segment = self.__get_segment(
                 img,
                 digit_pixel,
                 scan_state
             )
 
-            if segment_type == SegmentType.DIGIT:
+            # Add this segment to the list
+            segments.append(segment)
 
-                self.__process_digit_segment(segment, numbers, confidence)
 
-            elif segment_type == SegmentType.DECIMAL:
+        # The return values
+        numbers = []
+        confidence = []
+
+        # Process all the segments found earlier
+        for segment in segments:
+
+            if segment['type'] == SegmentType.DIGIT:
+
+                self.__process_digit_segment(
+                    segment['img'],
+                    numbers,
+                    confidence
+                )
+
+            elif segment['type'] == SegmentType.DECIMAL:
 
                 if self.find_decimal_points:
-                    conf = self.__get_decimal_confidence(segment.shape)
+                    conf = self.__get_decimal_confidence(segment['img'].shape)
                     numbers.append('.')
                     confidence.append(conf)
 
-                self.__show_debug_image(segment, 'Decimal Point')
+                self.__show_debug_image(segment['img'], 'Decimal Point')
 
-            elif segment_type == SegmentType.MINUS:
+            elif segment['type'] == SegmentType.MINUS:
 
                 if self.find_minus_signs:
-                    conf = 100.0 - self.__get_decimal_confidence(segment.shape)
+                    conf = self.__get_decimal_confidence(segment['img'].shape)
                     numbers.append('-')
-                    confidence.append(conf)
+                    confidence.append(100.0 - conf)
 
-                self.__show_debug_image(segment, 'Minus Symbol')
+                self.__show_debug_image(segment['img'], 'Minus Symbol')
 
             else:
-
-                self.__show_debug_image(segment, 'Ignored')
+                self.__show_debug_image(segment['img'], 'Ignored')
 
         return (numbers, confidence)
 
@@ -290,8 +303,9 @@ class DigitGetter:
                                scan between function calls.
 
         Returns:
-            numpy.ndarray: A slice of img containing handwriting.
-            SegmentType: The type of handwriting in the image segment.
+            dict: The segment and its type stored in a dictionary:
+                  'img' (numpy.ndarray): A slice of img containing handwriting.
+                  'type' (SegmentType): The type of handwriting in the segment.
         """
 
         bounds = Boundary(
@@ -327,7 +341,7 @@ class DigitGetter:
         # Determine what we just segmented out of the image
         segment_type = self.__get_segment_type(segment, img.shape)
 
-        return segment, segment_type
+        return {'img': segment, 'type': segment_type}
 
 
     def __get_segment_type(self, segment, img_shape):
