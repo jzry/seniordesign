@@ -85,7 +85,7 @@ function BCEResults({ extractedDataList }) {
                 <p>Total Veterinary Score:</p>
                 </div>
                 <div class="column right">
-                  <p>{totalTimeScore}</p>
+                  <p>{totalVeterinaryScore}</p>
                 </div>
               </div>
             </div>
