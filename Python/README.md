@@ -10,7 +10,7 @@ Python can be downloaded from the
 [official Python download page](https://www.python.org/downloads/).
 
 > [!IMPORTANT]
-> As of January 2025, PyTorch [does not support Python 3.13](https://pytorch.org/get-started/locally/#windows-python)
+> As of March 2025, PyTorch [does not yet support Python 3.13](https://pytorch.org/get-started/locally/#windows-python)
 > on all systems. If you install version 3.13, PyTorch may not work correctly!
 
 To check your Python version, run the following command:
@@ -74,10 +74,17 @@ From the options on the linked page, select the following:
 > PyTorch with the latest
 > [CUDA version that your GPU supports](https://en.wikipedia.org/wiki/CUDA#GPUs_supported).
 
+Optionally, you can install support for additional file types.
+:warning: Some of these packages may require additional software to be installed
+on Windows and Mac systems.
+
+`pip install -r ext-requirements.txt`
+
 ### Server Installation
 
-> [!NOTE]
+> [!WARNING]
 > This method is for installation on a server running a Linux distro.
-> The correct version of PyTorch will automatically be installed.
+> Installing this in a development environment may result in unintended
+> side effects.
 
 `pip install -r server-requirements.txt`
