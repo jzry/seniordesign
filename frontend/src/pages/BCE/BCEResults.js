@@ -2,13 +2,40 @@ import React from 'react';
 import '../../styles/CTRHandWritingRecognitionStyles.css';
 
 // Calculates and displays final scores for each rider
-function BCEResults({ extractedDataList, fastestRiderTime, heaviestRiderWeight }) {
+function BCEResults({ extractedDataList }) {
 
   // Calculates the veterinary score for a rider
   const calculateVeterinaryScore = (data) => {
     const { Recovery, Hydration, Lesions, Soundness, 'Qual Mvmt': QualMvmt } = data;
     return (parseFloat(Recovery.value, 10) + parseFloat(Hydration.value, 10) + parseFloat(Lesions.value, 10) + parseFloat(Soundness.value, 10) + parseFloat(QualMvmt.value, 10)) * 10;
   };
+
+  // Finds the weight of the heaviest rider
+  const findHeaviestWeight = () => {
+    let heaviestWeight = 0;
+    extractedDataList.forEach((rider) => {
+      let riderWeight = parseInt(rider['Weight of this rider'].value, 10);
+      if (riderWeight > heaviestWeight) heaviestWeight = riderWeight;
+    });
+    console.log(`Max weight: ${heaviestWeight}`);
+    return heaviestWeight;
+  };
+
+  // Finds the time of the fastest rider
+  const findFastestTime = () => {
+    let fastestTime = 9999;
+    extractedDataList.forEach((rider) => {
+      let riderTime = parseInt(rider['Ride time, this rider'].value, 10);
+      if (riderTime < fastestTime) fastestTime = riderTime;
+    });
+    console.log(`Fastest time: ${fastestTime}`);
+    return fastestTime;
+  };
+
+
+  // The heaviest weight and fastest time for score calculations
+  const heaviestRiderWeight = findHeaviestWeight()
+  const fastestRiderTime = findFastestTime()
 
   // Calculates the weight score for a rider
   const calculateWeightScore = (weight) => {
@@ -66,7 +93,7 @@ function BCEResults({ extractedDataList, fastestRiderTime, heaviestRiderWeight }
               <div class="row">
                 <div class="column left">
                   <p>Total Time Score:</p>
-                </div>              
+                </div>
                 <div class="column right">
                   <p>{totalTimeScore}</p>
                 </div>
