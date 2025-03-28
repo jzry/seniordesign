@@ -75,7 +75,7 @@ From the options on the linked page, select the following:
 > [CUDA version that your GPU supports](https://en.wikipedia.org/wiki/CUDA#GPUs_supported).
 
 Optionally, you can install support for additional file types.
-:warning: Some of these packages may require additional software to be installed
+⚠️ Some of these packages may require additional software to be installed
 on Windows and Mac systems.
 
 `pip install -r ext-requirements.txt`
