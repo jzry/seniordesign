@@ -3,7 +3,7 @@ import BCEResults from './BCEResults';
 import '../../styles/CTRHandWritingRecognitionStyles.css';
 
 // Displays and edits extracted data for each rider
-function BCEExtractedValues({ extractedDataList, onGoBackToUpload, heaviestRiderWeight, fastestRiderTime, numberOfRiders }) {
+function BCEExtractedValues({ extractedDataList, onGoBackToUpload }) {
   const [currentRiderIndex, setCurrentRiderIndex] = useState(0); // Index to track the current rider
   const [data, setData] = useState({ ...extractedDataList[currentRiderIndex] }); // Initialize with the first rider's data
   const [step, setStep] = useState(1); // Tracks the current step (1: edit, 2: go back/calculate, 3: show score)
@@ -69,8 +69,8 @@ function BCEExtractedValues({ extractedDataList, onGoBackToUpload, heaviestRider
   };
 
   if (showResults) {
-    return <BCEResults extractedDataList={extractedDataList} fastestRiderTime={fastestRiderTime} heaviestRiderWeight={heaviestRiderWeight} />;
-  } 
+    return <BCEResults extractedDataList={extractedDataList} />;
+  }
 
 
   return (
