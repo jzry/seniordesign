@@ -176,7 +176,23 @@ def __preprocess(image):
 
     # Apply a threshold. It's not important if handwriting and text quality is
     # reduced. Just as long as the four vertical line are clearly visible.
-    _, thresh_image = cv.threshold(gray_image, 0, 255, cv.THRESH_BINARY + cv.THRESH_OTSU)
+    thresh_image = cv.adaptiveThreshold(
+        gray_image,
+        255,
+        cv.ADAPTIVE_THRESH_MEAN_C,
+        cv.THRESH_BINARY,
+        15,
+        10
+    )
+
+    # __demo_image(
+    #     thresh_image,
+    #     [],
+    #     [],
+    #     'gray'
+    # )
+    # cv.waitKey(0)
+    # cv.destroyAllWindows()
 
     return thresh_image
 
