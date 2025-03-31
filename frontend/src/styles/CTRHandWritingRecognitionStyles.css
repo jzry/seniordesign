@@ -85,6 +85,10 @@ div.bce-container {
   overflow-x: visible;
 }
 
+/* Makes sure that the editable fields can scroll */
+.bce-results-container .container {
+  touch-action: manipulation;
+}
 .result-container {
   font-size: 20px;
   font-weight: bold;
@@ -305,11 +309,11 @@ p {
   }
   
   /* Controls rotation of preview photo */
-  .rotated {
-    /* transform: rotate(90deg);
-    max-width: 80vh; /* Adjust based on screen size */
-    /* max-height: 90vw; */
-  }
+  /* .rotated {
+    transform: rotate(90deg);
+    max-width: 80vh; 
+    max-height: 90vw;
+  } */
   
   .action-buttons {
     display: flex;
@@ -320,8 +324,8 @@ p {
   }
   
   .container {
-    touch-action: manipulation; /* Prevents scrolling on touch */
-}
+    touch-action: manipulation; /* Prevents scrolling on touch for canvas*/
+  }
 
   /* Rotate */
   .image-fullscreen-container {
