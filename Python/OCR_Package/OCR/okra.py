@@ -557,10 +557,13 @@ class DigitGetter:
         """
 
         # Divide the smaller dimension by the larger dimension
-        # Multiply by 100 to convert to percentage
-        percentage = 100.0 * min(segment_shape) / max(segment_shape)
+        ratio = min(segment_shape) / max(segment_shape)
 
-        return percentage
+        # The higher the ratio, the higher the confidence.
+        # You may want to graph this to see what's going on
+        confidence = 1 - (ratio - 1)**2
+
+        return confidence * 100.0
 
 
     def __send_to_model(self, model_name, img):
