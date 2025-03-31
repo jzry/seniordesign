@@ -324,7 +324,7 @@ p {
   }
   
   .container {
-    touch-action: manipulation; /* Prevents scrolling on touch for canvas*/
+    touch-action: none; /* Prevents scrolling on touch for canvas*/
   }
 
   /* Rotate */
