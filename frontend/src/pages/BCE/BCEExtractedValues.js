@@ -32,10 +32,16 @@ function BCEExtractedValues({ extractedDataList, onGoBackToUpload, heaviestRider
 
   const getBorderColor = (confidence) => {
     if (confidence >= 95.0) return 'green';
-    if (confidence >= 85.0) return 'yellow';
+    if (confidence >= 85.0) return 'gold';
     return 'red';
   };
 
+  // Determines the border style based on confidence level
+  const getBorderStyle = (confidence) => {
+    if (confidence > 90.0) return 'solid';
+    if (confidence > 80.0) return 'dashed';
+    return 'dotted';
+  };
   // concatenates the base64 string from the API with the needed info to read as an image
   const newSrc = (source) => {
     return "data:image;base64,"+source;
@@ -87,6 +93,7 @@ function BCEExtractedValues({ extractedDataList, onGoBackToUpload, heaviestRider
                 onChange={(event) => handleInputChange(key, event)}
                 style={{
                   borderColor: getBorderColor(data[key].confidence),
+                  borderStyle: getBorderStyle(data[key].confidence),
                 }}
               />
               <div className = "crop">
