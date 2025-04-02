@@ -81,7 +81,7 @@ div.bce-container {
   max-width: max-content;
   align-items: center;
   text-align: center;
-  overflow-y: auto;
+  overflow-y: visible;
   overflow-x: visible;
 }
 
@@ -303,7 +303,7 @@ p {
     max-height: 80vh;
     object-fit: contain;
     display: block;
-    margin: 0 auto 20px auto;
+    margin: 20px auto 20px auto;
     border-radius: 10px;
     box-shadow: 0px 4px 8px rgba(0,0,0,0.2);
   }
@@ -330,7 +330,6 @@ p {
   /* Rotate */
   .image-fullscreen-container {
     display: flex;
-    justify-content: center;
     align-items: center;
     width: 100vw;
     max-width: 100%;
