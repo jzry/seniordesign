@@ -4,7 +4,7 @@ TorchServe will manage the image classifer on the deployment server.
 This README will go through the steps of setting it up.
 
 > [!NOTE]
-> These instructions assume you are running TorchServe on a Debian-based Linux distro.
+> These instructions assume you are running TorchServe on a Ubuntu server.
 > If for some reason you want to run TorchServe on Windows see
 > [this guide](https://pytorch.org/serve/torchserve_on_win_native.html).
 
@@ -18,8 +18,19 @@ Install Java 21:
 
 ### Python
 
-The required Python packages should have been installed during the
+The necessary packages will automatically be installed if you follow
+the server installation section of the
 [Python setup](../Python#server-installation).
+If you need to install the TorchServe packages in a development
+environment, navigate to the directory `seniordesign/Python/` and
+run:
+
+`pip install -r ts-requirements.txt`
+
+> [!IMPORTANT]
+> The model handler code will automatically use TorchServe if
+> it is installed. To stop using TorchServe,
+> you must uninstall it: `pip uninstall torchserve`
 
 ## Build Model Archive
 
@@ -61,7 +72,7 @@ To stop TorchServe:
 
 To daemonize TorchServe, a background process must be created
 that runs on startup. This can be accomplished by creating a
-systemd service. Using a text editor such as `nano` or `vim`,
+systemd service. Using a text editor such as *nano* or *vim*,
 create a file: `/etc/systemd/system/start-torchserve.service`.
 Copy and paste the following lines into the newly created file and
 replace `%USER%` with the name of the user that should run

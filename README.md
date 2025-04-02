@@ -1,7 +1,7 @@
 # Web-based Automated Scorecard Reading and Calculation
 
 This is a UCF senior design project completed by a team
-of six from September 2024 - May 2025 and is a practical
+of six from September 2024 - April 2025 and is a practical
 application of the knowledge gained from our undergraduate
 computer science education.
 
@@ -14,8 +14,13 @@ must complete courses between 25 and 100 miles long. Participants
 are scored based on their time and the soundness of the horse. For
 safety, horses are evaluated by veterinarians at regular intervals
 during the event and are only allowed to continue if they pass the
-checkup. Two scorecards are typically used: the Competitive Trail
-Ride (CTR) form and the Best Condition Evaluation (BCE) form.
+checkup. Two scorecards are typically used: the
+[Competitive Trail Ride (CTR)](https://www.distanceriding.org/wp-content/uploads/2016/09/Judge-Score-Card.pdf)
+form and the
+[Best Condition Evaluation (BCE)](https://aerc.org/wp-content/uploads/2024/04/BestConditionEvaluation2024.pdf)
+form.
+For more information about endurance riding, see
+[this article](https://aerc.org/wp-content/uploads/2023/09/EnduranceBasics2023.pdf).
 
 ## Goal
 
