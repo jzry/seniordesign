@@ -323,7 +323,7 @@ p {
     gap: 10px;
   }
   
-  .container {
+  .drag-container {
     touch-action: none; /* Prevents scrolling on touch for canvas*/
   }
 
