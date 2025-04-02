@@ -70,51 +70,51 @@ function BCEResults({ extractedDataList }) {
         return (
           <div key={index} className="bce-result">
             <div className = "row-container">
-              <div class="row">
-                <div class="column left">
+              <div className="row">
+                <div className="column left">
                 <h4>Rider number:</h4>
                 </div>
-                <div class="column right">
+                <div className="column right">
                   <h4>{data['Rider number'].value}</h4>
                 </div>
               </div>
             </div>
             <div className = "row-container">
-              <div class="row">
-                <div class="column left">
+              <div className="row">
+                <div className="column left">
                 <p>Total Veterinary Score:</p>
                 </div>
-                <div class="column right">
+                <div className="column right">
                   <p>{totalVeterinaryScore}</p>
                 </div>
               </div>
             </div>
             <div className = "row-container">
-              <div class="row">
-                <div class="column left">
+              <div className="row">
+                <div className="column left">
                   <p>Total Time Score:</p>
-                </div>
-                <div class="column right">
+                </div>              
+                <div className="column right">
                   <p>{totalTimeScore}</p>
                 </div>
               </div>
             </div>
             <div className = "row-container">
-              <div class="row">
-                <div class="column left">
+              <div className="row">
+                <div className="column left">
                   <p>Total Weight Score: </p>
                 </div>
-                <div class="column right">
+                <div className="column right">
                   <p>{totalWeightScore}</p>
                 </div>
               </div>
             </div>
             <div className = "row-container">
-              <div class="row">
-                <div class="column left">
+              <div className="row">
+                <div className="column left">
                   <p>Total Score:</p>
                 </div>
-                <div class="column right">
+                <div className="column right">
                   <p>{totalVeterinaryScore + totalWeightScore + totalTimeScore}</p>
                 </div>
               </div>
