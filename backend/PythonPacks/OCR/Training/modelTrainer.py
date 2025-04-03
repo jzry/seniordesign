@@ -6,7 +6,7 @@ from torch.utils.data import DataLoader
 import pandas as pd
 from pathlib import Path
 
-from OCR.OkraClassifier import OkraClassifier
+from OkraClassifier import OkraClassifier
 
 
 #############################

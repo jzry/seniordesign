@@ -53,12 +53,12 @@ To show the packages installed in your Python virtual environment run:
 
 ## Installing Packages
 
-Navigate in your terminal to the directory `seniordesign/Python/`.
+Navigate in your terminal to the directory `seniordesign/backend/PythonPacks/`.
 Packages will be installed using [pip](https://pip.pypa.io/en/stable/).
 
 ### Developer Installation
 
-`pip install -r dev-requirements.txt`
+`pip install -r setup/dev-requirements.txt`
 
 Also, install PyTorch using the command provided by
 [their website](https://pytorch.org/get-started/locally/).
@@ -78,7 +78,7 @@ Optionally, you can install support for additional file types.
 ⚠️ Some of these packages may require additional software to be installed
 on Windows and Mac systems.
 
-`pip install -r ext-requirements.txt`
+`pip install -r setup/ext-requirements.txt`
 
 ### Server Installation
 
@@ -87,4 +87,4 @@ on Windows and Mac systems.
 > Installing this in a development environment may result in unintended
 > side effects.
 
-`pip install -r server-requirements.txt`
+`pip install -r setup/server-requirements.txt`

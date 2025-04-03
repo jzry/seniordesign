@@ -1,7 +1,8 @@
 import unittest
 import numpy as np
 
-import OCR.okra as okra
+from .context import OCR
+from OCR import okra
 
 
 class DigitGetterTestCase(unittest.TestCase):

@@ -17,7 +17,7 @@ import numpy as np
 from pathlib import Path
 import json
 
-from OCR.OkraClassifier import OkraClassifier
+from .OkraClassifier import OkraClassifier
 
 
 class OkraHandler(BaseHandler):

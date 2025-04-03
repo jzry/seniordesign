@@ -1,7 +1,7 @@
-from preprocessing.scorefields import BCSegments
-from OCR import okra
-from OCR import violin as v
-import ImagePackager
+from PythonPacks.preprocessing.scorefields import BCSegments
+from PythonPacks.OCR import okra
+from PythonPacks.OCR import violin as v
+from PythonPacks import ImagePackager
 
 
 # A key map to convert the score-field key

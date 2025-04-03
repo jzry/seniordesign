@@ -1,6 +1,7 @@
 import unittest
 
-import OCR.violin as violin
+from .context import OCR
+from OCR import violin
 
 
 class ViolinTestCase(unittest.TestCase):
