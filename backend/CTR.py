@@ -1,7 +1,7 @@
-from PythonPacks.preprocessing.scorefields import CTRSegments
-from PythonPacks.OCR import okra
-from PythonPacks.OCR import violin as v
-from PythonPacks import ImagePackager
+from PythonPackages.preprocessing.scorefields import CTRSegments
+from PythonPackages.OCR import okra
+from PythonPackages.OCR import violin as v
+from PythonPackages import ImagePackager
 
 
 max_score_per_field = [5, 5, 5, 5, 5, 3, 0, 2, 5, 5, 20, 5, 10, 25, 5, 5, None, None]
