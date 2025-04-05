@@ -1,5 +1,5 @@
 def run(args, image_buffer):
-    from preprocessing.scoresheet import Paper_Extraction
+    from PythonPackages.preprocessing.scoresheet import Paper_Extraction
 
     # Perform paper extraction to get corners and warped image
     expected_corners = Paper_Extraction(image_buffer)

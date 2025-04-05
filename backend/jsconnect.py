@@ -5,8 +5,8 @@ from os import devnull
 import importlib.util
 from pathlib import Path
 
-from preprocessing.exceptions import *
-from OCR.exceptions import *
+from PythonPackages.preprocessing.exceptions import *
+from PythonPackages.OCR.exceptions import *
 
 
 def main():

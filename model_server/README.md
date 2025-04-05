@@ -20,12 +20,12 @@ Install Java 21:
 
 The necessary packages will automatically be installed if you follow
 the server installation section of the
-[Python setup](../Python#server-installation).
+[Python setup](../backend/PythonPacks#server-installation).
 If you need to install the TorchServe packages in a development
-environment, navigate to the directory `seniordesign/Python/` and
+environment, navigate to the directory `seniordesign/backend/PythonPacks` and
 run:
 
-`pip install -r ts-requirements.txt`
+`pip install -r setup/ts-requirements.txt`
 
 > [!IMPORTANT]
 > The model handler code will automatically use TorchServe if
@@ -39,9 +39,9 @@ Navigate to the directory `seniordesign/model_server/` and run the following com
 ```
 torch-model-archiver --model-name OkraClassifier \
                      --version 1.0 \
-                     --model-file ../Python/OCR_Package/OCR/OkraClassifier.py \
-                     --serialized-file ../Python/OCR_Package/OCR/weights/okra.resnet.weights \
-                     --handler ../Python/OCR_Package/OCR/OkraHandler.py \
+                     --model-file ../backend/PythonPacks/OCR/OkraClassifier.py \
+                     --serialized-file ../backend/PythonPacks/OCR/weights/okra.resnet.weights \
+                     --handler ../backend/PythonPacks/OCR/OkraHandler.py \
                      --export-path model_store/ --force
 ```
 

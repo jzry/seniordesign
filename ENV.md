@@ -4,7 +4,7 @@ A comprehensive list of all environment variables that are used by this web app.
 Not all of these are required to be set for development. The variables that must be set
 in order to run will be labeled :exclamation:***Required***.
 
-## :page_facing_up: File: `/process.env`
+## :page_facing_up: File: `backend/.env`
 
 ### PORT
 
