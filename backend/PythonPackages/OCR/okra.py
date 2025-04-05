@@ -3,6 +3,8 @@ import cv2
 from enum import IntEnum
 import requests
 import json
+import base64
+import os
 
 from .exceptions import *
 
@@ -45,13 +47,6 @@ class DigitGetter:
         """Creates a new instance of DigitGetter"""
 
         self.__debug = not ts
-
-        if self.__debug:
-
-            from .OkraHandler import OkraHandler
-
-            self.__classifier_handle = OkraHandler()
-            self.__classifier_handle.initialize()
 
         self.__tracer = OkraTracer()
 
@@ -581,35 +576,28 @@ class DigitGetter:
             OkraModelError: Failed to run a model.
         """
 
-        payload = {"data": img.tobytes(), "x": img.shape[1], "y": img.shape[0]}
+        payload = {
+            "data": base64.b64encode(img.tobytes()).decode('ascii'),
+            "x": img.shape[1],
+            "y": img.shape[0]
+        }
 
-        if self.__debug:
+        model_server_port = os.environ.get('LITSERVE_PORT', 8000)
 
-            if model_name == 'OkraClassifier':
+        try:
+            response = requests.post(
+                f'http://localhost:{model_server_port}/predict',
+                json=payload
+            )
+            body = response.json()
 
-                response = self.__classifier_handle.handle(payload)
-
-            else:
-                raise OkraModelError(f'Unkown model: "{model_name}"')
-
-            body = json.loads(response[0])
-
-        else:
-
-            try:
-                response = requests.post(
-                    f'http://localhost:6060/predictions/{model_name}',
-                    data=payload
+            if response.status_code != 200:
+                raise OkraModelError(
+                    f'The model server could not process the request: {body}'
                 )
-                body = response.json()
 
-                if response.status_code != 200:
-                    raise OkraModelError(
-                        f'TorchServe could not process the request: {body}'
-                    )
-
-            except requests.exceptions.ConnectionError as e:
-                raise OkraModelError(f'Unable to connect to TorchServe: {e}')
+        except requests.exceptions.ConnectionError as e:
+            raise OkraModelError(f'Unable to connect to model server: {e}')
 
         return body
 

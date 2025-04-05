@@ -28,9 +28,9 @@ nesterov = True
 use_extended_MNIST = True
 use_Adam_optimizer = False
 load_existing_weights = False
-input_weights_filename = 'okra_input.resnet.weights'
-output_final_weights_filename = 'okra_final.resnet.weights'
-output_best_weights_filename = 'okra_best.resnet.weights'
+input_weights_filename = 'okra_input-resnet.pt'
+output_final_weights_filename = 'okra_final-resnet.pt'
+output_best_weights_filename = 'okra_best-resnet.pt'
 
 
 # Transformations to be applied to the training images
