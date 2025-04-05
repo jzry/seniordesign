@@ -11,9 +11,6 @@ const pyconnect = require('./pyconnect')
 const devMode = process.env.MODE
 const corsOrigin = (process.env.ORIGIN) ? process.env.ORIGIN : '*'
 
-// A flag that determines if TorchServe is used or not
-const torchserveFlag = (process.env.TORCHSERVE) ? process.env.TORCHSERVE.toLowerCase() === 'torchserve' : false
-
 
 // Middleware function to validate the image input by the user
 function validateImage(req, res, next) {
@@ -141,7 +138,7 @@ app.post('/ctr', validateImage, validateCorners, async (req, res) => {
 
   //console.log('File received:', sampleFile.name);  // Log file details
 
-  let args = { "torchserve": torchserveFlag }
+  let args = {}
 
   if (req.corner_points)
     args.corner_points = req.corner_points
@@ -158,7 +155,7 @@ app.post('/bce', validateImage, validateCorners, async (req, res) => {
 
   //console.log('File received:', sampleFile.name);  // Log file details
 
-  let args = { "torchserve": torchserveFlag }
+  let args = {}
 
   if (req.corner_points)
     args.corner_points = req.corner_points

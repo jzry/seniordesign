@@ -2,3 +2,4 @@
 numpy~=2.2.2
 filetype~=1.2.0
 requests~=2.32.3
+litserve~=0.2.7

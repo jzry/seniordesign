@@ -2,7 +2,6 @@ import numpy as np
 import cv2
 from enum import IntEnum
 import requests
-import json
 import base64
 import os
 
@@ -43,10 +42,8 @@ class DigitGetter:
                                     (default=80.0).
     """
 
-    def __init__(self, ts=False):
+    def __init__(self):
         """Creates a new instance of DigitGetter"""
-
-        self.__debug = not ts
 
         self.__tracer = OkraTracer()
 
@@ -60,6 +57,19 @@ class DigitGetter:
         self.blank_threshold = 120
         self.use_width_as_reference = False
         self.scribble_threshold = 80.0
+
+        # Optionally bypass LitServe
+
+        if os.environ.get('BYPASS_LITSERVE') is not None:
+
+            from .OkraAPI import OkraLitAPI
+
+            self.__model_handler = OkraLitAPI()
+            self.__model_handler.setup('cpu')
+            self.__bypass_LitServe = True
+
+        else:
+            self.__bypass_LitServe = False
 
 
     def __preprocess_image(self, img):
@@ -582,22 +592,28 @@ class DigitGetter:
             "y": img.shape[0]
         }
 
-        model_server_port = os.environ.get('LITSERVE_PORT', 8000)
+        if self.__bypass_LitServe:
 
-        try:
-            response = requests.post(
-                f'http://localhost:{model_server_port}/predict',
-                json=payload
-            )
-            body = response.json()
+            body = self.__model_handler.direct_request(payload)
 
-            if response.status_code != 200:
-                raise OkraModelError(
-                    f'The model server could not process the request: {body}'
+        else:
+
+            model_server_port = os.environ.get('LITSERVE_PORT', 8000)
+
+            try:
+                response = requests.post(
+                    f'http://localhost:{model_server_port}/predict',
+                    json=payload
                 )
+                body = response.json()
 
-        except requests.exceptions.ConnectionError as e:
-            raise OkraModelError(f'Unable to connect to model server: {e}')
+                if response.status_code != 200:
+                    raise OkraModelError(
+                        f'The model server could not process the request: {body}'
+                    )
+
+            except requests.exceptions.ConnectionError as e:
+                raise OkraModelError(f'Unable to connect to model server: {e}')
 
         return body
 
@@ -605,16 +621,15 @@ class DigitGetter:
     def __show_debug_image(self, img, title):
         """Helper function to display a matplotlib plot of an image"""
 
-        if self.__debug:
-            if self.debug_images:
-                if MATPLOTLIB_ENABLED:
+        if self.debug_images:
+            if MATPLOTLIB_ENABLED:
 
-                    plt.imshow(img)
-                    plt.title(title)
-                    plt.show()
+                plt.imshow(img)
+                plt.title(title)
+                plt.show()
 
-                else:
-                    print('Warning: matplotlib is not configured')
+            else:
+                print('Warning: matplotlib is not configured')
 
 
 

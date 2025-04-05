@@ -57,8 +57,6 @@ See the documentation below for more information.
 
 [Python Setup](./backend/PythonPackages#configuring-python)
 
-[TorchServe Setup](./model_server#torchserve-setup-guide)
-
 [Rick's Video](https://www.youtube.com/watch?v=E4WlUXrJgy4)
 
 ## Getting Started
