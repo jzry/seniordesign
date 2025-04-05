@@ -47,15 +47,15 @@ See the documentation below for more information.
 
 [Express Backend](./backend#expressjs-server)
 
-[Image Processing and Segmentation](./backend/PythonPacks/preprocessing#image-processing-test)
+[Image Processing and Segmentation](./backend/PythonPackages/preprocessing#image-processing-test)
 
-[Optical Character Recognition](./backend/PythonPacks/OCR#ocr-package)
+[Optical Character Recognition](./backend/PythonPackages/OCR#ocr-package)
 
 [API Reference](./backend/API.md)
 
 [Environment Variables Reference](./ENV.md)
 
-[Python Setup](./backend/PythonPacks#configuring-python)
+[Python Setup](./backend/PythonPackages#configuring-python)
 
 [TorchServe Setup](./model_server#torchserve-setup-guide)
 
@@ -65,7 +65,7 @@ See the documentation below for more information.
 
 1. The first step is to clone this repository onto your device using [git](https://git-scm.com/).
 1. If you have not done so already, install [Node.js](https://nodejs.org/en).
-1. Follow the directions in the [Python Setup](./backend/PythonPacks#configuring-python) guide.
+1. Follow the directions in the [Python Setup](./backend/PythonPackages#configuring-python) guide.
 1. Define the environment variables in the appropriate files as described in the
 [Environment Variables Reference](./ENV.md).
 1. Install dependencies and run the [Express Backend](./backend#expressjs-server).
