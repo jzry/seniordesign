@@ -58,6 +58,16 @@ If this variable is ommitted, then CORS will allow requests from any origin (`*`
 The port number that the model server will run on. By default, it will run on
 port `8000`.
 
+### LITSERVE_URL
+
+If LitServe is to be run on a seperate server, you can specify the url to
+access it.
+
+### LIT_SERVER_API_KEY
+
+Sets the LitServe authentication key. All requests must contain this key in the
+`X-API-Key` header. If ommitted, all requests will be accepted without authentication.
+
 ### BYPASS_LITSERVE
 
 LitServe is used by default. By setting this variable to any value, the OCR

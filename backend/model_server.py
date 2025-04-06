@@ -3,6 +3,9 @@ import os
 
 from PythonPackages.OCR.OkraAPI import OkraLitAPI
 
+from dotenv import load_dotenv
+load_dotenv()
+
 
 if __name__ == '__main__':
     api = OkraLitAPI()

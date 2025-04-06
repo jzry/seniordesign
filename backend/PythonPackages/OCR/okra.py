@@ -66,10 +66,27 @@ class DigitGetter:
 
             self.__model_handler = OkraLitAPI()
             self.__model_handler.setup('cpu')
-            self.__bypass_LitServe = True
+            self.__bypass_model_server = True
 
         else:
-            self.__bypass_LitServe = False
+
+            self.__bypass_model_server = False
+
+            port = os.environ.get('LITSERVE_PORT', 8000)
+            key = os.environ.get('LIT_SERVER_API_KEY')
+
+            self.__model_server_url = os.environ.get(
+                'LITSERVE_URL',
+                f'http://localhost:{port}'
+            )
+
+            if key is not None:
+                self.__model_server_headers = { 'X-API-Key': key }
+
+            else:
+                self.__model_server_headers = {}
+
+
 
 
     def __preprocess_image(self, img):
@@ -592,18 +609,17 @@ class DigitGetter:
             "y": img.shape[0]
         }
 
-        if self.__bypass_LitServe:
+        if self.__bypass_model_server:
 
             body = self.__model_handler.direct_request(payload)
 
         else:
 
-            model_server_port = os.environ.get('LITSERVE_PORT', 8000)
-
             try:
                 response = requests.post(
-                    f'http://localhost:{model_server_port}/predict',
-                    json=payload
+                    f'{self.__model_server_url}/predict',
+                    json=payload,
+                    headers=self.__model_server_headers
                 )
                 body = response.json()
 
