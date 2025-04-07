@@ -8,13 +8,13 @@ The primary functionality of the backend of this application is to retrieve imag
 
 NOTE: This does not apply to the default React app port (3000) you are running when in development mode (`npm run start`)
 
-If port 8080 (the default port for our server) is busy, you may change it by doing the following. First, navigate to `process.env` in the root directory and you should see `PORT=8080`. You may change `8080` to almost any other integer between 1 and 65535 whose port isn't restricted (EACCES) or in use (EADDRINUSE). THEN, navigate to the `.env` file in the frontend directory and change ONLY the `8080` in `REACT_APP_API_URL=http://localhost:8080` to your chosen port.
+If port 8080 (the default port for our server) is busy, you may change it by doing the following. First, open the `.env` file in this directory and you should see `PORT=8080`. You may change `8080` to almost any other integer between 1 and 65535 whose port isn't restricted (EACCES) or in use (EADDRINUSE). THEN, navigate to the `.env` file in the frontend directory and change ONLY the `8080` in `REACT_APP_API_URL=http://localhost:8080` to your chosen port.
 
 ## Run in development mode
 
 ### Change environment variable to development mode if needed
 
-In the main project directory, navigate to `process.env`. Set `MODE=development` to enable dev mode, if it's not already enabled.
+In the file `.env`, set `MODE=development` to enable dev mode, if it's not already enabled.
 
 ### Node module installation
 
@@ -36,7 +36,7 @@ While running the application, open up a new terminal window, navigate to the fr
 
 ### Change environment variable to production mode if needed
 
-In the `process.env` file in the root project directory, set `MODE=production` if it isn't already.
+In the `.env` file, set `MODE=production` if it isn't already.
 
 ### Build React app
 

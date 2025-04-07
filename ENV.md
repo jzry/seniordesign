@@ -66,14 +66,15 @@ access it.
 ### LIT_SERVER_API_KEY
 
 Sets the LitServe authentication key. All requests must contain this key in the
-`X-API-Key` header. If ommitted, all requests will be accepted without authentication.
+`X-API-Key` header. If this variable is ommitted, all requests will be accepted
+without authentication.
 
 ### BYPASS_LITSERVE
 
 LitServe is used by default. By setting this variable to any value, the OCR
 will not use LitServe and directly load the image classifier model instead.
 
-## :page_facing_up: File: `/frontend/.env`
+## :page_facing_up: File: `frontend/.env`
 
 > [!IMPORTANT]
 > These variables should be up to date before performing a static build.
