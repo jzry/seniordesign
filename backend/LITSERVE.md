@@ -20,5 +20,5 @@ You can configure the OCR to bypass LitServe by setting the environment variable
 LitServe can be configured by setting these environment variables in the `.env` file.
 
 - [`LITSERVE_PORT`](../ENV.md#litserve_port) Configure which port LitServe will use.
-- [`LITSERVE_URL`](../ENV.md#litserve_url) The URL at which LitServe can be accessed.
+- [`LITSERVE_URL`](../ENV.md#litserve_url) Configure the URL at which LitServe can be accessed.
 - [`LIT_SERVER_API_KEY`](../ENV.md#lit_server_api_key) Configure password authentication for LitServe requests.
