@@ -2,7 +2,8 @@ import numpy as np
 import cv2
 from enum import IntEnum
 import requests
-import json
+import base64
+import os
 
 from .exceptions import *
 
@@ -41,17 +42,8 @@ class DigitGetter:
                                     (default=80.0).
     """
 
-    def __init__(self, ts=False):
+    def __init__(self):
         """Creates a new instance of DigitGetter"""
-
-        self.__debug = not ts
-
-        if self.__debug:
-
-            from .OkraHandler import OkraHandler
-
-            self.__classifier_handle = OkraHandler()
-            self.__classifier_handle.initialize()
 
         self.__tracer = OkraTracer()
 
@@ -65,6 +57,36 @@ class DigitGetter:
         self.blank_threshold = 120
         self.use_width_as_reference = False
         self.scribble_threshold = 80.0
+
+        # Optionally bypass LitServe
+
+        if os.environ.get('BYPASS_LITSERVE') is not None:
+
+            from .OkraAPI import OkraLitAPI
+
+            self.__model_handler = OkraLitAPI()
+            self.__model_handler.setup('cpu')
+            self.__bypass_model_server = True
+
+        else:
+
+            self.__bypass_model_server = False
+
+            port = os.environ.get('LITSERVE_PORT', 8000)
+            key = os.environ.get('LIT_SERVER_API_KEY')
+
+            self.__model_server_url = os.environ.get(
+                'LITSERVE_URL',
+                f'http://localhost:{port}'
+            )
+
+            if key is not None:
+                self.__model_server_headers = { 'X-API-Key': key }
+
+            else:
+                self.__model_server_headers = {}
+
+
 
 
     def __preprocess_image(self, img):
@@ -581,35 +603,33 @@ class DigitGetter:
             OkraModelError: Failed to run a model.
         """
 
-        payload = {"data": img.tobytes(), "x": img.shape[1], "y": img.shape[0]}
+        payload = {
+            "data": base64.b64encode(img.tobytes()).decode('ascii'),
+            "x": img.shape[1],
+            "y": img.shape[0]
+        }
 
-        if self.__debug:
+        if self.__bypass_model_server:
 
-            if model_name == 'OkraClassifier':
-
-                response = self.__classifier_handle.handle(payload)
-
-            else:
-                raise OkraModelError(f'Unkown model: "{model_name}"')
-
-            body = json.loads(response[0])
+            body = self.__model_handler.direct_request(payload)
 
         else:
 
             try:
                 response = requests.post(
-                    f'http://localhost:6060/predictions/{model_name}',
-                    data=payload
+                    f'{self.__model_server_url}/predict',
+                    json=payload,
+                    headers=self.__model_server_headers
                 )
                 body = response.json()
 
                 if response.status_code != 200:
                     raise OkraModelError(
-                        f'TorchServe could not process the request: {body}'
+                        f'The model server could not process the request: {body}'
                     )
 
             except requests.exceptions.ConnectionError as e:
-                raise OkraModelError(f'Unable to connect to TorchServe: {e}')
+                raise OkraModelError(f'Unable to connect to model server: {e}')
 
         return body
 
@@ -617,16 +637,15 @@ class DigitGetter:
     def __show_debug_image(self, img, title):
         """Helper function to display a matplotlib plot of an image"""
 
-        if self.__debug:
-            if self.debug_images:
-                if MATPLOTLIB_ENABLED:
+        if self.debug_images:
+            if MATPLOTLIB_ENABLED:
 
-                    plt.imshow(img)
-                    plt.title(title)
-                    plt.show()
+                plt.imshow(img)
+                plt.title(title)
+                plt.show()
 
-                else:
-                    print('Warning: matplotlib is not configured')
+            else:
+                print('Warning: matplotlib is not configured')
 
 
 

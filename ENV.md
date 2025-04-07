@@ -47,17 +47,34 @@ The path to a file containing the private key of the SSL certificate.
 
 The path to a file containing the server certificate of the SSL certificate.
 
-### TORCHSERVE
-
-To use TorchServe, set this to `torchserve`. TorchServe is not used by default.
-
 ### ORIGIN
 
 The origin to use for CORS security. CORS will block requests that come from origins other
 than the one specified here. For example, this might be set to `https://stirup.co`.
 If this variable is ommitted, then CORS will allow requests from any origin (`*`).
 
-## :page_facing_up: File: `/frontend/.env`
+### LITSERVE_PORT
+
+The port number that the model server will run on. By default, it will run on
+port `8000`.
+
+### LITSERVE_URL
+
+If LitServe is to be run on a seperate server, you can specify the url to
+access it.
+
+### LIT_SERVER_API_KEY
+
+Sets the LitServe authentication key. All requests must contain this key in the
+`X-API-Key` header. If this variable is ommitted, all requests will be accepted
+without authentication.
+
+### BYPASS_LITSERVE
+
+LitServe is used by default. By setting this variable to any value, the OCR
+will not use LitServe and directly load the image classifier model instead.
+
+## :page_facing_up: File: `frontend/.env`
 
 > [!IMPORTANT]
 > These variables should be up to date before performing a static build.

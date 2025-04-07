@@ -9,10 +9,6 @@ Python version 3.12 should be installed on your device.
 Python can be downloaded from the
 [official Python download page](https://www.python.org/downloads/).
 
-> [!IMPORTANT]
-> As of March 2025, PyTorch [does not yet support Python 3.13](https://pytorch.org/get-started/locally/#windows-python)
-> on all systems. If you install version 3.13, PyTorch may not work correctly!
-
 To check your Python version, run the following command:
 
 `python -V`
@@ -53,12 +49,12 @@ To show the packages installed in your Python virtual environment run:
 
 ## Installing Packages
 
-Navigate in your terminal to the directory `seniordesign/backend/PythonPacks/`.
+Navigate in your terminal to the directory `seniordesign/backend/PythonPackages/setup/`.
 Packages will be installed using [pip](https://pip.pypa.io/en/stable/).
 
 ### Developer Installation
 
-`pip install -r setup/dev-requirements.txt`
+`pip install -r dev-requirements.txt`
 
 Also, install PyTorch using the command provided by
 [their website](https://pytorch.org/get-started/locally/).
@@ -74,12 +70,6 @@ From the options on the linked page, select the following:
 > PyTorch with the latest
 > [CUDA version that your GPU supports](https://en.wikipedia.org/wiki/CUDA#GPUs_supported).
 
-Optionally, you can install support for additional file types.
-⚠️ Some of these packages may require additional software to be installed
-on Windows and Mac systems.
-
-`pip install -r setup/ext-requirements.txt`
-
 ### Server Installation
 
 > [!WARNING]
@@ -87,4 +77,4 @@ on Windows and Mac systems.
 > Installing this in a development environment may result in unintended
 > side effects.
 
-`pip install -r setup/server-requirements.txt`
+`pip install -r server-requirements.txt`

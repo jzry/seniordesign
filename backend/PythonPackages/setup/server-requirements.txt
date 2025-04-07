@@ -3,8 +3,5 @@
 -r core-requirements.txt
 
 opencv-python-headless~=4.11.0.86
-torch~=2.5.1 --index-url https://download.pytorch.org/whl/cpu
-torchvision~=0.20.1 --index-url https://download.pytorch.org/whl/cpu
-
--r ext-requirements.txt
--r ts-requirements.txt
+torch~=2.6.0 --index-url https://download.pytorch.org/whl/cpu
+torchvision~=0.21.0 --index-url https://download.pytorch.org/whl/cpu

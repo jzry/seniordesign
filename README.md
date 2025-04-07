@@ -57,7 +57,7 @@ See the documentation below for more information.
 
 [Python Setup](./backend/PythonPackages#configuring-python)
 
-[TorchServe Setup](./model_server#torchserve-setup-guide)
+[LitServe](./backend/LITSERVE.md)
 
 [Rick's Video](https://www.youtube.com/watch?v=E4WlUXrJgy4)
 
@@ -70,4 +70,4 @@ See the documentation below for more information.
 [Environment Variables Reference](./ENV.md).
 1. Install dependencies and run the [Express Backend](./backend#expressjs-server).
 1. Install dependencies and run the [React Frontend](./frontend#getting-started-with-create-react-app).
-
+1. Run [LitServe](./backend/LITSERVE.md).

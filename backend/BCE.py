@@ -24,8 +24,6 @@ def run(args, image_buffer):
 
     Parameters:
         args (dict): A dictionary containing the arguments:
-                     'torchserve' (bool): A flag to specify whether TorchServe
-                                          should be used or not.
                      'corner_points' (dict): A dictionary containing the
                                              coordinates of the page corners
                                              (optional).
@@ -45,7 +43,7 @@ def run(args, image_buffer):
     extracted_fields = BCSegments(image_buffer, args['corner_points'])
 
     # Prepare the OCR
-    dg = okra.DigitGetter(ts=args['torchserve'])
+    dg = okra.DigitGetter()
 
     rider_keys = extracted_fields.keys()
 
@@ -152,7 +150,7 @@ def _debug_main():
         print(f'\n  Cannot open "{sys.argv[1]}"\n')
         return
 
-    ret_val = run({'torchserve': False}, image_buffer)
+    ret_val = run({}, image_buffer)
 
     for riderNumber in range(ret_val['riderCount']):
 
