@@ -1,7 +1,7 @@
 import axios from "axios";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 
-function Corners({ imageSrc, imageFile, onSubmitCorners, mode }) {
+function Corners({ imageSrc, imageFile, onSubmitCorners, onError, mode }) {
     const canvasRef = useRef(null)
     const [image, setImage] = useState(null)
     const apiUrl = process.env.REACT_APP_API_URL;
@@ -105,7 +105,7 @@ function Corners({ imageSrc, imageFile, onSubmitCorners, mode }) {
         handleMouseUp();
     }
 
-    function drawQuad(context) {
+    const drawQuad = useCallback((context) => {
         context.strokeStyle = "red";
         context.lineWidth = imageRes.x / 150;
         context.beginPath();
@@ -123,7 +123,7 @@ function Corners({ imageSrc, imageFile, onSubmitCorners, mode }) {
             context.fillStyle = draggingCorner === index ? "green" : "blue";  //   Change to green while dragging
             context.fill();
         });
-    };
+    }, [corners, draggingCorner, imageRes.x]);
 
     function scaleCanvas(imgWidth, imgHeight) {
         let maxWidth, maxHeight;
@@ -154,7 +154,7 @@ function Corners({ imageSrc, imageFile, onSubmitCorners, mode }) {
         return { width, height };
     }
 
-    function drawToCanvas() {
+    const drawToCanvas = useCallback(() => {
         const canvas = canvasRef.current
         const context = canvas.getContext("2d")
 
@@ -207,7 +207,7 @@ function Corners({ imageSrc, imageFile, onSubmitCorners, mode }) {
         } else {
             context.clearRect(0, 0, canvas.width, canvas.height);
         }
-    }
+    }, [corners, drawQuad, image])
 
     async function submitImage() {
         if (!imageFile) {
@@ -241,23 +241,9 @@ function Corners({ imageSrc, imageFile, onSubmitCorners, mode }) {
             setCorners(processedCorners);
             setHasCorners(true);
 
-            // //   Ensure `drawToCanvas()` runs AFTER `setCorners` updates
-            // setTimeout(() => {
-            //     requestAnimationFrame(drawToCanvas);
-            // }, 0);
-
         } catch (error) {
             console.error("Could not extract corners!", error);
-
-            // Default corners if extraction fails
-            setCorners([
-                { x: 500, y: 500 },
-                { x: 1000, y: 500 },
-                { x: 1000, y: 1000 },
-                { x: 500, y: 1000 }
-            ]);
-            setCorners(null)
-            setHasCorners(true);
+            handleError(error);
         }
     }
 
@@ -300,15 +286,33 @@ function Corners({ imageSrc, imageFile, onSubmitCorners, mode }) {
             console.log("Here is the rider data:");
             console.log(response.data);
 
+            setHasCorners(false);
+
             //   Send API response back to getphotoBCE.js
             if (onSubmitCorners) {
                 onSubmitCorners(response.data);
             }
         } catch (error) {
-            console.error("Error submitting corners to BCE:", error);
+            console.error(`Error submitting image to /${mode}:`, error);
+            handleError(error);
         } finally {
-            setHasCorners(false);
             setLoading(false);
+        }
+    }
+
+    function handleError(error) {
+        if (!error.response) {
+            onError("Our server could not be reached", hasCorners);
+        } else if (error.response.status >= 500) {
+            onError("An unexpected error occured on our server. Please try again", hasCorners);
+        } else if (error.response.status === 429) {
+            onError("Our server is busy. Please try again", hasCorners);
+        } else {
+            if (error.response.data.error) {
+                onError(error.response.data.error);
+            } else {
+                onError("An unknown error occured. Try a different image");
+            }
         }
     }
 
@@ -318,7 +322,7 @@ function Corners({ imageSrc, imageFile, onSubmitCorners, mode }) {
         drawToCanvas();
         window.addEventListener("resize", drawToCanvas);
         return () => window.removeEventListener("resize", drawToCanvas);
-    }, [draggingCorner, image, corners])
+    }, [draggingCorner, image, corners, drawToCanvas])
 
 
 

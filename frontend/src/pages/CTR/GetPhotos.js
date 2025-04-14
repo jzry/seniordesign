@@ -1,6 +1,5 @@
 import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
 import UploadIcon from "../../images/upload.png";
 import CTRExtractedValues from './CTRExtractedValues.js';
 import Corners from '../Test/Corners.js';
@@ -13,9 +12,8 @@ function GetPhotos() {
   const [loading, setLoading] = useState(false); // Loading state
   const [backendError, setBackendError] = useState(null); // Error state
     const [showCorners, setShowCorners] = useState(false);
-  const fileInputRef = useRef(null); 
+  const fileInputRef = useRef(null);
   const navigate = useNavigate();
-  const apiUrl = process.env.REACT_APP_API_URL;
 
   // Handles file selection for uploading an image
   const handleFileChange = (event) => {
@@ -30,41 +28,7 @@ function GetPhotos() {
   const handleRetakePhoto = () => {
     setImageSrc(null); // Clear the image preview
     setImageFile(null); // Clear the image file
-  };
-
-  // Submits the uploaded image to the backend
-  const handleSubmit = async (event) => {
-    event.preventDefault();
-    setLoading(true); // Show loading spinner
-    setBackendError(null); // Reset any previous errors
-
-    if (imageFile) {
-      const formData = new FormData();
-      formData.append('image', imageFile);
-
-      try {
-        const response = await axios.post(apiUrl.concat('/ctr'), formData, {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-          },
-        });
-
-        if (response.data.error) {
-          throw new Error(response.data.error);
-        }
-
-        console.log("Data Retrieved:", response.data);
-        setExtractedData(response.data);
-      } catch (error) {
-        console.error('Error uploading file:', error);
-        setBackendError(error.message || "An unknown error occurred.");
-      } finally {
-        setLoading(false); // Hide loading spinner
-      }
-    } else {
-      console.error("No image to upload.");
-      setLoading(false); // Hide loading spinner
-    }
+    setBackendError(null);
   };
 
   const handleGoBack = () => {
@@ -84,7 +48,13 @@ function GetPhotos() {
     setShowCorners(false);
 
     setExtractedData(processedData)
-};
+  };
+
+  const handleError = (message, haveCorners=false) => {
+    if (!haveCorners)
+      setShowCorners(false);
+    setBackendError(message);
+  };
 
 
   return (
@@ -99,12 +69,16 @@ function GetPhotos() {
       {extractedData ? (
         <CTRExtractedValues extractedData={extractedData} />
       ) : showCorners ? (
-        <Corners
-          imageSrc={imageSrc}
-          imageFile={imageFile}
-          onSubmitCorners={handleCornersSubmit}
-          mode={'ctr'}
-        />
+        <>
+          <Corners
+            imageSrc={imageSrc}
+            imageFile={imageFile}
+            onSubmitCorners={handleCornersSubmit}
+            onError={handleError}
+            mode={'ctr'}
+          />
+          {backendError && <div className="error-message">{backendError}</div>}
+        </>
       ) : (
         !imageSrc ? (
           <div className="button-container">
@@ -130,6 +104,7 @@ function GetPhotos() {
               </label>
               <button className="go-back-button" onClick={handleGoBack}>Go Back</button>
             </div>
+            {backendError && <div className="error-message">{backendError}</div>}
           </div>
         ) : (
           <div className="image-fullscreen-container">
@@ -142,12 +117,10 @@ function GetPhotos() {
                 Continue
               </button>
             </div>
+            {backendError && <div className="error-message">{backendError}</div>}
           </div>
         )
       )}
-
-      {/* Show backend error message */}
-      {backendError && <div className="error-message">{backendError}</div>}
     </div>
   );
 }
