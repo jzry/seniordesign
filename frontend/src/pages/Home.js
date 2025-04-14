@@ -15,6 +15,10 @@ function Home() {
         {/* <Link to="/corners">
           <button className="scorecard-button">Corner Selection</button>
         </Link> */}
+        <Link to="/faq">
+          <button className="scorecard-button">FAQ</button>
+        </Link>
+            <h4>Only JPG, PNG, BMP, TIF, HEIC, and PDF files are accepted for upload</h4>
       </div>
     </div>
   );

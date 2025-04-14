@@ -186,13 +186,6 @@ div.button-container {
   padding: 1%;
 }
 
-/* For multi-buttons */
-div.button-container {
-  display: flex;
-  margin: auto;
-  padding: 1%;
-}
-
 /* same button stylings as for BC and CTR */
 .action-button,
 .submit-button, 
@@ -223,6 +216,16 @@ p {
   min-width: fit-content;
   justify-self: center;
   margin: 5%;
+}
+
+/* Misc styling for FAQ page */
+ul {
+  list-style-position: inside;
+}
+ul, 
+li, 
+ol {
+  padding: 4px;
 }
 
 /* For desktop */
@@ -340,7 +343,8 @@ p {
   }
   
   /* General Button Styling */
-  button {
+  button,
+  .scorecard {
     width: 250px;
     padding: 15px;
     font-size: 18px;
@@ -359,7 +363,8 @@ p {
   
   /* Fix iPhone Blue Text Issue */
   button:focus,
-  button:active {
+  button:active, 
+  .scorecard {
     color: black !important;  /*   Ensures text remains black */
     background: white;
     outline: none;
