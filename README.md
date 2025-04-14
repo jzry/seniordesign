@@ -59,7 +59,7 @@ See the documentation below for more information.
 
 [LitServe](./backend/LITSERVE.md)
 
-[Rick's Video](https://www.youtube.com/watch?v=E4WlUXrJgy4)
+[Demo Video](https://www.youtube.com/watch?v=VmIr_6LUgsI)
 
 ## Getting Started
 
