@@ -296,6 +296,7 @@ ol {
   .error-message {
     color: red;
     margin-top: 20px;
+    padding-bottom: 40px;
     text-align: center;
   }
   

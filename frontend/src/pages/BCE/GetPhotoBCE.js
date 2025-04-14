@@ -1,9 +1,8 @@
-import React, { useState, useRef } from 'react';
+import React, { useState } from 'react';
 import UploadIcon from "../../images/upload.png";
 import BCEExtractedValues from './BCEExtractedValues';
 import Corners from '../Test/Corners.js';
 import '../../styles/CTRHandWritingRecognitionStyles.css';
-import axios from 'axios';
 
 function GetPhotoBCE({ numberOfScorecards }) {
   const [imageSrc1, setImageSrc1] = useState(null);
@@ -15,7 +14,6 @@ function GetPhotoBCE({ numberOfScorecards }) {
   const [loading, setLoading] = useState(false);
   const [backendError, setBackendError] = useState(null);
   const [showCorners, setShowCorners] = useState(false);
-  const apiUrl = process.env.REACT_APP_API_URL;
 
   const isTwoPhotosRequired = (numberOfScorecards > 1);
 
@@ -66,6 +64,7 @@ function GetPhotoBCE({ numberOfScorecards }) {
       setImageSrc2(null);
       setImageFile2(null);
     }
+    setBackendError(null);
   };
 
   const handleContinue = () => {
@@ -95,9 +94,15 @@ function GetPhotoBCE({ numberOfScorecards }) {
         setCurrentStep(2);
     } else {
         setCurrentStep(3);
+        setBackendError(null);
     }
-};
+  };
 
+  const handleError = (message, haveCorners=false) => {
+    if (!haveCorners)
+      setShowCorners(false);
+    setBackendError(message);
+  };
 
 
   return (
@@ -115,12 +120,15 @@ function GetPhotoBCE({ numberOfScorecards }) {
           />
         </div>
       ) : showCorners ? (
-        <Corners
-          imageSrc={currentStep === 1 ? imageSrc1 : imageSrc2}
-          imageFile={currentStep === 1 ? imageFile1 : imageFile2}
-          onSubmitCorners={handleCornersSubmit}
-          mode={'bce'}
-        />
+        <>
+            <Corners
+              imageSrc={currentStep === 1 ? imageSrc1 : imageSrc2}
+              imageFile={currentStep === 1 ? imageFile1 : imageFile2}
+              onSubmitCorners={handleCornersSubmit}
+              onError={handleError}
+              mode={'bce'}
+            />
+        </>
       ) : (
         <>
           {((currentStep === 1 && !imageSrc1) || (isTwoPhotosRequired && currentStep === 2 && !imageSrc2)) ? (
