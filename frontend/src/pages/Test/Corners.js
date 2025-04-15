@@ -55,6 +55,12 @@ function Corners({ imageSrc, imageFile, onSubmitCorners, onError, mode }) {
             const touch = e.touches[0] || e.changedTouches[0];
             x = (touch.clientX - rect.left) / scale.x;
             y = (touch.clientY - rect.top) / scale.y;
+            let longSide = Math.max(imageRes.x, imageRes.y);
+            let shortSide = Math.min(imageRes.x, imageRes.y);
+            if (x < 0) x = 0;
+            if (y < 0) y = 0;
+            if (x > shortSide) x = shortSide;
+            if (y > longSide) y = longSide;
         } else {
             // Handling mouse events
             x = e.nativeEvent.offsetX / scale.x;
