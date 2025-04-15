@@ -343,6 +343,16 @@ ol {
     position: relative; /* Ensures proper layout */
   }
   
+  /* Styling for the FAQ scorecards previews */
+  .scorecard {
+    margin: 5px;
+  }
+
+  .scorecard > img {
+    width: 150px;
+    height: auto;
+  }
+
   /* General Button Styling */
   button,
   .scorecard {
@@ -409,9 +419,6 @@ ol {
     color: white;
     border-color: black;
 }
-
-
-
   /* Loading Icon!!! */
   /*   Fullscreen dark overlay when loading */
 .loading-overlay {

@@ -4,7 +4,6 @@ import Home from './pages/Home';
 import GetPhotos from './pages/CTR/GetPhotos';
 import BCE from './pages/BCE/BCE';
 import Corners from './pages/Test/Corners';
-import FAQ from './pages/FAQ/FAQ';
 import NotFound from './pages/NotFound';
 
 function App() {
@@ -15,7 +14,7 @@ function App() {
         <Route path="/ctr" element={< GetPhotos/>} />
         <Route path="/bce" element={< BCE/>} />
         <Route path="/corners" element={< Corners/>} />
-        <Route path="/faq" element={< FAQ/>} />
+        {/* <Route path="/faq" element={< FAQ/>} /> */}
         <Route path="*" element={< NotFound/>} />
       </Routes>
     </Router>
