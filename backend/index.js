@@ -9,6 +9,7 @@ const morgan = require('morgan')
 const pyconnect = require('./pyconnect')
 
 const devMode = process.env.MODE
+const nodeMode = process.env.NODE_ENV
 const corsOrigin = (process.env.ORIGIN) ? process.env.ORIGIN : '*'
 
 
@@ -85,23 +86,23 @@ function validateCorners(req, res, next) {
 // The express app
 const app = express();
 
-// Allow cross-origin resource sharing for our react development build
-if (devMode === 'development') {
-  // Configure API logging
-  app.use(morgan('[:date] :method :url', { immediate: true}))
-}
-else if (devMode === 'production') {
+if (devMode === 'production') {
   // Serve static frontend
   app.use(express.static(path.join(__dirname, '../frontend/build')))
   app.get('/*', (req, res) => {
     res.sendFile(path.join(__dirname, '../frontend/build', 'index.html'));
   })
+}
+else if (devMode !== 'development') {
+  throw `Error: "${devMode}" is not a valid MODE - see ENV.md`
+}
 
-  // Configure API logging
+// Configure API logging
+if (nodeMode === 'production') {
   app.use(morgan('[:date] :remote-addr (:status) :method :url (:response-time ms)'))
 }
 else {
-  throw `Error: "${devMode}" is not a valid MODE - see ENV.md`
+  app.use(morgan('[:date] :method :url', { immediate: true}))
 }
 
 // Configure CORS requests

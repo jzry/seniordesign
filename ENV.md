@@ -24,6 +24,12 @@ This can be set to either `development` or `production`.
 If `production` is specified, the React frontend will be
 served statically from Express (Remember to run the frontend build script first!).
 
+### NODE_ENV
+
+This can be set to either `development` or `production`.
+This value will determine if node.js will run in development or
+production mode.
+
 ### PYTHON_CMD
 
 Sets the string used to run Python. Depending on your system and configuration this could be
