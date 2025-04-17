@@ -47,7 +47,7 @@ function CTRExtractedValues({ extractedData }) {
   // Handle score calculation (first click shows options, second calculates total score)
   const handleCalculateScore = () => {
     if (step === 2) {
-      const sumOfValues = Object.values(data).reduce((acc, item) => acc + (parseInt(item.value, 10) || 0), 0);
+      const sumOfValues = Object.values(data).reduce((acc, item) => acc + (parseFloat(item.value, 10) || 0), 0);
       const calculatedScore = 100 - sumOfValues;
       setTotalScore(calculatedScore); // Set the total score
       setStep(3); // Move to the final step (show total score)
