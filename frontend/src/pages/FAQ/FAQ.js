@@ -60,7 +60,7 @@ function FAQ(){
             <h4>What image file types are accepted?</h4>
             <p>Only JPG, PNG, BMP, TIF, HEIC, and PDF files are accepted for upload.</p>
             <h4>What size of image file types are accepted?</h4>
-            <p>Only files below 5 Mb are accepted for upload.</p>
+            <p>Only files below 15 Mb are accepted for upload.</p>
             <div className="button-container">
                 <button className="action-button" onClick={handleGoBack}>
                 Go back

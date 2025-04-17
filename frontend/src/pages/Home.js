@@ -18,8 +18,7 @@ function Home() {
         <Link to="/faq">
           <button className="scorecard-button">FAQ</button>
         </Link>
-            <h4>Only JPG, PNG, BMP, TIF, HEIC, and PDF files are accepted for upload.</h4>
-            <h4>Only files below 5 Mb are accepted for upload.</h4>
+            <h4>Only JPG, PNG, BMP, TIF, HEIC, and PDF files less than 15 Mb in size are accepted for upload.</h4>
       </div>
     </div>
   );

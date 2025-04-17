@@ -23,7 +23,7 @@ function validateImage(req, res, next) {
     'image/tiff',
     'application/pdf'
   ];
-  const maxSize = 10; // limit in mebibytes
+  const maxSize = 15; // limit in mebibytes
   const maxSizeBytes = maxSize * 1024 * 1024;
 
   // Check if file exists
