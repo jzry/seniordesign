@@ -81,6 +81,8 @@ def _debug_main():
 
     import sys
     from termcolor import colored
+    from dotenv import load_dotenv
+    load_dotenv()
 
     if len(sys.argv) != 2:
         print('\n  Usage: python BCE.py <Path to image>\n')
