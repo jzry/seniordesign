@@ -185,6 +185,8 @@ def __preprocess(image):
         10
     )
 
+    thresh_image = cv.erode(thresh_image, (3, 3), iterations=3)
+
     # __demo_image(
     #     thresh_image,
     #     [],
