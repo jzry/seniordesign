@@ -1,4 +1,5 @@
 from litserve import LitAPI
+from fastapi import HTTPException
 
 from torch import load as torch_load, device as torch_device, argmax as torch_argmax
 from torch import no_grad, float32
@@ -8,6 +9,7 @@ from torchvision.transforms import v2
 import numpy as np
 from pathlib import Path
 import base64
+import threading
 
 from .OkraClassifier import OkraClassifier
 
@@ -18,21 +20,6 @@ class OkraLitAPI(LitAPI):
     def setup(self, device):
         """Initialize and load the model"""
 
-        model_dir = Path(__file__).parent / 'weights'
-
-        #
-        # Init and load the model
-        #
-        state_dict = torch_load(
-            Path(model_dir) / 'okra-resnet.pt',
-            weights_only=True,
-            map_location=torch_device(device)
-        )
-        self.model = OkraClassifier()
-        self.model.to(device)
-        self.model.load_state_dict(state_dict)
-        self.model.eval()
-
         #
         # Prepare the image transformations
         #
@@ -42,9 +29,45 @@ class OkraLitAPI(LitAPI):
             v2.Resize((28, 28))
         ])
 
+        self.model_ready = threading.Event()
+
+        # Init model
+        self.model = OkraClassifier()
+
+        # Load the model weights in a different thread
+        threading.Thread(target=self._load_model_async, daemon=True).start()
+
+
+    def _load_model_async(self):
+        """Load the model without blocking the main thread"""
+
+        print('Loading model in background...')
+        #
+        # Load the model weights
+        #
+        model_dir = Path(__file__).parent / 'weights'
+        state_dict = torch_load(
+            Path(model_dir) / 'okra-resnet.pt',
+            weights_only=True,
+            map_location=torch_device(self.device)
+        )
+        self.model.load_state_dict(state_dict)
+        self.model.to(self.device)
+        self.model.eval()
+
+        print('Model loaded')
+        self.model_ready.set()
+
 
     def decode_request(self, request):
         """Retrieve the image from the request"""
+
+        if not self.model_ready.is_set():
+            raise HTTPException(
+                status_code=503,
+                detail='Model is still loading',
+                headers={'Retry-After': '5'}
+            )
 
         raw_img = base64.b64decode(request.get('data').encode('ascii'))
         img_shape = (int(request.get('y')), int(request.get('x')))
